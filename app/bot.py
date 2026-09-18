@@ -1308,17 +1308,24 @@ async def run_bot(
         or not is_gemini
     )
 
+    if is_gemini and settings.GROQ_API_KEY and "flash-lite" in agent_llm.lower():
+        # Prevent 43-second stall caused by deprecated/throttled gemini-3.5-flash-lite on voice calls
+        logger.warning(f"⚡ [LLM] Detected slow flash-lite model '{agent_llm}' — Auto-accelerating to Groq LPU (qwen/qwen3.8-27b, 200ms TTFT) for seamless realtime voice.")
+        is_gemini = False
+        is_groq = True
+
     if is_gemini:
-        # Map legacy/old model names to the correct working Gemini model
+        # Map legacy/old model names to the correct working Gemini 3.6 model
         _GEMINI_MODEL_MAP = {
-            "gemini-3.1-flash-lite": "gemini-3.1-flash-lite",
-            "gemini-3.5-flash-lite": "gemini-3.5-flash-lite",
-            "gemini-3.5-flash": "gemini-3.5-flash",
-            "gemini-3.1-flash-lite-preview": "gemini-3.1-flash-lite",
-            "gemini-flash-latest": "gemini-3.5-flash",
+            "gemini-3.1-flash-lite": "gemini-3.6-flash",
+            "gemini-3.5-flash-lite": "gemini-3.6-flash",
+            "gemini-3.5-flash": "gemini-3.6-flash",
+            "gemini-3.1-flash-lite-preview": "gemini-3.6-flash",
+            "gemini-flash-latest": "gemini-3.6-flash",
+            "gemini-3.6-flash": "gemini-3.6-flash",
         }
-        gemini_model = _GEMINI_MODEL_MAP.get(agent_llm.lower(), "gemini-3.1-flash-lite")
-        logger.success(f"⚡ [LLM] Activating Google Gemini Flash Lite ({gemini_model}) for '{agent_name}'")
+        gemini_model = _GEMINI_MODEL_MAP.get(agent_llm.lower(), "gemini-3.6-flash")
+        logger.success(f"⚡ [LLM] Activating Google Gemini ({gemini_model}) for '{agent_name}'")
         llm = OpenAILLMService(
             api_key=settings.GEMINI_API_KEY,
             base_url=settings.GEMINI_BASE_URL,
@@ -1682,7 +1689,8 @@ async def run_bot(
                 continue
 
             last_speech = state.get("last_user_speech_time", now)
-            silence_anchor = max(last_speech, speaking_until)
+            llm_finished = state.get("llm_finished_time", 0.0)
+            silence_anchor = max(last_speech, speaking_until, llm_finished)
             silence_duration = now - silence_anchor
             nudge_count = state.get("silence_nudge_count", 0)
             last_nudge_time = state.get("last_nudge_time", 0.0)
@@ -1691,8 +1699,8 @@ async def run_bot(
             if now - last_nudge_time < 14.0:
                 continue
 
-            # Inhibit nudge if user spoke within the last 9 seconds (e.g. dictating or pausing between email letters)
-            if now - last_speech < 9.0:
+            # Inhibit nudge if user spoke or LLM finished within the last 9 seconds
+            if now - last_speech < 9.0 or now - llm_finished < 9.0:
                 continue
 
             # Nudge 1: 14.0s dead air (allows natural human thought and dictation)
@@ -2026,6 +2034,8 @@ async def run_bot(
                 self.call_state["current_assistant_text"] += frame.text
             elif isinstance(frame, LLMFullResponseEndFrame):
                 self.call_state["is_llm_generating"] = False
+                self.call_state["llm_finished_time"] = time.time()
+                self.call_state["last_user_speech_time"] = time.time()
                 full_text = self.call_state.get("current_assistant_text", "").strip()
                 if full_text:
                     self.call_state["pending_broadcast_text"] = full_text

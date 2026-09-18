@@ -25,7 +25,7 @@ try:
 
         # Google Gemini LLM Settings
         GEMINI_API_KEY: str = ""
-        GEMINI_MODEL: str = "gemini-3.5-flash-lite"
+        GEMINI_MODEL: str = "gemini-3.6-flash"
         GEMINI_BASE_URL: str = "https://generativelanguage.googleapis.com/v1beta/openai/"
 
         # OpenRouter LLM Settings
