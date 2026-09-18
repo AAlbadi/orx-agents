@@ -1287,27 +1287,33 @@ async def run_bot(
                 raise
 
     if is_gemini:
-        # Map legacy/old model names to the correct working Gemini 3.6 model
-        _GEMINI_MODEL_MAP = {
-            "gemini-3.1-flash-lite": "gemini-3.6-flash",
-            "gemini-3.5-flash-lite": "gemini-3.6-flash",
-            "gemini-3.5-flash": "gemini-3.6-flash",
-            "gemini-3.1-flash-lite-preview": "gemini-3.6-flash",
-            "gemini-flash-latest": "gemini-3.6-flash",
-            "gemini-3.6-flash": "gemini-3.6-flash",
-        }
-        gemini_model = _GEMINI_MODEL_MAP.get(agent_llm.lower(), "gemini-3.6-flash")
-        logger.success(f"⚡ [LLM] Activating Google Gemini ({gemini_model}) for '{agent_name}'")
-        llm = OpenAILLMService(
-            api_key=settings.GEMINI_API_KEY,
-            base_url=settings.GEMINI_BASE_URL,
-            settings=OpenAILLMService.Settings(
-                model=gemini_model,
-                temperature=0.3,
-                max_tokens=150,
-                system_instruction=system_instruction,
-            ),
-        )
+        # Native Google GenAI SDK for blazing fast ~450ms TTFB
+        gemini_model = "gemini-2.5-flash"
+        logger.success(f"⚡ [LLM] Activating Native Google GenAI ({gemini_model}) for '{agent_name}'")
+        try:
+            from pipecat.services.google.llm import GoogleLLMService
+            llm = GoogleLLMService(
+                api_key=settings.GEMINI_API_KEY,
+                settings=GoogleLLMService.Settings(
+                    model=gemini_model,
+                    system_instruction=system_instruction,
+                    temperature=0.3,
+                    max_tokens=150,
+                    thinking=GoogleLLMService.ThinkingConfig(thinking_budget=0),
+                ),
+            )
+        except Exception as e:
+            logger.warning(f"Native GoogleLLMService fallback: {e}")
+            llm = OpenAILLMService(
+                api_key=settings.GEMINI_API_KEY,
+                base_url=settings.GEMINI_BASE_URL,
+                settings=OpenAILLMService.Settings(
+                    model=gemini_model,
+                    temperature=0.3,
+                    max_tokens=150,
+                    system_instruction=system_instruction,
+                ),
+            )
     elif is_groq:
         groq_model = agent_llm if ("gemini" not in agent_llm.lower() and agent_llm not in _DEPRECATED_GROQ_MODELS) else "qwen/qwen3.8-27b"
         logger.info(f"Configuring Groq LLM for '{agent_name}' (model={groq_model})")
