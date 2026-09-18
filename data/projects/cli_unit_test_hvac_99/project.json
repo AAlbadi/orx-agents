@@ -1,0 +1,16 @@
+{
+  "client_id": "cli_unit_test_hvac_99",
+  "project_name": "Polar Air & Heating Project",
+  "business_name": "Polar Air & Heating",
+  "industry": "hvac",
+  "address": "123 Glacier Way, Denver, CO",
+  "forwarding_phone": "",
+  "assigned_phone": "+18334205227",
+  "owner_phone": "+13035550199",
+  "owner_email": "",
+  "timezone": "America/New_York",
+  "status": "active",
+  "trigger_source": "admin",
+  "created_at": "2026-09-18 15:31:48",
+  "updated_at": "2026-09-18 15:31:48"
+}

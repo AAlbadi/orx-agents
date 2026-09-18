@@ -1,0 +1,16 @@
+{
+  "client_id": "cli_demo",
+  "project_name": "Apex Climate & Air Project",
+  "business_name": "Apex Climate & Air",
+  "industry": "hvac",
+  "address": "742 Evergreen Terrace, Springfield",
+  "forwarding_phone": "+1 (555) 234-5678",
+  "assigned_phone": "+1 (833) 420-5227",
+  "owner_phone": "+1 (555) 234-5678",
+  "owner_email": "",
+  "timezone": "America/New_York",
+  "status": "active",
+  "trigger_source": "onboarding",
+  "created_at": "2026-09-18 15:25:49",
+  "updated_at": "2026-09-18 15:25:49"
+}

@@ -1,0 +1,16 @@
+{
+  "client_id": "cli_wwvawp7",
+  "project_name": "San Diego Services Project",
+  "business_name": "San Diego Services",
+  "industry": "general",
+  "address": "9771 Clairemont Mesa Blvd Ste E, San Diego, 9771 Clairemont Mesa Blvd Ste E, San Diego, USA",
+  "forwarding_phone": "+1 (555) 234-5678",
+  "assigned_phone": "+1 (833) 420-5227",
+  "owner_phone": "+1 (555) 234-5678",
+  "owner_email": "",
+  "timezone": "America/New_York",
+  "status": "active",
+  "trigger_source": "onboarding",
+  "created_at": "2026-09-18 15:25:49",
+  "updated_at": "2026-09-18 15:25:49"
+}

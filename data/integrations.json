@@ -1,0 +1,21 @@
+{
+  "auto_extract_client_info": true,
+  "google_calendar_enabled": true,
+  "google_calendar_id": "primary",
+  "google_service_account_json": "",
+  "calendar_webhook_url": "",
+  "morning_slot_capacity": 2,
+  "afternoon_slot_capacity": 2,
+  "owner_phone_number": "+14155552671",
+  "enable_owner_sms": true,
+  "enable_customer_sms": true,
+  "email_notifications_enabled": true,
+  "notify_email": "owner@comfortbreezehvac.com",
+  "smtp_host": "smtp.gmail.com",
+  "smtp_port": 587,
+  "smtp_user": "",
+  "smtp_password": "",
+  "smtp_use_tls": true,
+  "resend_api_key": "",
+  "from_email": "Aria Voice AI <notifications@ariavoice.ai>"
+}

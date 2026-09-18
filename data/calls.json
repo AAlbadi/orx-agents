@@ -1,0 +1,1920 @@
+{
+  "calls": [
+    {
+      "call_id": "call-rec-demo-84920",
+      "assistant_id": "asst-1",
+      "assistant_name": "Riley",
+      "caller": "+1 (415) 890-2341",
+      "called": "+1 (800) 555-0199",
+      "started_at": "2026-09-16 14:32:00",
+      "ended_at": "2026-09-16 15:23:26",
+      "duration_seconds": 34.1,
+      "recording_url": "/api/recordings/call-rec-demo-84920.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hello! Thank you for calling Comfort Breeze. How can I assist you with your home services today?",
+          "timestamp": "14:32:01",
+          "latency_ms": 45
+        },
+        {
+          "speaker": "customer",
+          "text": "Hi! My air conditioner is making a strange humming sound and blowing warm air. Can someone come check it?",
+          "timestamp": "14:32:08",
+          "latency_ms": 340
+        },
+        {
+          "speaker": "assistant",
+          "text": "I completely understand how frustrating that is. I can dispatch our certified HVAC technician to inspect your system tomorrow at 10 AM. Would that work for you?",
+          "timestamp": "14:32:15",
+          "latency_ms": 380
+        },
+        {
+          "speaker": "customer",
+          "text": "Tomorrow at 10 AM works great. Thanks so much!",
+          "timestamp": "14:32:24",
+          "latency_ms": 290
+        },
+        {
+          "speaker": "assistant",
+          "text": "Perfect! You're all confirmed for tomorrow at 10 AM. We'll send a text when the technician is en route. Have a wonderful day!",
+          "timestamp": "14:32:28",
+          "latency_ms": 320
+        }
+      ],
+      "turn_count": 5,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789559900",
+      "assistant_id": "aria-concierge",
+      "assistant_name": "Aria Executive",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 15:58:20",
+      "ended_at": "2026-09-16 15:58:21",
+      "duration_seconds": 0.8,
+      "recording_url": "/api/recordings/call-1789559900.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hi there! I'm Aria, your executive assistant. How can I assist you today?",
+          "timestamp": "15:58:21",
+          "latency_ms": 45
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789559943",
+      "assistant_id": "aria-concierge",
+      "assistant_name": "Aria Executive",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 15:59:03",
+      "ended_at": "2026-09-16 15:59:04",
+      "duration_seconds": 0.1,
+      "recording_url": "/api/recordings/call-1789559943.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hi there! I'm Aria, your executive assistant. How can I assist you today?",
+          "timestamp": "15:59:03",
+          "latency_ms": 45
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789560032",
+      "assistant_id": "aria-concierge",
+      "assistant_name": "Aria Executive",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 16:00:32",
+      "ended_at": "2026-09-16 16:00:33",
+      "duration_seconds": 0.1,
+      "recording_url": "/api/recordings/call-1789560032.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hi there! I'm Aria, your executive assistant. How can I assist you today?",
+          "timestamp": "16:00:32",
+          "latency_ms": 45
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789561052",
+      "assistant_id": "aria-concierge",
+      "assistant_name": "Aria Executive",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 16:17:32",
+      "ended_at": "2026-09-16 16:17:32",
+      "duration_seconds": 0.7,
+      "recording_url": "/api/recordings/call-1789561052.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hi there! I'm Aria, your executive assistant. How can I assist you today?",
+          "timestamp": "16:17:32",
+          "latency_ms": 45
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789561068",
+      "assistant_id": "aria-concierge",
+      "assistant_name": "Aria Executive",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 16:17:48",
+      "ended_at": "2026-09-16 16:17:48",
+      "duration_seconds": 0.1,
+      "recording_url": "/api/recordings/call-1789561068.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hi there! I'm Aria, your executive assistant. How can I assist you today?",
+          "timestamp": "16:17:48",
+          "latency_ms": 45
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789562255",
+      "assistant_id": "aria-concierge",
+      "assistant_name": "Aria Executive",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 16:37:35",
+      "ended_at": "2026-09-16 16:37:38",
+      "duration_seconds": 3.3,
+      "recording_url": "/api/recordings/call-1789562255.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hi there! I'm Aria, your executive assistant. How can I assist you today?",
+          "timestamp": "16:37:38",
+          "latency_ms": 45
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789562334",
+      "assistant_id": "aria-concierge",
+      "assistant_name": "Aria Executive",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 16:38:54",
+      "ended_at": "2026-09-16 16:38:56",
+      "duration_seconds": 2.3,
+      "recording_url": "/api/recordings/call-1789562334.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hi there! I'm Aria, your executive assistant. How can I assist you today?",
+          "timestamp": "16:38:56",
+          "latency_ms": 45
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789562405",
+      "assistant_id": "aria-concierge",
+      "assistant_name": "Aria Executive",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 16:40:05",
+      "ended_at": "2026-09-16 16:40:05",
+      "duration_seconds": 0.1,
+      "recording_url": "/api/recordings/call-1789562405.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hi there! I'm Aria, your executive assistant. How can I assist you today?",
+          "timestamp": "16:40:05",
+          "latency_ms": 45
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789562910",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 16:48:30",
+      "ended_at": "2026-09-16 16:48:30",
+      "duration_seconds": 0.1,
+      "recording_url": "/api/recordings/call-1789562910.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Thank you for calling. This is Riley, your virtual receptionist. How may I help you today?",
+          "timestamp": "16:48:30",
+          "latency_ms": 45
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789562977",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 16:49:37",
+      "ended_at": "2026-09-16 16:49:37",
+      "duration_seconds": 0.1,
+      "recording_url": "/api/recordings/call-1789562977.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Thank you for calling. This is Riley, your virtual receptionist. How may I help you today?",
+          "timestamp": "16:49:37",
+          "latency_ms": 45
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789563049",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 16:50:49",
+      "ended_at": "2026-09-16 16:50:49",
+      "duration_seconds": 0.1,
+      "recording_url": "/api/recordings/call-1789563049.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Thank you for calling. This is Riley, your virtual receptionist. How may I help you today?",
+          "timestamp": "16:50:49",
+          "latency_ms": 45
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789563071",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 16:51:11",
+      "ended_at": "2026-09-16 16:51:11",
+      "duration_seconds": 0.1,
+      "recording_url": "/api/recordings/call-1789563071.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Thank you for calling. This is Riley, your virtual receptionist. How may I help you today?",
+          "timestamp": "16:51:11",
+          "latency_ms": 45
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789563480",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 16:58:00",
+      "ended_at": "2026-09-16 16:58:08",
+      "duration_seconds": 8.9,
+      "recording_url": "/api/recordings/call-1789563480.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Thank you for calling. This is Riley, your virtual receptionist. How may I help you today?",
+          "timestamp": "16:58:00",
+          "latency_ms": 45
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789564525",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 17:15:25",
+      "ended_at": "2026-09-16 17:15:57",
+      "duration_seconds": 31.6,
+      "recording_url": "/api/recordings/call-1789564525.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Thank you for calling. This is Riley, your virtual receptionist. How may I help you today?",
+          "timestamp": "17:15:25",
+          "latency_ms": 45
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789564621",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 17:17:01",
+      "ended_at": "2026-09-16 17:17:19",
+      "duration_seconds": 18.0,
+      "recording_url": "/api/recordings/call-1789564621.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Thank you for calling. This is Riley, your virtual receptionist. How may I help you today?",
+          "timestamp": "17:17:01",
+          "latency_ms": 45
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789565305",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 17:28:25",
+      "ended_at": "2026-09-16 17:28:33",
+      "duration_seconds": 8.0,
+      "recording_url": "/api/recordings/call-1789565305.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Thank you for calling. This is Riley, your virtual receptionist. How may I help you today?",
+          "timestamp": "17:28:27",
+          "latency_ms": 45
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789565369",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 17:29:29",
+      "ended_at": "2026-09-16 17:29:29",
+      "duration_seconds": 0.1,
+      "recording_url": "/api/recordings/call-1789565369.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Thank you for calling. This is Riley, your virtual receptionist. How may I help you today?",
+          "timestamp": "17:29:29",
+          "latency_ms": 45
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789565379",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 17:29:39",
+      "ended_at": "2026-09-16 17:29:39",
+      "duration_seconds": 0.1,
+      "recording_url": "/api/recordings/call-1789565379.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Thank you for calling. This is Riley, your virtual receptionist. How may I help you today?",
+          "timestamp": "17:29:39",
+          "latency_ms": 45
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789565486",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 17:31:26",
+      "ended_at": "2026-09-16 17:32:15",
+      "duration_seconds": 49.0,
+      "recording_url": "/api/recordings/call-1789565486.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Thank you for calling. This is Riley, your virtual receptionist. How may I help you today?",
+          "timestamp": "17:31:26",
+          "latency_ms": 45
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789566347",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 17:45:47",
+      "ended_at": "2026-09-16 17:45:55",
+      "duration_seconds": 8.0,
+      "recording_url": "/api/recordings/call-1789566347.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Thank you for calling. This is Riley, your virtual receptionist. How may I help you today?",
+          "timestamp": "17:45:49",
+          "latency_ms": 45
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789566413",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 17:46:53",
+      "ended_at": "2026-09-16 17:46:53",
+      "duration_seconds": 0.1,
+      "recording_url": "/api/recordings/call-1789566413.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Thank you for calling. This is Riley, your virtual receptionist. How may I help you today?",
+          "timestamp": "17:46:53",
+          "latency_ms": 45
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789566421",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 17:47:01",
+      "ended_at": "2026-09-16 17:47:01",
+      "duration_seconds": 0.1,
+      "recording_url": "/api/recordings/call-1789566421.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Thank you for calling. This is Riley, your virtual receptionist. How may I help you today?",
+          "timestamp": "17:47:01",
+          "latency_ms": 45
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789566672",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 17:51:12",
+      "ended_at": "2026-09-16 17:51:45",
+      "duration_seconds": 33.0,
+      "recording_url": "/api/recordings/call-1789566672.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Thank you for calling. This is Riley, your virtual receptionist. How may I help you today?",
+          "timestamp": "17:51:12",
+          "latency_ms": 45
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789567268",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 18:01:08",
+      "ended_at": "2026-09-16 18:01:09",
+      "duration_seconds": 0.8,
+      "recording_url": "/api/recordings/call-1789567268.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Thank you for calling. This is Riley, your virtual receptionist. How may I help you today?",
+          "timestamp": "18:01:09"
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789567291",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 18:01:31",
+      "ended_at": "2026-09-16 18:01:39",
+      "duration_seconds": 8.0,
+      "recording_url": "/api/recordings/call-1789567291.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Thank you for calling. This is Riley, your virtual receptionist. How may I help you today?",
+          "timestamp": "18:01:39"
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789567557",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 18:05:57",
+      "ended_at": "2026-09-16 18:06:23",
+      "duration_seconds": 25.4,
+      "recording_url": "/api/recordings/call-1789567557.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Thank you for calling. This is Riley, your virtual receptionist. How may I help you today?",
+          "timestamp": "18:06:23"
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789567592",
+      "assistant_id": "aria-concierge",
+      "assistant_name": "Aria Executive",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 18:06:32",
+      "ended_at": "2026-09-16 18:06:45",
+      "duration_seconds": 12.7,
+      "recording_url": "/api/recordings/call-1789567592.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hi there! I'm Aria, your executive assistant. How can I assist you today?",
+          "timestamp": "18:06:45"
+        },
+        {
+          "speaker": "customer",
+          "text": "You're not going to get the money.",
+          "timestamp": "18:06:45"
+        }
+      ],
+      "turn_count": 2,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789568271",
+      "assistant_id": "aria-concierge",
+      "assistant_name": "Aria Executive",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 18:17:51",
+      "ended_at": "2026-09-16 18:17:59",
+      "duration_seconds": 8.3,
+      "recording_url": "/api/recordings/call-1789568271.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hi there! I'm Aria, your executive assistant. How can I assist you today?",
+          "timestamp": "18:17:59"
+        },
+        {
+          "speaker": "customer",
+          "text": "Yeah, hi there. Can you hear me?",
+          "timestamp": "18:17:59"
+        }
+      ],
+      "turn_count": 2,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789568333",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 18:18:53",
+      "ended_at": "2026-09-16 18:18:53",
+      "duration_seconds": 0.1,
+      "recording_url": "/api/recordings/call-1789568333.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Thank you for calling. This is Riley, your virtual receptionist. How may I help you today?",
+          "timestamp": "18:18:53"
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789568370",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 18:19:30",
+      "ended_at": "2026-09-16 18:19:38",
+      "duration_seconds": 8.0,
+      "recording_url": "/api/recordings/call-1789568370.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Thank you for calling. This is Riley, your virtual receptionist. How may I help you today?",
+          "timestamp": "18:19:38"
+        },
+        {
+          "speaker": "customer",
+          "text": "Yeah, hi there. Can you hear me?",
+          "timestamp": "18:19:38"
+        }
+      ],
+      "turn_count": 2,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789568421",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 18:20:21",
+      "ended_at": "2026-09-16 18:23:09",
+      "duration_seconds": 167.3,
+      "recording_url": "/api/recordings/call-1789568421.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Thank you for calling. This is Riley, your virtual receptionist. How may I help you today?",
+          "timestamp": "18:23:09"
+        },
+        {
+          "speaker": "customer",
+          "text": "You're hiding in your home.",
+          "timestamp": "18:23:09"
+        },
+        {
+          "speaker": "assistant",
+          "text": "I'm sorry, I think you might have dialed the wrong number! This is Comfort Breeze HVAC, and I'm your scheduling assistant. Are you looking to set up an HVAC service appointment today?",
+          "timestamp": "18:23:09"
+        },
+        {
+          "speaker": "customer",
+          "text": "Yes.",
+          "timestamp": "18:23:09"
+        },
+        {
+          "speaker": "assistant",
+          "text": "Wonderful! What type of HVAC service are you looking for today? For example, AC repair, furnace maintenance, or system installation?",
+          "timestamp": "18:23:09"
+        },
+        {
+          "speaker": "customer",
+          "text": "You see?",
+          "timestamp": "18:23:09"
+        },
+        {
+          "speaker": "assistant",
+          "text": "I want to make sure I understand\u2014are you having trouble with your heating or cooling system today?",
+          "timestamp": "18:23:09"
+        },
+        {
+          "speaker": "customer",
+          "text": "with EC.",
+          "timestamp": "18:23:09"
+        },
+        {
+          "speaker": "assistant",
+          "text": "Ah, it sounds like you might be having some trouble with your AC unit. Let me help you get that taken care of! What is the address where the service is needed?",
+          "timestamp": "18:23:09"
+        },
+        {
+          "speaker": "customer",
+          "text": "and it goes 55414",
+          "timestamp": "18:23:09"
+        },
+        {
+          "speaker": "assistant",
+          "text": "Thank you! Just to confirm, is the zip code 55414? And what is the street address where the service is needed?",
+          "timestamp": "18:23:09"
+        },
+        {
+          "speaker": "customer",
+          "text": "2.5.0",
+          "timestamp": "18:23:09"
+        },
+        {
+          "speaker": "assistant",
+          "text": "Got it. Could you also let me know the rest of your street address along with 2.50?",
+          "timestamp": "18:23:09"
+        },
+        {
+          "speaker": "customer",
+          "text": "10th of the worst street",
+          "timestamp": "18:23:09"
+        },
+        {
+          "speaker": "customer",
+          "text": "You can't do it like this.",
+          "timestamp": "18:23:09"
+        },
+        {
+          "speaker": "assistant",
+          "text": "Let me make sure I have that right. Did you say 250 10th Avenue?",
+          "timestamp": "18:23:09"
+        },
+        {
+          "speaker": "customer",
+          "text": "Here.",
+          "timestamp": "18:23:09"
+        }
+      ],
+      "turn_count": 17,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789570626",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley Voice AI",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 18:57:06",
+      "ended_at": "2026-09-16 18:57:06",
+      "duration_seconds": 0.7,
+      "recording_url": "/api/recordings/call-1789570626.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hello! This is Riley, your voice AI assistant. How can I help you today?",
+          "timestamp": "18:57:06"
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789570649",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley Voice AI",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 18:57:29",
+      "ended_at": "2026-09-16 18:57:37",
+      "duration_seconds": 8.0,
+      "recording_url": "/api/recordings/call-1789570649.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hello! This is Riley, your voice AI assistant. How can I help you today?",
+          "timestamp": "18:57:37"
+        },
+        {
+          "speaker": "customer",
+          "text": "You're either paying for me.",
+          "timestamp": "18:57:37"
+        }
+      ],
+      "turn_count": 2,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789570958",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley Voice AI",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 19:02:38",
+      "ended_at": "2026-09-16 19:06:50",
+      "duration_seconds": 252.4,
+      "recording_url": "/api/recordings/call-1789570958.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hello! This is Riley, your voice AI assistant. How can I help you today?",
+          "timestamp": "19:06:50"
+        },
+        {
+          "speaker": "customer",
+          "text": "Yeah, I need some help.",
+          "timestamp": "19:06:50"
+        },
+        {
+          "speaker": "assistant",
+          "text": "I'd be happy to help. What's going on?",
+          "timestamp": "19:06:50"
+        },
+        {
+          "speaker": "customer",
+          "text": "So, what do you get you guys to?",
+          "timestamp": "19:06:50"
+        },
+        {
+          "speaker": "assistant",
+          "text": "Could you tell me a bit more about what you're looking for? We can help with customer support, scheduling appointments, and general questions.",
+          "timestamp": "19:06:50"
+        },
+        {
+          "speaker": "customer",
+          "text": "I need to book a point.",
+          "timestamp": "19:06:50"
+        },
+        {
+          "speaker": "customer",
+          "text": "It fits my AEC.",
+          "timestamp": "19:06:50"
+        },
+        {
+          "speaker": "assistant",
+          "text": "I can definitely help you schedule an appointment. What service would you like to book?",
+          "timestamp": "19:06:50"
+        },
+        {
+          "speaker": "assistant",
+          "text": "I can definitely help you schedule an appointment! What kind of service or department is this for?",
+          "timestamp": "19:06:50"
+        },
+        {
+          "speaker": "customer",
+          "text": "Can you hear me?",
+          "timestamp": "19:06:50"
+        },
+        {
+          "speaker": "assistant",
+          "text": "Yes, I hear you loud and clear! What kind of service would you like to schedule?",
+          "timestamp": "19:06:50"
+        },
+        {
+          "speaker": "customer",
+          "text": "Can I love? Cleaning Shops.",
+          "timestamp": "19:06:50"
+        },
+        {
+          "speaker": "assistant",
+          "text": "Sure thing \u2014 let me check that for you.",
+          "timestamp": "19:06:50"
+        },
+        {
+          "speaker": "customer",
+          "text": "Hi there.",
+          "timestamp": "19:06:50"
+        },
+        {
+          "speaker": "customer",
+          "text": "Hello?",
+          "timestamp": "19:06:50"
+        },
+        {
+          "speaker": "assistant",
+          "text": "I've got that appointment for Cleaning Shops booked for tomorrow, September 17th, at 10:00 AM. Your confirmation code is APT-88219. Is there anything else I can help you with?",
+          "timestamp": "19:06:50"
+        },
+        {
+          "speaker": "assistant",
+          "text": "I'm here! I've got your Cleaning Shops appointment scheduled for tomorrow, September 17th at 10:00 AM. Does that work for you?",
+          "timestamp": "19:06:50"
+        }
+      ],
+      "turn_count": 17,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789572132",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley Voice AI",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 19:22:12",
+      "ended_at": "2026-09-16 19:22:13",
+      "duration_seconds": 0.8,
+      "recording_url": "/api/recordings/call-1789572132.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hello! This is Riley, your voice AI assistant. How can I help you today?",
+          "timestamp": "19:22:13"
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789572161",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley Voice AI",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 19:22:41",
+      "ended_at": "2026-09-16 19:22:49",
+      "duration_seconds": 8.0,
+      "recording_url": "/api/recordings/call-1789572161.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hello! This is Riley, your voice AI assistant. How can I help you today?",
+          "timestamp": "19:22:49"
+        },
+        {
+          "speaker": "customer",
+          "text": "You're either paying for me.",
+          "timestamp": "19:22:49"
+        }
+      ],
+      "turn_count": 2,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789572371",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley Voice AI",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 19:26:11",
+      "ended_at": "2026-09-16 19:27:02",
+      "duration_seconds": 50.2,
+      "recording_url": "/api/recordings/call-1789572371.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hello! This is Riley, your voice AI assistant. How can I help you today?",
+          "timestamp": "19:27:02"
+        },
+        {
+          "speaker": "customer",
+          "text": "Yeah, I am there. Are you here?",
+          "timestamp": "19:27:02"
+        },
+        {
+          "speaker": "assistant",
+          "text": "Yes, I hear you loud and clear! How are you doing today?",
+          "timestamp": "19:27:02"
+        }
+      ],
+      "turn_count": 3,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789576052",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley Voice AI",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 20:27:32",
+      "ended_at": "2026-09-16 20:27:32",
+      "duration_seconds": 0.7,
+      "recording_url": "/api/recordings/call-1789576052.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hello! This is Riley, your voice AI assistant. How can I help you today?",
+          "timestamp": "20:27:32"
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789576341",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley Voice AI",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 20:32:21",
+      "ended_at": "2026-09-16 20:32:21",
+      "duration_seconds": 0.0,
+      "recording_url": "/api/recordings/call-1789576341.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hello! This is Riley, your voice AI assistant. How can I help you today?",
+          "timestamp": "20:32:21"
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789576666",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley Voice AI",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 20:37:46",
+      "ended_at": "2026-09-16 20:37:57",
+      "duration_seconds": 10.9,
+      "recording_url": "/api/recordings/call-1789576666.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hello! This is Riley, your voice AI assistant. How can I help you today?",
+          "timestamp": "20:37:57"
+        },
+        {
+          "speaker": "customer",
+          "text": "I think you might have dialed the wrong number.",
+          "timestamp": "20:37:57"
+        },
+        {
+          "speaker": "customer",
+          "text": "This is Comfort Breeze HVAC.",
+          "timestamp": "20:37:57"
+        },
+        {
+          "speaker": "assistant",
+          "text": "Oh, I am so sorry about that! Did you still need assistance with anything today?",
+          "timestamp": "20:37:57"
+        }
+      ],
+      "turn_count": 4,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789577752",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley Voice AI",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 20:55:52",
+      "ended_at": "2026-09-16 20:56:29",
+      "duration_seconds": 36.7,
+      "recording_url": "/api/recordings/call-1789577752.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hello! This is Riley, your voice AI assistant. How can I help you today?",
+          "timestamp": "20:56:29"
+        },
+        {
+          "speaker": "customer",
+          "text": "Yeah, I did.  Can you hear me?",
+          "timestamp": "20:56:29"
+        },
+        {
+          "speaker": "assistant",
+          "text": "Yes, I hear you loud and clear! How are you doing today?",
+          "timestamp": "20:56:29"
+        },
+        {
+          "speaker": "customer",
+          "text": "Bye, cheers from Jelaine.",
+          "timestamp": "20:56:29"
+        },
+        {
+          "speaker": "assistant",
+          "text": "Goodbye, Jelaine! Have a wonderful rest of your day.",
+          "timestamp": "20:56:29"
+        }
+      ],
+      "turn_count": 5,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789577791",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley Voice AI",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 20:56:31",
+      "ended_at": "2026-09-16 20:57:10",
+      "duration_seconds": 38.9,
+      "recording_url": "/api/recordings/call-1789577791.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hello! This is Riley, your voice AI assistant. How can I help you today?",
+          "timestamp": "20:57:10"
+        },
+        {
+          "speaker": "customer",
+          "text": "and you'll help me with that",
+          "timestamp": "20:57:10"
+        },
+        {
+          "speaker": "assistant",
+          "text": "I would be happy to help you with that. What do you need assistance with?",
+          "timestamp": "20:57:10"
+        }
+      ],
+      "turn_count": 3,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789577840",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley Voice AI",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 20:57:20",
+      "ended_at": "2026-09-16 20:57:40",
+      "duration_seconds": 20.5,
+      "recording_url": "/api/recordings/call-1789577840.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hello! This is Riley, your voice AI assistant. How can I help you today?",
+          "timestamp": "20:57:40"
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789579513",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley Voice AI",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 21:25:13",
+      "ended_at": "2026-09-16 21:25:14",
+      "duration_seconds": 1.6,
+      "recording_url": "/api/recordings/call-1789579513.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hello! This is Riley, your voice AI assistant. How can I help you today?",
+          "timestamp": "21:25:14"
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789579727",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley Voice AI",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 21:28:47",
+      "ended_at": "2026-09-16 21:28:49",
+      "duration_seconds": 2.3,
+      "recording_url": "/api/recordings/call-1789579727.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hello! This is Riley, your voice AI assistant. How can I help you today?",
+          "timestamp": "21:28:49"
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789581130",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley Voice AI",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 21:52:10",
+      "ended_at": "2026-09-16 21:52:10",
+      "duration_seconds": 0.8,
+      "recording_url": "/api/recordings/call-1789581130.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hello! This is Riley, your voice AI assistant. How can I help you today?",
+          "timestamp": "21:52:10"
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789581193",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley Voice AI",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 21:53:13",
+      "ended_at": "2026-09-16 21:53:24",
+      "duration_seconds": 10.9,
+      "recording_url": "/api/recordings/call-1789581193.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hello! This is Riley, your voice AI assistant. How can I help you today?",
+          "timestamp": "21:53:24"
+        },
+        {
+          "speaker": "customer",
+          "text": "I think you might have dialed the wrong number.",
+          "timestamp": "21:53:24"
+        },
+        {
+          "speaker": "customer",
+          "text": "This is Comfort Breeze HVAC.",
+          "timestamp": "21:53:24"
+        }
+      ],
+      "turn_count": 3,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789581354",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley Voice AI",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 21:55:54",
+      "ended_at": "2026-09-16 21:56:06",
+      "duration_seconds": 12.2,
+      "recording_url": "/api/recordings/call-1789581354.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hello! This is Riley, your voice AI assistant. How can I help you today?",
+          "timestamp": "21:56:06"
+        },
+        {
+          "speaker": "customer",
+          "text": "I want to schedule an appointment for Friday morning.",
+          "timestamp": "21:56:06"
+        },
+        {
+          "speaker": "assistant",
+          "text": "I'd be happy to help you schedule that! What time on Friday morning works best for you?",
+          "timestamp": "21:56:06"
+        }
+      ],
+      "turn_count": 3,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789581642",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley Voice AI",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 22:00:42",
+      "ended_at": "2026-09-16 22:02:25",
+      "duration_seconds": 103.7,
+      "recording_url": "/api/recordings/call-1789581642.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hello! This is Riley, your voice AI assistant. How can I help you today?",
+          "timestamp": "22:02:25"
+        },
+        {
+          "speaker": "customer",
+          "text": "Hi there, can you hear me?",
+          "timestamp": "22:02:25"
+        },
+        {
+          "speaker": "assistant",
+          "text": "Loud and clear! How can I help you today?",
+          "timestamp": "22:02:25"
+        },
+        {
+          "speaker": "customer",
+          "text": "He has a question.",
+          "timestamp": "22:02:25"
+        },
+        {
+          "speaker": "assistant",
+          "text": "What is his question?",
+          "timestamp": "22:02:25"
+        },
+        {
+          "speaker": "customer",
+          "text": "Can you hook me with something?",
+          "timestamp": "22:02:25"
+        },
+        {
+          "speaker": "assistant",
+          "text": "I'd love to help, but what kind of topic or information are you looking for?",
+          "timestamp": "22:02:25"
+        },
+        {
+          "speaker": "customer",
+          "text": "All kinds of stuff you can help with.",
+          "timestamp": "22:02:25"
+        },
+        {
+          "speaker": "assistant",
+          "text": "I can help with general questions, customer support, or scheduling. What's on your mind?",
+          "timestamp": "22:02:25"
+        },
+        {
+          "speaker": "customer",
+          "text": "can help you to get one.",
+          "timestamp": "22:02:25"
+        },
+        {
+          "speaker": "assistant",
+          "text": "That sounds interesting, but could you tell me a bit more about what you need?",
+          "timestamp": "22:02:25"
+        },
+        {
+          "speaker": "customer",
+          "text": "and you always wish for an appointment with the department.",
+          "timestamp": "22:02:25"
+        },
+        {
+          "speaker": "assistant",
+          "text": "Would you like me to help you schedule an appointment with a specific department?",
+          "timestamp": "22:02:25"
+        },
+        {
+          "speaker": "customer",
+          "text": "Yeah, thanks for",
+          "timestamp": "22:02:25"
+        },
+        {
+          "speaker": "assistant",
+          "text": "You're very welcome! Which department would you like to schedule that appointment with?",
+          "timestamp": "22:02:25"
+        },
+        {
+          "speaker": "customer",
+          "text": "Let's back",
+          "timestamp": "22:02:25"
+        },
+        {
+          "speaker": "assistant",
+          "text": "No problem at all. Where would you like to start?",
+          "timestamp": "22:02:25"
+        },
+        {
+          "speaker": "customer",
+          "text": "You give me directions.",
+          "timestamp": "22:02:25"
+        },
+        {
+          "speaker": "assistant",
+          "text": "I can certainly help with directions, but where are you trying to go?",
+          "timestamp": "22:02:25"
+        }
+      ],
+      "turn_count": 19,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789583575",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley Voice AI",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 22:32:55",
+      "ended_at": "2026-09-16 22:32:56",
+      "duration_seconds": 0.6,
+      "recording_url": "/api/recordings/call-1789583575.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hello! This is Riley, your voice AI assistant. How can I help you today?",
+          "timestamp": "22:32:56"
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-simulation-kaelen-vash",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley Voice AI",
+      "caller": "+1 (555) 234-5678",
+      "called": "+1 (800) 555-0199",
+      "started_at": "2026-09-16 22:57:41",
+      "ended_at": "2026-09-16 22:59:25",
+      "duration_seconds": 104.4,
+      "recording_url": "/api/recordings/call-simulation-kaelen-vash.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "speaker_name": "Riley",
+          "text": "Hello! This is Riley, your voice AI assistant. How can I help you today?",
+          "timestamp": "00:00:00",
+          "start_offset": 0.0,
+          "duration": 4.31,
+          "latency_ms": 14.5
+        },
+        {
+          "speaker": "user",
+          "speaker_name": "Kaelen Vash",
+          "text": "Hi Riley, my AC is blowing completely warm air and making a rattling noise. Can you get someone out here?",
+          "timestamp": "00:00:04",
+          "start_offset": 4.76,
+          "duration": 6.4,
+          "latency_ms": 0.0
+        },
+        {
+          "speaker": "assistant",
+          "speaker_name": "Riley",
+          "text": "I'd be glad to help with that! Let's get our technician scheduled to look at that rattling noise for you. May I have your first and last name, please?",
+          "timestamp": "00:00:11",
+          "start_offset": 11.61,
+          "duration": 7.68,
+          "latency_ms": 14.5
+        },
+        {
+          "speaker": "user",
+          "speaker_name": "Kaelen Vash",
+          "text": "My name is Kaelen Vash.",
+          "timestamp": "00:00:19",
+          "start_offset": 19.74,
+          "duration": 1.49,
+          "latency_ms": 0.0
+        },
+        {
+          "speaker": "assistant",
+          "speaker_name": "Riley",
+          "text": "Thank you, Kaelen. Could you quickly spell your last name out for me just so our technician has it one hundred percent accurate in our dispatch system?",
+          "timestamp": "00:00:21",
+          "start_offset": 21.68,
+          "duration": 8.02,
+          "latency_ms": 14.5
+        },
+        {
+          "speaker": "user",
+          "speaker_name": "Kaelen Vash",
+          "text": "Sure, that's K-A-E-L-E-N, last name V-A-S-H.",
+          "timestamp": "00:00:30",
+          "start_offset": 30.15,
+          "duration": 2.79,
+          "latency_ms": 0.0
+        },
+        {
+          "speaker": "assistant",
+          "speaker_name": "Riley",
+          "text": "Thank you for spelling that out for me. What is the street address where you would like our technician to visit?",
+          "timestamp": "00:00:33",
+          "start_offset": 33.4,
+          "duration": 5.38,
+          "latency_ms": 14.5
+        },
+        {
+          "speaker": "user",
+          "speaker_name": "Kaelen Vash",
+          "text": "The address is 742 Evergreen Terrace, Springfield.",
+          "timestamp": "00:00:39",
+          "start_offset": 39.22,
+          "duration": 3.8,
+          "latency_ms": 0.0
+        },
+        {
+          "speaker": "assistant",
+          "speaker_name": "Riley",
+          "text": "Thank you, Kaelen. We have openings tomorrow morning around ten o'clock or Thursday afternoon around two o'clock. Which day and time works best for you?",
+          "timestamp": "00:00:43",
+          "start_offset": 43.47,
+          "duration": 8.66,
+          "latency_ms": 14.5
+        },
+        {
+          "speaker": "user",
+          "speaker_name": "Kaelen Vash",
+          "text": "Tomorrow morning around 10 AM works great for me.",
+          "timestamp": "00:00:52",
+          "start_offset": 52.58,
+          "duration": 2.84,
+          "latency_ms": 0.0
+        },
+        {
+          "speaker": "assistant",
+          "speaker_name": "Riley",
+          "text": "I have that noted down. Can we send your technician arrival updates and confirmation text to this phone number, or is there a different mobile number you prefer?",
+          "timestamp": "00:00:55",
+          "start_offset": 55.87,
+          "duration": 9.09,
+          "latency_ms": 14.5
+        },
+        {
+          "speaker": "user",
+          "speaker_name": "Kaelen Vash",
+          "text": "Yes, you can text this number, that's fine.",
+          "timestamp": "00:01:05",
+          "start_offset": 65.41,
+          "duration": 2.2,
+          "latency_ms": 0.0
+        },
+        {
+          "speaker": "assistant",
+          "speaker_name": "Riley",
+          "text": "Wonderful. And what is the best email address to send your Google Calendar invite and service confirmation?",
+          "timestamp": "00:01:08",
+          "start_offset": 68.06,
+          "duration": 6.23,
+          "latency_ms": 14.5
+        },
+        {
+          "speaker": "user",
+          "speaker_name": "Kaelen Vash",
+          "text": "My email is kaelen.vash@gmail.com.",
+          "timestamp": "00:01:14",
+          "start_offset": 74.74,
+          "duration": 2.77,
+          "latency_ms": 0.0
+        },
+        {
+          "speaker": "assistant",
+          "speaker_name": "Riley",
+          "text": "Just to double-check that, that is kaelen dot vash at gmail dot com, correct?",
+          "timestamp": "00:01:17",
+          "start_offset": 77.96,
+          "duration": 4.74,
+          "latency_ms": 14.5
+        },
+        {
+          "speaker": "user",
+          "speaker_name": "Kaelen Vash",
+          "text": "Yes, that's correct.",
+          "timestamp": "00:01:23",
+          "start_offset": 83.14,
+          "duration": 1.11,
+          "latency_ms": 0.0
+        },
+        {
+          "speaker": "assistant",
+          "speaker_name": "Riley",
+          "text": "You are all set, Kaelen! We have you booked for your air conditioning repair tomorrow morning at ten o'clock at seventy-four-two Evergreen Terrace. Is there anything else I can assist you with today?",
+          "timestamp": "00:01:24",
+          "start_offset": 84.7,
+          "duration": 10.75,
+          "latency_ms": 14.5
+        },
+        {
+          "speaker": "user",
+          "speaker_name": "Kaelen Vash",
+          "text": "No, that's everything. Thank you so much!",
+          "timestamp": "00:01:35",
+          "start_offset": 95.91,
+          "duration": 2.22,
+          "latency_ms": 0.0
+        },
+        {
+          "speaker": "assistant",
+          "speaker_name": "Riley",
+          "text": "You are very welcome, Kaelen! Have a wonderful day, and our technician will see you tomorrow morning.",
+          "timestamp": "00:01:38",
+          "start_offset": 98.57,
+          "duration": 5.4,
+          "latency_ms": 14.5
+        }
+      ],
+      "turn_count": 19,
+      "status": "completed",
+      "extracted_info": {
+        "client_name": "Kaelen Vash",
+        "client_phone": "+1 (555) 234-5678",
+        "client_email": "kaelen.vash@gmail.com",
+        "service_requested": "AC Repair (warm air and rattling noise)",
+        "service_address": "742 Evergreen Terrace, Springfield",
+        "appointment_date": "2026-09-17",
+        "appointment_time": "10:00 AM",
+        "has_appointment": true,
+        "summary": "Kaelen Vash called because their AC is blowing warm air and making a rattling noise. An appointment was successfully scheduled for tomorrow morning at 10:00 AM at 742 Evergreen Terrace.",
+        "urgency": "medium",
+        "customer_name": "Kaelen Vash",
+        "email": "kaelen.vash@gmail.com",
+        "phone": "+1 (555) 234-5678",
+        "address": "742 Evergreen Terrace, Springfield"
+      },
+      "google_calendar_url": "https://calendar.google.com/calendar/render?action=TEMPLATE&text=AC+Repair+%28warm+air+and+rattling+noise%29+%E2%80%94+Kaelen+Vash&dates=20260917T100000%2F20260917T110000&details=Service%3A+AC+Repair+%28warm+air+and+rattling+noise%29%0ACustomer+Name%3A+Kaelen+Vash%0AContact+Phone%3A+%2B1+%28555%29+234-5678%0ALocation%3A+742+Evergreen+Terrace%2C+Springfield%0A%0ANotes+from+Call%3A%0AKaelen+Vash+called+because+their+AC+is+blowing+warm+air+and+making+a+rattling+noise.+An+appointment+was+successfully+scheduled+for+tomorrow+morning+at+10%3A00+AM+at+742+Evergreen+Terrace.%0A%0ABooked+automatically+by+Riley+Voice+AI+Voice+AI.&location=742+Evergreen+Terrace%2C+Springfield",
+      "has_appointment": true
+    },
+    {
+      "call_id": "call-1789585890",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley Voice AI",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 23:11:30",
+      "ended_at": "2026-09-16 23:11:30",
+      "duration_seconds": 0.8,
+      "recording_url": "/api/recordings/call-1789585890.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hello! This is Riley, your voice AI assistant. How can I help you today?",
+          "timestamp": "23:11:30"
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789586183",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley Voice AI",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 23:16:23",
+      "ended_at": "2026-09-16 23:16:31",
+      "duration_seconds": 7.9,
+      "recording_url": "/api/recordings/call-1789586183.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hello! This is Riley, your voice AI assistant. How can I help you today?",
+          "timestamp": "23:16:31"
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789586234",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley Voice AI",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 23:17:14",
+      "ended_at": "2026-09-16 23:17:21",
+      "duration_seconds": 7.0,
+      "recording_url": "/api/recordings/call-1789586234.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hello! This is Riley, your voice AI assistant. How can I help you today?",
+          "timestamp": "23:17:21"
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789587005",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley Voice AI",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 23:30:05",
+      "ended_at": "2026-09-16 23:30:05",
+      "duration_seconds": 0.7,
+      "recording_url": "/api/recordings/call-1789587005.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hello! This is Riley, your voice AI assistant. How can I help you today?",
+          "timestamp": "23:30:05"
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789587073",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley Voice AI",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 23:31:13",
+      "ended_at": "2026-09-16 23:31:17",
+      "duration_seconds": 4.8,
+      "recording_url": "/api/recordings/call-1789587073.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hello! This is Riley, your voice AI assistant. How can I help you today?",
+          "timestamp": "23:31:17"
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789587125",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley Voice AI",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-16 23:32:05",
+      "ended_at": "2026-09-16 23:32:09",
+      "duration_seconds": 3.7,
+      "recording_url": "/api/recordings/call-1789587125.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hello! This is Riley, your voice AI assistant. How can I help you today?",
+          "timestamp": "23:32:09"
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789627152",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley Voice AI",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-17 10:39:12",
+      "ended_at": "2026-09-17 10:39:13",
+      "duration_seconds": 0.7,
+      "recording_url": "/api/recordings/call-1789627152.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hello! This is Riley, your voice AI assistant. How can I help you today?",
+          "timestamp": "10:39:13"
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789627171",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley Voice AI",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-17 10:39:31",
+      "ended_at": "2026-09-17 10:39:57",
+      "duration_seconds": 25.5,
+      "recording_url": "/api/recordings/call-1789627171.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hello! This is Riley, your voice AI assistant. How can I help you today?",
+          "timestamp": "10:39:57"
+        }
+      ],
+      "turn_count": 1,
+      "status": "completed"
+    },
+    {
+      "call_id": "call-1789630582",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley Voice AI",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-17 11:36:22",
+      "ended_at": "2026-09-17 11:36:32",
+      "duration_seconds": 10.1,
+      "recording_url": "/api/recordings/call-1789630582.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hello! This is Riley, your voice AI assistant. How can I help you today?",
+          "timestamp": "11:36:32"
+        },
+        {
+          "speaker": "customer",
+          "text": "I think you might have dialed the wrong number.",
+          "timestamp": "11:36:32"
+        },
+        {
+          "speaker": "customer",
+          "text": "This is comfort, Breeze HVAC.",
+          "timestamp": "11:36:32"
+        }
+      ],
+      "turn_count": 3,
+      "status": "completed",
+      "extracted_info": {
+        "client_name": "",
+        "client_phone": "Unknown",
+        "client_email": "",
+        "service_requested": "",
+        "service_address": "",
+        "appointment_date": "",
+        "appointment_time": "",
+        "has_appointment": false,
+        "summary": "The AI assistant reached out to Breeze HVAC, and the person who answered stated it was the wrong number. No appointment or service was requested.",
+        "urgency": "low",
+        "customer_name": "",
+        "email": "",
+        "phone": "Unknown",
+        "address": ""
+      },
+      "google_calendar_url": "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Service+Appointment+%E2%80%94+Customer&dates=20260918T100000%2F20260918T110000&details=Service%3A+Service+Appointment%0ACustomer+Name%3A+Customer%0AContact+Phone%3A+Unknown%0ALocation%3A+%0A%0ANotes+from+Call%3A%0AThe+AI+assistant+reached+out+to+Breeze+HVAC%2C+and+the+person+who+answered+stated+it+was+the+wrong+number.+No+appointment+or+service+was+requested.%0A%0ABooked+automatically+by+Riley+Voice+AI+Voice+AI.&location=",
+      "has_appointment": false
+    },
+    {
+      "call_id": "call-1789630619",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley Voice AI",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-17 11:36:59",
+      "ended_at": "2026-09-17 11:37:05",
+      "duration_seconds": 6.2,
+      "recording_url": "/api/recordings/call-1789630619.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hello! This is Riley, your voice AI assistant. How can I help you today?",
+          "timestamp": "11:37:05"
+        },
+        {
+          "speaker": "customer",
+          "text": "My AC is blowing warm air and making a rattling noise.",
+          "timestamp": "11:37:05"
+        }
+      ],
+      "turn_count": 2,
+      "status": "completed",
+      "extracted_info": {
+        "client_name": "",
+        "client_phone": "Unknown",
+        "client_email": "",
+        "service_requested": "AC Repair (blowing warm air and making a rattling noise)",
+        "service_address": "",
+        "appointment_date": "",
+        "appointment_time": "",
+        "has_appointment": false,
+        "summary": "The customer called because their AC is blowing warm air and making a rattling noise. No appointment or next steps were discussed yet.",
+        "urgency": "medium",
+        "customer_name": "",
+        "email": "",
+        "phone": "Unknown",
+        "address": ""
+      },
+      "google_calendar_url": "https://calendar.google.com/calendar/render?action=TEMPLATE&text=AC+Repair+%28blowing+warm+air+and+making+a+rattling+noise%29+%E2%80%94+Customer&dates=20260918T100000%2F20260918T110000&details=Service%3A+AC+Repair+%28blowing+warm+air+and+making+a+rattling+noise%29%0ACustomer+Name%3A+Customer%0AContact+Phone%3A+Unknown%0ALocation%3A+%0A%0ANotes+from+Call%3A%0AThe+customer+called+because+their+AC+is+blowing+warm+air+and+making+a+rattling+noise.+No+appointment+or+next+steps+were+discussed+yet.%0A%0ABooked+automatically+by+Riley+Voice+AI+Voice+AI.&location=",
+      "has_appointment": false
+    },
+    {
+      "call_id": "call-1789631049",
+      "assistant_id": "riley-hvac",
+      "assistant_name": "Riley Voice AI",
+      "caller": "Web Browser User",
+      "called": "Aria Voice Line",
+      "started_at": "2026-09-17 11:44:09",
+      "ended_at": "2026-09-17 11:44:21",
+      "duration_seconds": 11.7,
+      "recording_url": "/api/recordings/call-1789631049.wav",
+      "transcript": [
+        {
+          "speaker": "assistant",
+          "text": "Hello! This is Riley, your voice AI assistant. How can I help you today?",
+          "timestamp": "11:44:21"
+        },
+        {
+          "speaker": "customer",
+          "text": "My AC is blowing warm air and making a rattling noise.",
+          "timestamp": "11:44:21"
+        }
+      ],
+      "turn_count": 2,
+      "status": "completed",
+      "extracted_info": {
+        "client_name": "",
+        "client_phone": "Unknown",
+        "client_email": "",
+        "service_requested": "AC repair for unit blowing warm air and making a rattling noise",
+        "service_address": "",
+        "appointment_date": "",
+        "appointment_time": "",
+        "has_appointment": false,
+        "summary": "The customer reported that their air conditioner is blowing warm air and making a rattling noise. No appointment or next steps were discussed in this brief exchange.",
+        "urgency": "medium",
+        "customer_name": "",
+        "email": "",
+        "phone": "Unknown",
+        "address": ""
+      },
+      "google_calendar_url": "https://calendar.google.com/calendar/render?action=TEMPLATE&text=AC+repair+for+unit+blowing+warm+air+and+making+a+rattling+noise+%E2%80%94+Customer&dates=20260918T100000%2F20260918T110000&details=Service%3A+AC+repair+for+unit+blowing+warm+air+and+making+a+rattling+noise%0ACustomer+Name%3A+Customer%0AContact+Phone%3A+Unknown%0ALocation%3A+%0A%0ANotes+from+Call%3A%0AThe+customer+reported+that+their+air+conditioner+is+blowing+warm+air+and+making+a+rattling+noise.+No+appointment+or+next+steps+were+discussed+in+this+brief+exchange.%0A%0ABooked+automatically+by+Riley+Voice+AI+Voice+AI.&location=",
+      "has_appointment": false
+    }
+  ]
+}

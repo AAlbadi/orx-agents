@@ -1,0 +1,14 @@
+{
+  "client_id": "cli_3i5i1vo",
+  "calendar_id": "primary",
+  "service_account_json": "",
+  "calendar_webhook_url": "",
+  "sync_enabled": 1,
+  "morning_slot_capacity": 2,
+  "afternoon_slot_capacity": 2,
+  "evening_slot_capacity": 2,
+  "is_connected": 0,
+  "last_tested_at": null,
+  "last_status": "untested",
+  "last_error": null
+}

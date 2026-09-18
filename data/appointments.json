@@ -1,0 +1,2624 @@
+{
+  "appointments": [
+    {
+      "id": "APT-24404",
+      "call_id": "test_call_101",
+      "client_name": "Sarah Jenkins",
+      "client_phone": "+14155559876",
+      "service_requested": "High-Efficiency Heat Pump Tune-Up",
+      "service_address": "742 Evergreen Terrace",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T14:25:10.277164",
+      "summary": "Customer AC blowing warm air, wants Friday morning inspection.",
+      "google_event_id": null,
+      "confirmed_at": "2026-09-18T14:25:10.279088"
+    },
+    {
+      "id": "APT-92725",
+      "call_id": "test_call_102",
+      "client_name": "David Miller",
+      "client_phone": "+14155553333",
+      "service_requested": "Compressor Replacement",
+      "service_address": "124 Conch Street",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T14:25:10.279447",
+      "summary": "Compressor humming but no cooling.",
+      "google_event_id": null,
+      "confirmed_at": "2026-09-18T14:25:38.895556"
+    },
+    {
+      "id": "APT-80911",
+      "call_id": "test_call_101",
+      "client_name": "Sarah Jenkins",
+      "client_phone": "+14155559876",
+      "service_requested": "High-Efficiency Heat Pump Tune-Up",
+      "service_address": "742 Evergreen Terrace",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T14:25:38.523572",
+      "summary": "Customer AC blowing warm air, wants Friday morning inspection.",
+      "google_event_id": null,
+      "confirmed_at": "2026-09-18T14:25:38.527216"
+    },
+    {
+      "id": "APT-57362",
+      "call_id": "test_call_102",
+      "client_name": "David Miller",
+      "client_phone": "+14155553333",
+      "service_requested": "Compressor Replacement",
+      "service_address": "124 Conch Street",
+      "appointment_date": "2026-09-25",
+      "window": "afternoon",
+      "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T14:25:38.527672",
+      "summary": "Compressor humming but no cooling.",
+      "google_event_id": null,
+      "confirmed_at": "2026-09-18T14:25:38.528742"
+    },
+    {
+      "id": "APT-80710",
+      "call_id": "test_call_101",
+      "client_name": "Sarah Jenkins",
+      "client_phone": "+14155559876",
+      "service_requested": "High-Efficiency Heat Pump Tune-Up",
+      "service_address": "742 Evergreen Terrace",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T14:32:08.153226",
+      "summary": "Customer AC blowing warm air, wants Friday morning inspection.",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-80710",
+      "google_event_id": null,
+      "confirmed_at": "2026-09-18T14:32:08.154892"
+    },
+    {
+      "id": "APT-35263",
+      "call_id": "call_102",
+      "client_name": "Mike Henderson",
+      "client_phone": "+14155551111",
+      "service_requested": "Emergency AC Leak",
+      "service_address": "88 Ocean Avenue",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "pending_owner_approval",
+      "created_at": "2026-09-18T14:32:08.155408",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-35263",
+      "google_event_id": null
+    },
+    {
+      "id": "APT-46645",
+      "call_id": "test_call_101",
+      "client_name": "Sarah Jenkins",
+      "client_phone": "+14155559876",
+      "service_requested": "High-Efficiency Heat Pump Tune-Up",
+      "service_address": "742 Evergreen Terrace",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T14:32:54.522718",
+      "summary": "Customer AC blowing warm air, wants Friday morning inspection.",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-46645",
+      "google_event_id": null,
+      "confirmed_at": "2026-09-18T14:32:54.524519"
+    },
+    {
+      "id": "APT-25389",
+      "call_id": "call_102",
+      "client_name": "Mike Henderson",
+      "client_phone": "+14155551111",
+      "service_requested": "Emergency AC Leak",
+      "service_address": "88 Ocean Avenue",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T14:32:54.525060",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-25389",
+      "google_event_id": null,
+      "confirmed_at": "2026-09-18T14:32:54.525973"
+    },
+    {
+      "id": "APT-15096",
+      "call_id": "call_103",
+      "client_name": "Alice Wong",
+      "client_phone": "+14155552222",
+      "service_requested": "Duct Inspection",
+      "service_address": "500 Market St",
+      "appointment_date": "2026-09-25",
+      "window": "afternoon",
+      "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)",
+      "status": "rescheduled_pending_customer",
+      "created_at": "2026-09-18T14:32:54.526580",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-15096",
+      "google_event_id": null
+    },
+    {
+      "id": "APT-62604",
+      "call_id": "call_104",
+      "client_name": "Carlos Gomez",
+      "client_phone": "+14155554444",
+      "service_requested": "Thermostat Installation",
+      "service_address": "77 Mission St",
+      "appointment_date": "2026-09-28",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "rescheduled_pending_customer",
+      "created_at": "2026-09-18T14:32:54.527851",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-62604",
+      "google_event_id": null
+    },
+    {
+      "id": "APT-76165",
+      "call_id": "call_105",
+      "client_name": "Tom Brady",
+      "client_phone": "+14155557777",
+      "service_requested": "Commercial Rooftop AC",
+      "service_address": "12 Stadium Way",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "declined",
+      "created_at": "2026-09-18T14:32:54.529338",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-76165",
+      "google_event_id": null
+    },
+    {
+      "id": "APT-65609",
+      "call_id": "call_106",
+      "client_name": "Karen Smith",
+      "client_phone": "+14155558888",
+      "service_requested": "Filter Replacement",
+      "service_address": "90 Pine St",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T14:32:54.531627",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-65609",
+      "google_event_id": null,
+      "confirmed_at": "2026-09-18T14:32:54.944377"
+    },
+    {
+      "id": "APT-70121",
+      "call_id": "call_flex_101",
+      "client_name": "Marcus Vance",
+      "client_phone": "+14155559876",
+      "service_requested": "Full AC System Replacement",
+      "service_address": "404 Ocean Blvd",
+      "appointment_date": "2026-10-23",
+      "window": "afternoon",
+      "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T14:39:21.087456",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-21",
+          "window": "morning",
+          "label": "Mon Sep 21 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-21",
+          "window": "afternoon",
+          "label": "Mon Sep 21 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-22",
+          "window": "morning",
+          "label": "Tue Sep 22 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-70121",
+      "google_event_id": null,
+      "confirmed_at": "2026-09-18T14:39:21.394273"
+    },
+    {
+      "id": "APT-15091",
+      "call_id": "test_call_101",
+      "client_name": "Sarah Jenkins",
+      "client_phone": "+14155559876",
+      "service_requested": "High-Efficiency Heat Pump Tune-Up",
+      "service_address": "742 Evergreen Terrace",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T14:39:33.172975",
+      "summary": "Customer AC blowing warm air, wants Friday morning inspection.",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-15091",
+      "google_event_id": null,
+      "confirmed_at": "2026-09-18T14:39:33.174247"
+    },
+    {
+      "id": "APT-53458",
+      "call_id": "call_102",
+      "client_name": "Mike Henderson",
+      "client_phone": "+14155551111",
+      "service_requested": "Emergency AC Leak",
+      "service_address": "88 Ocean Avenue",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T14:39:33.174989",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-53458",
+      "google_event_id": null,
+      "confirmed_at": "2026-09-18T14:39:33.175879"
+    },
+    {
+      "id": "APT-72368",
+      "call_id": "call_103",
+      "client_name": "Alice Wong",
+      "client_phone": "+14155552222",
+      "service_requested": "Duct Inspection",
+      "service_address": "500 Market St",
+      "appointment_date": "2026-09-25",
+      "window": "afternoon",
+      "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)",
+      "status": "rescheduled_pending_customer",
+      "created_at": "2026-09-18T14:39:33.176505",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-72368",
+      "google_event_id": null
+    },
+    {
+      "id": "APT-42269",
+      "call_id": "call_104",
+      "client_name": "Carlos Gomez",
+      "client_phone": "+14155554444",
+      "service_requested": "Thermostat Installation",
+      "service_address": "77 Mission St",
+      "appointment_date": "2026-09-28",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "rescheduled_pending_customer",
+      "created_at": "2026-09-18T14:39:33.177982",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-42269",
+      "google_event_id": null
+    },
+    {
+      "id": "APT-46057",
+      "call_id": "call_105",
+      "client_name": "Tom Brady",
+      "client_phone": "+14155557777",
+      "service_requested": "Commercial Rooftop AC",
+      "service_address": "12 Stadium Way",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "declined",
+      "created_at": "2026-09-18T14:39:33.179588",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-46057",
+      "google_event_id": null
+    },
+    {
+      "id": "APT-79275",
+      "call_id": "call_106",
+      "client_name": "Karen Smith",
+      "client_phone": "+14155558888",
+      "service_requested": "Filter Replacement",
+      "service_address": "90 Pine St",
+      "appointment_date": "2026-09-18",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "rescheduled_pending_customer",
+      "created_at": "2026-09-18T14:39:33.192576",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-79275",
+      "google_event_id": null
+    },
+    {
+      "id": "APT-37381",
+      "call_id": "test_call_101",
+      "client_name": "Sarah Jenkins",
+      "client_phone": "+14155559876",
+      "service_requested": "High-Efficiency Heat Pump Tune-Up",
+      "service_address": "742 Evergreen Terrace",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T14:41:16.112491",
+      "summary": "Customer AC blowing warm air, wants Friday morning inspection.",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-37381",
+      "google_event_id": null,
+      "confirmed_at": "2026-09-18T14:41:16.114067"
+    },
+    {
+      "id": "APT-66444",
+      "call_id": "call_102",
+      "client_name": "Mike Henderson",
+      "client_phone": "+14155551111",
+      "service_requested": "Emergency AC Leak",
+      "service_address": "88 Ocean Avenue",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T14:41:16.114916",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-66444",
+      "google_event_id": null,
+      "confirmed_at": "2026-09-18T14:41:16.115772"
+    },
+    {
+      "id": "APT-61333",
+      "call_id": "call_103",
+      "client_name": "Alice Wong",
+      "client_phone": "+14155552222",
+      "service_requested": "Duct Inspection",
+      "service_address": "500 Market St",
+      "appointment_date": "2026-09-25",
+      "window": "afternoon",
+      "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)",
+      "status": "rescheduled_pending_customer",
+      "created_at": "2026-09-18T14:41:16.116924",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-61333",
+      "google_event_id": null
+    },
+    {
+      "id": "APT-38753",
+      "call_id": "call_104",
+      "client_name": "Carlos Gomez",
+      "client_phone": "+14155554444",
+      "service_requested": "Thermostat Installation",
+      "service_address": "77 Mission St",
+      "appointment_date": "2026-09-28",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "rescheduled_pending_customer",
+      "created_at": "2026-09-18T14:41:16.118659",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-38753",
+      "google_event_id": null
+    },
+    {
+      "id": "APT-82596",
+      "call_id": "call_105",
+      "client_name": "Tom Brady",
+      "client_phone": "+14155557777",
+      "service_requested": "Commercial Rooftop AC",
+      "service_address": "12 Stadium Way",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "declined",
+      "created_at": "2026-09-18T14:41:16.120274",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-82596",
+      "google_event_id": null
+    },
+    {
+      "id": "APT-74850",
+      "call_id": "call_106",
+      "client_name": "Karen Smith",
+      "client_phone": "+14155558888",
+      "service_requested": "Filter Replacement",
+      "service_address": "90 Pine St",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T14:41:16.121963",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-74850",
+      "google_event_id": null,
+      "confirmed_at": "2026-09-18T14:41:16.442722"
+    },
+    {
+      "id": "APT-87759",
+      "call_id": "call_flex_101",
+      "client_name": "Marcus Vance",
+      "client_phone": "+14155559876",
+      "service_requested": "Full AC System Replacement",
+      "service_address": "404 Ocean Blvd",
+      "appointment_date": "2026-10-23",
+      "window": "afternoon",
+      "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T14:41:19.331745",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-21",
+          "window": "morning",
+          "label": "Mon Sep 21 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-21",
+          "window": "afternoon",
+          "label": "Mon Sep 21 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-22",
+          "window": "morning",
+          "label": "Tue Sep 22 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-87759",
+      "google_event_id": null,
+      "confirmed_at": "2026-09-18T14:41:19.521399"
+    },
+    {
+      "id": "APT-73531",
+      "call_id": "test_call_101",
+      "client_name": "Sarah Jenkins",
+      "client_phone": "+14155559876",
+      "service_requested": "High-Efficiency Heat Pump Tune-Up",
+      "service_address": "742 Evergreen Terrace",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T15:04:22.603607",
+      "summary": "Customer AC blowing warm air, wants Friday morning inspection.",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-73531",
+      "google_event_id": null,
+      "confirmed_at": "2026-09-18T15:04:22.605855"
+    },
+    {
+      "id": "APT-65704",
+      "call_id": "call_102",
+      "client_name": "Mike Henderson",
+      "client_phone": "+14155551111",
+      "service_requested": "Emergency AC Leak",
+      "service_address": "88 Ocean Avenue",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T15:04:22.607693",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-65704",
+      "google_event_id": null,
+      "confirmed_at": "2026-09-18T15:04:22.608963"
+    },
+    {
+      "id": "APT-61718",
+      "call_id": "call_103",
+      "client_name": "Alice Wong",
+      "client_phone": "+14155552222",
+      "service_requested": "Duct Inspection",
+      "service_address": "500 Market St",
+      "appointment_date": "2026-09-25",
+      "window": "afternoon",
+      "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)",
+      "status": "rescheduled_pending_customer",
+      "created_at": "2026-09-18T15:04:22.610130",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-61718",
+      "google_event_id": null
+    },
+    {
+      "id": "APT-72079",
+      "call_id": "call_104",
+      "client_name": "Carlos Gomez",
+      "client_phone": "+14155554444",
+      "service_requested": "Thermostat Installation",
+      "service_address": "77 Mission St",
+      "appointment_date": "2026-09-28",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "rescheduled_pending_customer",
+      "created_at": "2026-09-18T15:04:22.612521",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-72079",
+      "google_event_id": null
+    },
+    {
+      "id": "APT-86601",
+      "call_id": "call_105",
+      "client_name": "Tom Brady",
+      "client_phone": "+14155557777",
+      "service_requested": "Commercial Rooftop AC",
+      "service_address": "12 Stadium Way",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "declined",
+      "created_at": "2026-09-18T15:04:22.614891",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-86601",
+      "google_event_id": null
+    },
+    {
+      "id": "APT-85285",
+      "call_id": "call_106",
+      "client_name": "Karen Smith",
+      "client_phone": "+14155558888",
+      "service_requested": "Filter Replacement",
+      "service_address": "90 Pine St",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T15:04:22.617421",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-85285",
+      "google_event_id": null,
+      "confirmed_at": "2026-09-18T15:04:23.273948"
+    },
+    {
+      "id": "APT-86919",
+      "call_id": "call_flex_101",
+      "client_name": "Marcus Vance",
+      "client_phone": "+14155559876",
+      "service_requested": "Full AC System Replacement",
+      "service_address": "404 Ocean Blvd",
+      "appointment_date": "2026-10-23",
+      "window": "afternoon",
+      "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T15:04:48.589097",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-21",
+          "window": "morning",
+          "label": "Mon Sep 21 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-21",
+          "window": "afternoon",
+          "label": "Mon Sep 21 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-22",
+          "window": "morning",
+          "label": "Tue Sep 22 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-86919",
+      "google_event_id": null,
+      "exact_time": "3:30 PM",
+      "appointment_time": "3:30 PM",
+      "display_label": "Fri Oct 02 at 2:30 PM (Afternoon (12:00 PM \u2013 4:00 PM))",
+      "confirmed_at": "2026-09-18T15:04:48.908793"
+    },
+    {
+      "id": "APT-58064",
+      "call_id": "call_flex_101",
+      "client_name": "Marcus Vance",
+      "client_phone": "+14155559876",
+      "service_requested": "Full AC System Replacement",
+      "service_address": "404 Ocean Blvd",
+      "appointment_date": "2026-10-23",
+      "window": "afternoon",
+      "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T15:05:12.725037",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-21",
+          "window": "morning",
+          "label": "Mon Sep 21 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-21",
+          "window": "afternoon",
+          "label": "Mon Sep 21 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-22",
+          "window": "morning",
+          "label": "Tue Sep 22 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-58064",
+      "google_event_id": null,
+      "exact_time": "3:30 PM",
+      "appointment_time": "3:30 PM",
+      "display_label": "Fri Oct 02 at 2:30 PM (Afternoon (12:00 PM \u2013 4:00 PM))",
+      "confirmed_at": "2026-09-18T15:05:13.038301"
+    },
+    {
+      "id": "APT-11446",
+      "call_id": "test_call_101",
+      "client_name": "Sarah Jenkins",
+      "client_phone": "+14155559876",
+      "service_requested": "High-Efficiency Heat Pump Tune-Up",
+      "service_address": "742 Evergreen Terrace",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T15:05:17.634007",
+      "summary": "Customer AC blowing warm air, wants Friday morning inspection.",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-11446",
+      "google_event_id": null,
+      "confirmed_at": "2026-09-18T15:05:17.635707"
+    },
+    {
+      "id": "APT-37491",
+      "call_id": "call_102",
+      "client_name": "Mike Henderson",
+      "client_phone": "+14155551111",
+      "service_requested": "Emergency AC Leak",
+      "service_address": "88 Ocean Avenue",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T15:05:17.636958",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-37491",
+      "google_event_id": null,
+      "confirmed_at": "2026-09-18T15:05:17.638852"
+    },
+    {
+      "id": "APT-14003",
+      "call_id": "call_103",
+      "client_name": "Alice Wong",
+      "client_phone": "+14155552222",
+      "service_requested": "Duct Inspection",
+      "service_address": "500 Market St",
+      "appointment_date": "2026-09-25",
+      "window": "afternoon",
+      "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)",
+      "status": "rescheduled_pending_customer",
+      "created_at": "2026-09-18T15:05:17.640085",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-14003",
+      "google_event_id": null
+    },
+    {
+      "id": "APT-92279",
+      "call_id": "call_104",
+      "client_name": "Carlos Gomez",
+      "client_phone": "+14155554444",
+      "service_requested": "Thermostat Installation",
+      "service_address": "77 Mission St",
+      "appointment_date": "2026-09-28",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "rescheduled_pending_customer",
+      "created_at": "2026-09-18T15:05:17.642652",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-92279",
+      "google_event_id": null
+    },
+    {
+      "id": "APT-87300",
+      "call_id": "call_105",
+      "client_name": "Tom Brady",
+      "client_phone": "+14155557777",
+      "service_requested": "Commercial Rooftop AC",
+      "service_address": "12 Stadium Way",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "declined",
+      "created_at": "2026-09-18T15:05:17.645807",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-87300",
+      "google_event_id": null
+    },
+    {
+      "id": "APT-11384",
+      "call_id": "call_106",
+      "client_name": "Karen Smith",
+      "client_phone": "+14155558888",
+      "service_requested": "Filter Replacement",
+      "service_address": "90 Pine St",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T15:05:17.660277",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-11384",
+      "google_event_id": null,
+      "confirmed_at": "2026-09-18T15:05:18.108828"
+    },
+    {
+      "id": "APT-82323",
+      "call_id": "call_flex_101",
+      "client_name": "Marcus Vance",
+      "client_phone": "+14155559876",
+      "service_requested": "Full AC System Replacement",
+      "service_address": "404 Ocean Blvd",
+      "appointment_date": "2026-10-23",
+      "window": "afternoon",
+      "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T15:13:08.534008",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-21",
+          "window": "morning",
+          "label": "Mon Sep 21 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-21",
+          "window": "afternoon",
+          "label": "Mon Sep 21 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-22",
+          "window": "morning",
+          "label": "Tue Sep 22 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-82323",
+      "google_event_id": null,
+      "exact_time": "3:30 PM",
+      "appointment_time": "3:30 PM",
+      "display_label": "Thu Oct 15 at 1:30 PM (Afternoon (12:00 PM \u2013 4:00 PM))",
+      "confirmed_at": "2026-09-18T15:13:08.873437"
+    },
+    {
+      "id": "APT-74903",
+      "call_id": "test_call_101",
+      "client_name": "Sarah Jenkins",
+      "client_phone": "+14155559876",
+      "service_requested": "High-Efficiency Heat Pump Tune-Up",
+      "service_address": "742 Evergreen Terrace",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T15:13:14.532814",
+      "summary": "Customer AC blowing warm air, wants Friday morning inspection.",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-74903",
+      "google_event_id": null,
+      "confirmed_at": "2026-09-18T15:13:14.534891"
+    },
+    {
+      "id": "APT-35552",
+      "call_id": "call_102",
+      "client_name": "Mike Henderson",
+      "client_phone": "+14155551111",
+      "service_requested": "Emergency AC Leak",
+      "service_address": "88 Ocean Avenue",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T15:13:14.536697",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-35552",
+      "google_event_id": null,
+      "confirmed_at": "2026-09-18T15:13:14.538276"
+    },
+    {
+      "id": "APT-37065",
+      "call_id": "call_103",
+      "client_name": "Alice Wong",
+      "client_phone": "+14155552222",
+      "service_requested": "Duct Inspection",
+      "service_address": "500 Market St",
+      "appointment_date": "2026-09-25",
+      "window": "afternoon",
+      "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)",
+      "status": "rescheduled_pending_customer",
+      "created_at": "2026-09-18T15:13:14.540042",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-37065",
+      "google_event_id": null
+    },
+    {
+      "id": "APT-39560",
+      "call_id": "call_104",
+      "client_name": "Carlos Gomez",
+      "client_phone": "+14155554444",
+      "service_requested": "Thermostat Installation",
+      "service_address": "77 Mission St",
+      "appointment_date": "2026-09-28",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "rescheduled_pending_customer",
+      "created_at": "2026-09-18T15:13:14.543289",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-39560",
+      "google_event_id": null
+    },
+    {
+      "id": "APT-45938",
+      "call_id": "call_105",
+      "client_name": "Tom Brady",
+      "client_phone": "+14155557777",
+      "service_requested": "Commercial Rooftop AC",
+      "service_address": "12 Stadium Way",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "declined",
+      "created_at": "2026-09-18T15:13:14.546605",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-45938",
+      "google_event_id": null
+    },
+    {
+      "id": "APT-75444",
+      "call_id": "call_106",
+      "client_name": "Karen Smith",
+      "client_phone": "+14155558888",
+      "service_requested": "Filter Replacement",
+      "service_address": "90 Pine St",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T15:13:14.549363",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-75444",
+      "google_event_id": null,
+      "confirmed_at": "2026-09-18T15:13:15.135592"
+    },
+    {
+      "id": "APT-55483",
+      "call_id": "call_flex_101",
+      "client_name": "Marcus Vance",
+      "client_phone": "+14155559876",
+      "service_requested": "Full AC System Replacement",
+      "service_address": "404 Ocean Blvd",
+      "appointment_date": "2026-10-23",
+      "window": "afternoon",
+      "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T15:21:03.442268",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-21",
+          "window": "morning",
+          "label": "Mon Sep 21 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-21",
+          "window": "afternoon",
+          "label": "Mon Sep 21 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-22",
+          "window": "morning",
+          "label": "Tue Sep 22 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-55483",
+      "google_event_id": null,
+      "exact_time": "3:30 PM",
+      "appointment_time": "3:30 PM",
+      "display_label": "Thu Oct 15 at 1:30 PM (Afternoon (12:00 PM \u2013 4:00 PM))",
+      "confirmed_at": "2026-09-18T15:21:03.771875"
+    },
+    {
+      "id": "APT-49739",
+      "call_id": "test_call_101",
+      "client_name": "Sarah Jenkins",
+      "client_phone": "+14155559876",
+      "service_requested": "High-Efficiency Heat Pump Tune-Up",
+      "service_address": "742 Evergreen Terrace",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T15:21:09.863233",
+      "summary": "Customer AC blowing warm air, wants Friday morning inspection.",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-49739",
+      "google_event_id": null,
+      "confirmed_at": "2026-09-18T15:21:09.865614"
+    },
+    {
+      "id": "APT-14180",
+      "call_id": "call_102",
+      "client_name": "Mike Henderson",
+      "client_phone": "+14155551111",
+      "service_requested": "Emergency AC Leak",
+      "service_address": "88 Ocean Avenue",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T15:21:09.867439",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-14180",
+      "google_event_id": null,
+      "confirmed_at": "2026-09-18T15:21:09.869885"
+    },
+    {
+      "id": "APT-38411",
+      "call_id": "call_103",
+      "client_name": "Alice Wong",
+      "client_phone": "+14155552222",
+      "service_requested": "Duct Inspection",
+      "service_address": "500 Market St",
+      "appointment_date": "2026-09-25",
+      "window": "afternoon",
+      "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)",
+      "status": "rescheduled_pending_customer",
+      "created_at": "2026-09-18T15:21:09.871994",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-38411",
+      "google_event_id": null
+    },
+    {
+      "id": "APT-28648",
+      "call_id": "call_104",
+      "client_name": "Carlos Gomez",
+      "client_phone": "+14155554444",
+      "service_requested": "Thermostat Installation",
+      "service_address": "77 Mission St",
+      "appointment_date": "2026-09-28",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "rescheduled_pending_customer",
+      "created_at": "2026-09-18T15:21:09.875319",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-28648",
+      "google_event_id": null
+    },
+    {
+      "id": "APT-68838",
+      "call_id": "call_105",
+      "client_name": "Tom Brady",
+      "client_phone": "+14155557777",
+      "service_requested": "Commercial Rooftop AC",
+      "service_address": "12 Stadium Way",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "declined",
+      "created_at": "2026-09-18T15:21:09.880441",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-68838",
+      "google_event_id": null
+    },
+    {
+      "id": "APT-34617",
+      "call_id": "call_106",
+      "client_name": "Karen Smith",
+      "client_phone": "+14155558888",
+      "service_requested": "Filter Replacement",
+      "service_address": "90 Pine St",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T15:21:09.886077",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-34617",
+      "google_event_id": null,
+      "confirmed_at": "2026-09-18T15:21:10.439508"
+    },
+    {
+      "id": "APT-19542",
+      "call_id": "call_flex_101",
+      "client_name": "Marcus Vance",
+      "client_phone": "+14155559876",
+      "service_requested": "Full AC System Replacement",
+      "service_address": "404 Ocean Blvd",
+      "appointment_date": "2026-10-23",
+      "window": "afternoon",
+      "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T15:21:41.599672",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-21",
+          "window": "morning",
+          "label": "Mon Sep 21 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-21",
+          "window": "afternoon",
+          "label": "Mon Sep 21 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-22",
+          "window": "morning",
+          "label": "Tue Sep 22 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-19542",
+      "google_event_id": null,
+      "exact_time": "3:30 PM",
+      "appointment_time": "3:30 PM",
+      "display_label": "Thu Oct 15 at 1:30 PM (Afternoon (12:00 PM \u2013 4:00 PM))",
+      "confirmed_at": "2026-09-18T15:21:41.958715"
+    },
+    {
+      "id": "APT-88098",
+      "call_id": "test_call_101",
+      "client_name": "Sarah Jenkins",
+      "client_phone": "+14155559876",
+      "service_requested": "High-Efficiency Heat Pump Tune-Up",
+      "service_address": "742 Evergreen Terrace",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T15:21:42.133404",
+      "summary": "Customer AC blowing warm air, wants Friday morning inspection.",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-88098",
+      "google_event_id": null,
+      "confirmed_at": "2026-09-18T15:21:42.135705"
+    },
+    {
+      "id": "APT-78238",
+      "call_id": "call_102",
+      "client_name": "Mike Henderson",
+      "client_phone": "+14155551111",
+      "service_requested": "Emergency AC Leak",
+      "service_address": "88 Ocean Avenue",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T15:21:42.137829",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-78238",
+      "google_event_id": null,
+      "confirmed_at": "2026-09-18T15:21:42.139823"
+    },
+    {
+      "id": "APT-48521",
+      "call_id": "call_103",
+      "client_name": "Alice Wong",
+      "client_phone": "+14155552222",
+      "service_requested": "Duct Inspection",
+      "service_address": "500 Market St",
+      "appointment_date": "2026-09-25",
+      "window": "afternoon",
+      "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)",
+      "status": "rescheduled_pending_customer",
+      "created_at": "2026-09-18T15:21:42.141794",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-48521",
+      "google_event_id": null
+    },
+    {
+      "id": "APT-95373",
+      "call_id": "call_104",
+      "client_name": "Carlos Gomez",
+      "client_phone": "+14155554444",
+      "service_requested": "Thermostat Installation",
+      "service_address": "77 Mission St",
+      "appointment_date": "2026-09-28",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "rescheduled_pending_customer",
+      "created_at": "2026-09-18T15:21:42.146262",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-95373",
+      "google_event_id": null
+    },
+    {
+      "id": "APT-50264",
+      "call_id": "call_105",
+      "client_name": "Tom Brady",
+      "client_phone": "+14155557777",
+      "service_requested": "Commercial Rooftop AC",
+      "service_address": "12 Stadium Way",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "declined",
+      "created_at": "2026-09-18T15:21:42.150301",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-50264",
+      "google_event_id": null
+    },
+    {
+      "id": "APT-33027",
+      "call_id": "call_106",
+      "client_name": "Karen Smith",
+      "client_phone": "+14155558888",
+      "service_requested": "Filter Replacement",
+      "service_address": "90 Pine St",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T15:21:42.154361",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-33027",
+      "google_event_id": null,
+      "confirmed_at": "2026-09-18T15:21:42.602158"
+    },
+    {
+      "id": "APT-20318",
+      "call_id": "call_flex_101",
+      "client_name": "Marcus Vance",
+      "client_phone": "+14155559876",
+      "service_requested": "Full AC System Replacement",
+      "service_address": "404 Ocean Blvd",
+      "appointment_date": "2026-10-23",
+      "window": "afternoon",
+      "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T15:31:53.347993",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-21",
+          "window": "morning",
+          "label": "Mon Sep 21 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-21",
+          "window": "afternoon",
+          "label": "Mon Sep 21 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-22",
+          "window": "morning",
+          "label": "Tue Sep 22 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-20318",
+      "google_event_id": null,
+      "client_id": null,
+      "exact_time": "3:30 PM",
+      "appointment_time": "3:30 PM",
+      "display_label": "Thu Oct 15 at 1:30 PM (Afternoon (12:00 PM \u2013 4:00 PM))",
+      "confirmed_at": "2026-09-18T15:31:53.650866"
+    },
+    {
+      "id": "APT-42360",
+      "call_id": "test_call_101",
+      "client_name": "Sarah Jenkins",
+      "client_phone": "+14155559876",
+      "service_requested": "High-Efficiency Heat Pump Tune-Up",
+      "service_address": "742 Evergreen Terrace",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T15:31:53.837144",
+      "summary": "Customer AC blowing warm air, wants Friday morning inspection.",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-42360",
+      "google_event_id": null,
+      "client_id": null,
+      "confirmed_at": "2026-09-18T15:31:53.844462"
+    },
+    {
+      "id": "APT-91677",
+      "call_id": "call_102",
+      "client_name": "Mike Henderson",
+      "client_phone": "+14155551111",
+      "service_requested": "Emergency AC Leak",
+      "service_address": "88 Ocean Avenue",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T15:31:53.848003",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-91677",
+      "google_event_id": null,
+      "client_id": null,
+      "confirmed_at": "2026-09-18T15:31:53.853067"
+    },
+    {
+      "id": "APT-64375",
+      "call_id": "call_103",
+      "client_name": "Alice Wong",
+      "client_phone": "+14155552222",
+      "service_requested": "Duct Inspection",
+      "service_address": "500 Market St",
+      "appointment_date": "2026-09-25",
+      "window": "afternoon",
+      "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)",
+      "status": "rescheduled_pending_customer",
+      "created_at": "2026-09-18T15:31:53.856413",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-64375",
+      "google_event_id": null,
+      "client_id": null
+    },
+    {
+      "id": "APT-94447",
+      "call_id": "call_104",
+      "client_name": "Carlos Gomez",
+      "client_phone": "+14155554444",
+      "service_requested": "Thermostat Installation",
+      "service_address": "77 Mission St",
+      "appointment_date": "2026-09-28",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "rescheduled_pending_customer",
+      "created_at": "2026-09-18T15:31:53.863825",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-94447",
+      "google_event_id": null,
+      "client_id": null
+    },
+    {
+      "id": "APT-96043",
+      "call_id": "call_105",
+      "client_name": "Tom Brady",
+      "client_phone": "+14155557777",
+      "service_requested": "Commercial Rooftop AC",
+      "service_address": "12 Stadium Way",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "declined",
+      "created_at": "2026-09-18T15:31:53.870915",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-96043",
+      "google_event_id": null,
+      "client_id": null
+    },
+    {
+      "id": "APT-30087",
+      "call_id": "call_106",
+      "client_name": "Karen Smith",
+      "client_phone": "+14155558888",
+      "service_requested": "Filter Replacement",
+      "service_address": "90 Pine St",
+      "appointment_date": "2026-09-25",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "confirmed",
+      "created_at": "2026-09-18T15:31:53.878186",
+      "summary": "",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-25",
+          "window": "morning",
+          "label": "Fri Sep 25 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-25",
+          "window": "afternoon",
+          "label": "Fri Sep 25 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://cant-lovers-attitudes-humidity.trycloudflare.com/a/APT-30087",
+      "google_event_id": null,
+      "client_id": null,
+      "confirmed_at": "2026-09-18T15:31:54.344140"
+    }
+  ]
+}

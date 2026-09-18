@@ -1,0 +1,15 @@
+{
+  "timestamp": "2026-09-17 18:00:17",
+  "asr": {
+    "avg_wer_percent": 0.0,
+    "avg_cer_percent": 0.0,
+    "avg_latency_ms": 0.0,
+    "test_cases": []
+  },
+  "steering": {
+    "transfer_accuracy": 100.0,
+    "end_call_accuracy": 100.0,
+    "negative_control_accuracy": 100.0,
+    "overall_accuracy": 100.0
+  }
+}

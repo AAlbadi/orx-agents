@@ -1,0 +1,16 @@
+{
+  "client_id": "cli_auto_onboard_plumb_88",
+  "project_name": "Blue River Plumbing Project",
+  "business_name": "Blue River Plumbing",
+  "industry": "plumbing",
+  "address": "88 Riverwalk Ave, San Antonio, TX",
+  "forwarding_phone": "+12105557788",
+  "assigned_phone": "+18334205227",
+  "owner_phone": "+12105557788",
+  "owner_email": "",
+  "timezone": "America/New_York",
+  "status": "active",
+  "trigger_source": "onboarding",
+  "created_at": "2026-09-18 15:31:48",
+  "updated_at": "2026-09-18 15:31:48"
+}

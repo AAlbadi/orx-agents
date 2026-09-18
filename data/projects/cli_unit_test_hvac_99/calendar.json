@@ -1,0 +1,14 @@
+{
+  "client_id": "cli_unit_test_hvac_99",
+  "calendar_id": "hvac-dispatch-east@gmail.com",
+  "service_account_json": "",
+  "calendar_webhook_url": "",
+  "sync_enabled": 1,
+  "morning_slot_capacity": 5,
+  "afternoon_slot_capacity": 6,
+  "evening_slot_capacity": 3,
+  "is_connected": 0,
+  "last_tested_at": "2026-09-18 15:31:48",
+  "last_status": "missing_credentials",
+  "last_error": "Google Service Account JSON is empty. Paste service account credentials or set file path."
+}

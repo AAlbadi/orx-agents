@@ -1,0 +1,83 @@
+{
+  "timestamp": "2026-09-16 10:52:07 UTC",
+  "cloud_url": "https://seeks-downloadable-voluntary-missed.trycloudflare.com",
+  "http_localhost": {
+    "/health": {
+      "min_ms": 0.82,
+      "avg_ms": 1.39,
+      "max_ms": 1.63,
+      "status": 200
+    },
+    "/dashboard": {
+      "min_ms": 1.93,
+      "avg_ms": 4.52,
+      "max_ms": 14.21,
+      "status": 200
+    }
+  },
+  "http_cloud": {
+    "/health": {
+      "min_ms": 47.62,
+      "avg_ms": 48.76,
+      "max_ms": 50.59,
+      "status": 200
+    },
+    "/dashboard": {
+      "min_ms": 55.47,
+      "avg_ms": 346.84,
+      "max_ms": 1511.14,
+      "status": 200
+    }
+  },
+  "cloud_tts": [
+    {
+      "label": "Short (7 words)",
+      "word_count": 7,
+      "latency_ms": 2171.51,
+      "audio_duration_sec": 1.77,
+      "audio_size_bytes": 85036,
+      "rtf": 1.226,
+      "speed_multiplier": 0.8
+    },
+    {
+      "label": "Medium (14 words)",
+      "word_count": 14,
+      "latency_ms": 2145.92,
+      "audio_duration_sec": 3.46,
+      "audio_size_bytes": 165932,
+      "rtf": 0.621,
+      "speed_multiplier": 1.6
+    },
+    {
+      "label": "Long (30 words)",
+      "word_count": 29,
+      "latency_ms": 3852.03,
+      "audio_duration_sec": 10.45,
+      "audio_size_bytes": 501804,
+      "rtf": 0.368,
+      "speed_multiplier": 2.7
+    }
+  ],
+  "whisper_stt": {
+    "model": "small",
+    "compute_type": "int8",
+    "sample_duration_sec": 3.0,
+    "transcription_ms": 1045.62,
+    "rtf": 0.349,
+    "speed_multiplier": 2.9
+  },
+  "websocket_stream": {
+    "wss_handshake_ms": 3082.89,
+    "ttfa_greeting_ms": 1520.24,
+    "packets_received": 106,
+    "greeting_duration_sec": 4.24,
+    "streaming_bps": 64000.0
+  },
+  "end_to_end_turn": {
+    "question": "What services do you offer?",
+    "caller_audio_duration_sec": 1.45,
+    "turnaround_latency_ms": 2759.51,
+    "response_audio_duration_sec": 5.8,
+    "response_packets": 145
+  }
+}

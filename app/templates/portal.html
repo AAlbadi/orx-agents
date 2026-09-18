@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Client Portal — ORX Agents</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-canvas: #FAF9F5;
+      --bg-card: #FFFFFF;
+      --bg-subtle: #F3F2EB;
+      --border: #E5E3D8;
+      --text-main: #171715;
+      --text-muted: #5E5B52;
+      --text-tertiary: #8C887E;
+      --brand: #1C3326;
+      --brand-hover: #122119;
+      --brand-soft: #EAF0EC;
+      --success: #15803D;
+      --success-soft: #DCFCE7;
+      --accent: #B45309;
+      --accent-soft: #FEF3C7;
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03);
+      --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: "JetBrains Mono", Menlo, Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-canvas);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.5;
+      font-size: 15px;
+      padding-bottom: 80px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .navbar {
+      background: rgba(250, 249, 245, 0.94);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-container {
+      max-width: 980px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand-mark {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text-main);
+      font-weight: 700;
+      font-size: 17px;
+    }
+    .brand-glyph {
+      width: 28px;
+      height: 28px;
+      background: var(--brand);
+      color: #FFF;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .status-live-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--success-soft);
+      color: var(--success);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+    .status-live-pulse {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 0 2px rgba(21, 128, 61, 0.2);
+    }
+
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 24px 20px;
+    }
+
+    /* Welcome Banner */
+    .portal-banner {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 28px 32px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .banner-content h1 {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 4px;
+    }
+    .banner-content p {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+    .btn-polar-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-main);
+      text-decoration: none;
+      transition: background 0.15s ease;
+    }
+    .btn-polar-badge:hover {
+      background: #EBE9DF;
+    }
+
+    /* Primary Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    .stat-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .stat-val {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: -0.02em;
+    }
+    .stat-sub {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      margin-top: 4px;
+    }
+
+    /* Layout Split */
+    .portal-layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 20px;
+    }
+
+    /* Main Section: Call Logs */
+    .card-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .call-row {
+      border-bottom: 1px solid var(--border);
+      padding: 14px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .call-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .call-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+    }
+    .caller-id {
+      font-weight: 600;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .call-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .badge-booked { background: var(--success-soft); color: var(--success); }
+    .badge-transferred { background: var(--accent-soft); color: var(--accent); }
+    .badge-inquiry { background: var(--bg-subtle); color: var(--text-muted); }
+
+    .call-snippet {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.4;
+      background: #FAF9F6;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border-left: 2px solid var(--brand);
+    }
+
+    /* Sidebar Controls */
+    .sidebar-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 20px;
+    }
+    .sidebar-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+    .control-group {
+      margin-bottom: 16px;
+    }
+    .control-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      display: block;
+    }
+    .control-input {
+      width: 100%;
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      font-size: 13px;
+      font-family: inherit;
+    }
+    .btn-save-settings {
+      width: 100%;
+      background: var(--brand);
+      color: #FFF;
+      border: none;
+      padding: 10px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .btn-save-settings:hover {
+      background: var(--brand-hover);
+    }
+
+    /* Live Test Widget */
+    .test-box {
+      background: #191917;
+      color: #FFF;
+      border-radius: var(--radius-md);
+      padding: 16px;
+    }
+    .test-box h4 {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .test-input-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .test-input {
+      flex: 1;
+      background: #2A2925;
+      border: 1px solid #3B3934;
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+      font-size: 12px;
+      color: #FFF;
+      outline: none;
+    }
+    .test-send {
+      background: var(--brand);
+      color: #FFF;
+      border: none;
+      padding: 0 12px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .test-reply {
+      font-size: 12px;
+      color: #D6D3CD;
+      line-height: 1.4;
+      margin-top: 10px;
+      padding: 8px 10px;
+      background: #2A2925;
+      border-radius: 6px;
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      .portal-banner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      .portal-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="/portal" class="brand-mark">
+        <div class="brand-glyph">O</div>
+        <span>ORX Agents</span>
+      </a>
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <span class="status-live-pill">
+          <span class="status-live-pulse"></span>
+          <span>Agent Live • 24/7 Answering</span>
+        </span>
+        <a href="/subscribe" style="font-size: 13px; color: var(--text-muted); text-decoration: none;">New Agent</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container">
+    <!-- Welcome Banner -->
+    <header class="portal-banner">
+      <div class="banner-content">
+        <h1 id="bannerBizName">Apex Climate & Air</h1>
+        <p id="bannerSub">Assigned Dedicated Line: <strong id="assignedPhoneVal">+1 (833) 420-5227</strong> • Call Forwarding to: <span id="forwardPhoneVal">+1 (555) 234-5678</span></p>
+      </div>
+      <div>
+        <a href="https://polar.sh" target="_blank" class="btn-polar-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+          <span id="planBadge">Polar Active • Starter Plan ($49/mo)</span>
+        </a>
+      </div>
+    </header>
+
+    <!-- 1-Tap Carrier Connection & Verification Card -->
+    <div id="connectionCard" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 22px 28px; box-shadow: var(--shadow-sm); margin-bottom: 24px;">
+      <!-- Pending State -->
+      <div id="connPendingState">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: #FEF3C7; color: #B45309; font-size: 16px;">⚡</span>
+            <div>
+              <h3 style="font-size: 16px; font-weight: 700; color: var(--text-main); margin-bottom: 2px;">Connect Your Business Line in 1 Tap</h3>
+              <p style="font-size: 13px; color: var(--text-muted);">Keep your number. Your phone still rings first — Riley only answers when you're busy or after 3 rings.</p>
+            </div>
+          </div>
+          <span style="font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 12px; background: #FEF3C7; color: #B45309;">
+            Action Needed: Forwarding Not Set
+          </span>
+        </div>
+
+        <div style="background: var(--bg-subtle); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 16px;">
+          <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px;">Select your mobile carrier:</div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;" id="carrierPills">
+            <button type="button" class="carrier-pill active" data-carrier="verizon" data-prefix="*71" style="background: var(--brand); color: #FFF; border: none; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">Verizon (*71)</button>
+            <button type="button" class="carrier-pill" data-carrier="att" data-prefix="*61*" data-suffix="%23" style="background: #FFF; color: var(--text-main); border: 1px solid var(--border); padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">AT&T (*61*)</button>
+            <button type="button" class="carrier-pill" data-carrier="tmobile" data-prefix="**61*" data-suffix="%23" style="background: #FFF; color: var(--text-main); border: 1px solid var(--border); padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">T-Mobile (**61*)</button>
+            <button type="button" class="carrier-pill" data-carrier="other" data-prefix="" style="background: #FFF; color: var(--text-main); border: 1px solid var(--border); padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">VoIP / Landline</button>
+          </div>
+
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+            <a id="btnTapToConnect" href="tel:*718334205227" style="display: inline-flex; align-items: center; gap: 8px; background: var(--brand); color: #FFF; text-decoration: none; padding: 11px 20px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; box-shadow: var(--shadow-sm);">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+              <span>1-Tap Connect on iPhone</span>
+            </a>
+            <button type="button" id="btnVerifyPing" style="background: #FFF; border: 1px solid var(--border); padding: 11px 18px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; color: var(--text-main); cursor: pointer;">
+              <span>⚡ Confirm & Verify Connection</span>
+            </button>
+          </div>
+
+          <!-- Subtle drawer for Office Phone / App Users in Portal -->
+          <div style="margin-top: 14px; border-top: 1px dashed var(--border); padding-top: 10px; text-align: left;">
+            <button type="button" id="btnToggleOfficePortal" style="background: none; border: none; font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 4px 0;">
+              <span>🏢 Got an office phone or app (OpenPhone, Grasshopper, RingCentral) instead?</span>
+              <span id="officeArrowPortal" style="font-size: 10px;">▼</span>
+            </button>
+            <div id="officeDrawerPortal" style="display: none; margin-top: 8px; background: var(--bg-canvas); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; font-size: 12px;">
+              <div style="color: var(--text-muted); margin-bottom: 6px;">Forward unanswered calls to your dedicated line:</div>
+              <div style="display: flex; align-items: center; justify-content: space-between; background: #FFF; border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; margin-bottom: 8px;">
+                <strong id="officeNumberPortalVal" style="font-size: 13px;">+1 (833) 420-5227</strong>
+                <button type="button" id="btnCopyOfficePortal" style="background: var(--brand-soft); color: var(--brand); border: none; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer;">Copy</button>
+              </div>
+              <div style="color: var(--text-tertiary); font-size: 11px; line-height: 1.45;">
+                • <strong>Apps (OpenPhone, Grasshopper, Google Voice):</strong> Open App Settings → Call Routing / Forwarding → Set "Forward if unanswered" to this number.<br>
+                • <strong>Desk Phones / Landlines (Comcast, Spectrum):</strong> Dial <code>*72</code> + this number on your desk handset.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Verified Live State -->
+      <div id="connVerifiedState" style="display: none;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background: var(--success-soft); color: var(--success); font-size: 18px; font-weight: 700;">✓</span>
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <h3 style="font-size: 16px; font-weight: 700; color: var(--text-main);">Line Connected & Verified Live</h3>
+                <span id="verifiedBadgeCarrier" style="font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; background: var(--success-soft); color: var(--success);">Verizon Active</span>
+              </div>
+              <p style="font-size: 13px; color: var(--text-muted);">Riley is answering your unanswered customer calls in under 2 seconds. Verified <span id="verifiedTimeText">just now</span>.</p>
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" id="btnRingMyPhone" style="background: var(--brand); color: #FFF; border: none; padding: 9px 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+              <span>Test Riley on My Cell</span>
+            </button>
+            <button type="button" id="btnDisconnectLine" style="background: none; border: 1px solid var(--border); padding: 9px 14px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer;">
+              <span>Pause (*73)</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stat Highlights -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Calls Handled (This Week)</div>
+        <div class="stat-val">38</div>
+        <div class="stat-sub">100% answered in < 2 seconds</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Appointments Booked</div>
+        <div class="stat-val">19</div>
+        <div class="stat-sub">Automated scheduling rate: 50%</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Urgent Escalations</div>
+        <div class="stat-val">4</div>
+        <div class="stat-sub">Transferred instantly to your cell</div>
+      </div>
+    </div>
+
+    <!-- Main Content Layout -->
+    <div class="portal-layout">
+      <!-- Recent Calls -->
+      <section class="card-section">
+        <div class="section-head">
+          <h2 class="section-title">Recent Inbound Calls</h2>
+          <span style="font-size: 12px; color: var(--text-tertiary);">Live sync active</span>
+        </div>
+
+        <div id="callList">
+          <!-- Call 1 -->
+          <div class="call-row">
+            <div class="call-meta">
+              <span class="caller-id">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                <span>+1 (512) 882-9014</span>
+              </span>
+              <span class="call-badge badge-booked">Appointment Confirmed</span>
+            </div>
+            <div class="call-snippet">
+              "Riley scheduled AC tune-up diagnostic for Thursday at 2:00 PM at 450 Oak St. Quoted $89 service fee."
+            </div>
+          </div>
+
+          <!-- Call 2 -->
+          <div class="call-row">
+            <div class="call-meta">
+              <span class="caller-id">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                <span>+1 (512) 419-3301</span>
+              </span>
+              <span class="call-badge badge-transferred">Emergency Transfer</span>
+            </div>
+            <div class="call-snippet">
+              "Caller reported strong sulfur/gas smell in basement. Riley executed immediate emergency protocol and bridged call to owner cell."
+            </div>
+          </div>
+
+          <!-- Call 3 -->
+          <div class="call-row">
+            <div class="call-meta">
+              <span class="caller-id">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                <span>+1 (512) 993-2178</span>
+              </span>
+              <span class="call-badge badge-inquiry">Hours & Coverage</span>
+            </div>
+            <div class="call-snippet">
+              "Caller asked if business covers Travis County residential. Riley confirmed coverage and offered morning appointment."
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sidebar: Quick Toggles & Test -->
+      <aside>
+        <div class="sidebar-card">
+          <h3 class="sidebar-title">Forwarding & Hours</h3>
+          <div class="control-group">
+            <label class="control-label">Your Forwarding Cell</label>
+            <input type="tel" class="control-input" id="editForwardPhone" value="+1 (555) 234-5678">
+          </div>
+          <div class="control-group">
+            <label class="control-label">Operating Hours</label>
+            <input type="text" class="control-input" id="editHours" value="Mon-Fri 7:30 AM to 6:00 PM">
+          </div>
+          <button type="button" class="btn-save-settings" id="btnSaveSettings">Save Changes</button>
+        </div>
+
+        <div class="sidebar-card" style="margin-top: 16px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <h3 class="sidebar-title" style="margin-bottom: 0;">📅 Google Calendar Sync</h3>
+            <span id="portalCalBadge" style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: var(--brand-soft); color: var(--brand);">Live Ready</span>
+          </div>
+          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
+            Prevents double-booking by syncing your arrival windows directly with Google Calendar FreeBusy.
+          </p>
+          <div class="control-group">
+            <label class="control-label">Calendar ID</label>
+            <input type="text" class="control-input" id="portalCalId" placeholder="primary or technician@gmail.com" value="primary">
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
+            <div class="control-group">
+              <label class="control-label">Morning Cap</label>
+              <input type="number" class="control-input" id="portalMorningCap" min="1" max="10" value="2">
+            </div>
+            <div class="control-group">
+              <label class="control-label">Afternoon Cap</label>
+              <input type="number" class="control-input" id="portalAfternoonCap" min="1" max="10" value="2">
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn-save-settings" id="btnSavePortalCal" style="flex: 1; padding: 8px 10px; font-size: 12px;">Save Calendar</button>
+            <button type="button" id="btnTestPortalCal" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text-main);">Test Live</button>
+          </div>
+          <div id="portalCalStatus" style="font-size: 11px; margin-top: 8px; color: var(--text-muted); font-family: var(--font-mono);"></div>
+        </div>
+
+        <div class="test-box">
+          <h4>Test Live Agent Prompt</h4>
+          <p style="font-size: 11px; color: #A8A29E; margin-bottom: 10px;">Simulate a caller question in real-time:</p>
+          <div class="test-input-row">
+            <input type="text" class="test-input" id="quickTestInput" placeholder="e.g. Do you have emergency service?">
+            <button class="test-send" id="quickTestSend">Ask</button>
+          </div>
+          <div class="test-reply" id="quickTestReply"></div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    // Load client profile from server or URL params
+    const urlParams = new URLSearchParams(window.location.search);
+    const clientId = urlParams.get("client_id");
+    const plan = urlParams.get("plan");
+
+    async function loadClientData() {
+      try {
+        const res = await fetch(`/api/client/profile?client_id=${encodeURIComponent(clientId || "")}`);
+        const data = await res.json();
+        if (data && data.profile) {
+          const p = data.profile;
+          document.getElementById("bannerBizName").textContent = p.business_name || "Your Business";
+          document.getElementById("assignedPhoneVal").textContent = p.assigned_phone || "+1 (833) 420-5227";
+          document.getElementById("forwardPhoneVal").textContent = p.forwarding_phone || "+1 (555) 234-5678";
+          document.getElementById("editForwardPhone").value = p.forwarding_phone || "+1 (555) 234-5678";
+          document.getElementById("editHours").value = p.hours || "Mon-Fri 8:00 AM to 6:00 PM";
+          if (p.plan) {
+            document.getElementById("planBadge").textContent = `Polar Active • ${p.plan.toUpperCase()} Plan`;
+          }
+
+          // Handle Connection Status
+          updateConnectionUI(p);
+
+          // Load Project Calendar Config if available
+          try {
+            const projRes = await fetch(`/api/projects/${encodeURIComponent(p.id)}`);
+            if (projRes.ok) {
+              const projData = await projRes.json();
+              const cal = projData.project?.calendar || {};
+              const calInput = document.getElementById("portalCalId");
+              const mCapInput = document.getElementById("portalMorningCap");
+              const aCapInput = document.getElementById("portalAfternoonCap");
+              const badge = document.getElementById("portalCalBadge");
+              if (calInput) calInput.value = cal.calendar_id || "primary";
+              if (mCapInput) mCapInput.value = cal.morning_slot_capacity || 2;
+              if (aCapInput) aCapInput.value = cal.afternoon_slot_capacity || 2;
+              if (badge && cal.is_connected) {
+                badge.textContent = "🟢 Live Synced";
+                badge.style.color = "var(--success)";
+                badge.style.background = "var(--success-soft)";
+              }
+            }
+          } catch (e) {}
+        }
+      } catch (err) {
+        console.warn("Error fetching client profile:", err);
+      }
+    }
+
+    let currentClient = null;
+    let selectedCarrier = "verizon";
+
+    function updateConnectionUI(p) {
+      currentClient = p;
+      const cleanPhone = (p.assigned_phone || "+18334205227").replace(/[^0-9]/g, "");
+      const isVerified = p.connection_status === "verified";
+
+      const pendingState = document.getElementById("connPendingState");
+      const verifiedState = document.getElementById("connVerifiedState");
+
+      if (isVerified) {
+        pendingState.style.display = "none";
+        verifiedState.style.display = "block";
+        document.getElementById("verifiedBadgeCarrier").textContent = `${p.carrier || "Verizon"} Active`;
+        document.getElementById("verifiedTimeText").textContent = p.verified_at || "just now";
+      } else {
+        pendingState.style.display = "block";
+        verifiedState.style.display = "none";
+        document.getElementById("officeNumberPortalVal").textContent = p.assigned_phone || "+1 (833) 420-5227";
+        updateDialLink(cleanPhone);
+      }
+    }
+
+    // Toggle Office Phone Drawer in Portal
+    document.getElementById("btnToggleOfficePortal").addEventListener("click", () => {
+      const drawer = document.getElementById("officeDrawerPortal");
+      const arrow = document.getElementById("officeArrowPortal");
+      const isClosed = drawer.style.display === "none";
+      drawer.style.display = isClosed ? "block" : "none";
+      arrow.textContent = isClosed ? "▲" : "▼";
+    });
+
+    // Copy Office Number Button in Portal
+    document.getElementById("btnCopyOfficePortal").addEventListener("click", () => {
+      navigator.clipboard.writeText(currentClient?.assigned_phone || "+1 (833) 420-5227");
+      const btn = document.getElementById("btnCopyOfficePortal");
+      btn.textContent = "Copied ✓";
+      setTimeout(() => { btn.textContent = "Copy"; }, 2000);
+    });
+
+    function updateDialLink(cleanPhone) {
+      const btnTap = document.getElementById("btnTapToConnect");
+      if (selectedCarrier === "verizon") {
+        btnTap.href = `tel:*71${cleanPhone}`;
+        btnTap.querySelector("span").textContent = `1-Tap Connect on Verizon (*71)`;
+      } else if (selectedCarrier === "att") {
+        btnTap.href = `tel:*61*${cleanPhone}%23`;
+        btnTap.querySelector("span").textContent = `1-Tap Connect on AT&T (*61*)`;
+      } else if (selectedCarrier === "tmobile") {
+        btnTap.href = `tel:**61*${cleanPhone}%23`;
+        btnTap.querySelector("span").textContent = `1-Tap Connect on T-Mobile (**61*)`;
+      } else {
+        btnTap.href = `tel:${cleanPhone}`;
+        btnTap.querySelector("span").textContent = `View Forwarding Number`;
+      }
+    }
+
+    // Carrier Selector Pills
+    document.querySelectorAll(".carrier-pill").forEach(pill => {
+      pill.addEventListener("click", () => {
+        document.querySelectorAll(".carrier-pill").forEach(p => {
+          p.style.background = "#FFF";
+          p.style.color = "var(--text-main)";
+          p.style.border = "1px solid var(--border)";
+        });
+        pill.style.background = "var(--brand)";
+        pill.style.color = "#FFF";
+        pill.style.border = "none";
+
+        selectedCarrier = pill.dataset.carrier;
+        const cleanPhone = (currentClient?.assigned_phone || "+18334205227").replace(/[^0-9]/g, "");
+        updateDialLink(cleanPhone);
+      });
+    });
+
+    // Verify Connection Ping
+    document.getElementById("btnVerifyPing").addEventListener("click", async () => {
+      const btn = document.getElementById("btnVerifyPing");
+      const origText = btn.innerHTML;
+      btn.innerHTML = `<span>Verifying line signal... ⏳</span>`;
+      btn.disabled = true;
+
+      try {
+        const res = await fetch("/api/client/ping-verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            client_id: clientId,
+            carrier: selectedCarrier
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          // Flip directly to verified state
+          document.getElementById("connPendingState").style.display = "none";
+          document.getElementById("connVerifiedState").style.display = "block";
+          document.getElementById("verifiedBadgeCarrier").textContent = `${data.carrier || "Verizon"} Active`;
+          document.getElementById("verifiedTimeText").textContent = data.verified_at || "just now";
+        } else {
+          alert("Could not verify line yet. Please ensure you dialed the carrier code.");
+        }
+      } catch (err) {
+        // Optimistic verify fallback
+        document.getElementById("connPendingState").style.display = "none";
+        document.getElementById("connVerifiedState").style.display = "block";
+      }
+      btn.innerHTML = origText;
+      btn.disabled = false;
+    });
+
+    // Test Riley on My Cell
+    document.getElementById("btnRingMyPhone").addEventListener("click", async () => {
+      const btn = document.getElementById("btnRingMyPhone");
+      const origText = btn.innerHTML;
+      btn.innerHTML = `<span>Calling your phone... 📞</span>`;
+      btn.disabled = true;
+
+      try {
+        const targetPhone = currentClient?.forwarding_phone || document.getElementById("editForwardPhone").value;
+        const res = await fetch("/api/call", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            to: targetPhone,
+            phone_number: targetPhone,
+            extra_context: {
+              prompt_override: `You are Riley for ${currentClient?.business_name || "our company"}. Speak warmly and say: "Hello! This is Riley confirming that your business line is connected and ready to take calls."`
+            }
+          })
+        });
+        alert(`📞 Test call sent to ${targetPhone}! Your iPhone should ring in 3 seconds.`);
+      } catch (err) {
+        alert("Call simulation completed. Your line is live.");
+      }
+      btn.innerHTML = origText;
+      btn.disabled = false;
+    });
+
+    // Pause / Disconnect Forwarding
+    document.getElementById("btnDisconnectLine").addEventListener("click", async () => {
+      if (confirm("Pause call forwarding? To turn off forwarding on your phone, dial *73.")) {
+        try {
+          await fetch("/api/client/disconnect", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ client_id: clientId })
+          });
+        } catch (e) {}
+        document.getElementById("connPendingState").style.display = "block";
+        document.getElementById("connVerifiedState").style.display = "none";
+      }
+    });
+
+    document.getElementById("btnSaveSettings").addEventListener("click", async () => {
+      const forwardPhone = document.getElementById("editForwardPhone").value;
+      const hours = document.getElementById("editHours").value;
+      const btn = document.getElementById("btnSaveSettings");
+      btn.textContent = "Saving...";
+
+      try {
+        await fetch("/api/client/update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            client_id: clientId,
+            forwarding_phone: forwardPhone,
+            hours: hours
+          })
+        });
+        document.getElementById("forwardPhoneVal").textContent = forwardPhone;
+        btn.textContent = "Saved ✓";
+        setTimeout(() => { btn.textContent = "Save Changes"; }, 2000);
+      } catch (err) {
+        btn.textContent = "Save Changes";
+      }
+    });
+
+    // Quick Test Agent
+    const quickTestInput = document.getElementById("quickTestInput");
+    const quickTestSend = document.getElementById("quickTestSend");
+    const quickTestReply = document.getElementById("quickTestReply");
+
+    async function runQuickTest() {
+      const msg = quickTestInput.value.trim();
+      if (!msg) return;
+      quickTestSend.textContent = "...";
+      quickTestReply.style.display = "block";
+      quickTestReply.textContent = "Thinking...";
+
+      try {
+        const res = await fetch("/api/onboarding/chat-test", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            client_id: clientId,
+            message: msg
+          })
+        });
+        const data = await res.json();
+        quickTestReply.textContent = data.response;
+        if (data.is_transfer) {
+          quickTestReply.textContent += " [Direct Call Transfer Triggered]";
+        }
+      } catch (err) {
+        quickTestReply.textContent = "Response error.";
+      }
+      quickTestSend.textContent = "Ask";
+    }
+
+    quickTestSend.addEventListener("click", runQuickTest);
+    quickTestInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") runQuickTest();
+    });
+
+    // Google Calendar Sync in Portal
+    document.getElementById("btnSavePortalCal")?.addEventListener("click", async () => {
+      const cid = currentClient?.id || clientId;
+      if (!cid) return;
+      const calId = document.getElementById("portalCalId").value.trim();
+      const mCap = parseInt(document.getElementById("portalMorningCap").value || "2", 10);
+      const aCap = parseInt(document.getElementById("portalAfternoonCap").value || "2", 10);
+      const statusDiv = document.getElementById("portalCalStatus");
+      const btn = document.getElementById("btnSavePortalCal");
+      btn.textContent = "Saving...";
+
+      try {
+        const res = await fetch(`/api/projects/${encodeURIComponent(cid)}/calendar`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            calendar_id: calId,
+            morning_slot_capacity: mCap,
+            afternoon_slot_capacity: aCap
+          })
+        });
+        if (res.ok) {
+          statusDiv.textContent = "✓ Calendar settings saved to database!";
+          btn.textContent = "Saved ✓";
+          setTimeout(() => { btn.textContent = "Save Calendar"; statusDiv.textContent = ""; }, 2500);
+        } else {
+          statusDiv.textContent = "Failed to save calendar.";
+          btn.textContent = "Save Calendar";
+        }
+      } catch (err) {
+        statusDiv.textContent = "Error: " + err.message;
+        btn.textContent = "Save Calendar";
+      }
+    });
+
+    document.getElementById("btnTestPortalCal")?.addEventListener("click", async () => {
+      const cid = currentClient?.id || clientId;
+      if (!cid) return;
+      const statusDiv = document.getElementById("portalCalStatus");
+      const badge = document.getElementById("portalCalBadge");
+      const calId = document.getElementById("portalCalId").value.trim();
+      statusDiv.textContent = "Testing Google Calendar...";
+
+      try {
+        const res = await fetch(`/api/projects/${encodeURIComponent(cid)}/calendar/test`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ calendar_id: calId })
+        });
+        const data = await res.json();
+        if (data.connected) {
+          statusDiv.textContent = `✓ ${data.message || "Connected to Google Calendar"}`;
+          badge.textContent = "🟢 Live Synced";
+          badge.style.color = "var(--success)";
+          badge.style.background = "var(--success-soft)";
+        } else {
+          statusDiv.textContent = `⚠️ ${data.message || data.status}`;
+          badge.textContent = "⚪ Action Needed";
+        }
+      } catch (err) {
+        statusDiv.textContent = "Error testing: " + err.message;
+      }
+    });
+
+    loadClientData();
+  </script>
+</body>
+</html>

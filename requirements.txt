@@ -1,0 +1,25 @@
+# Pipecat AI core with Groq and Silero VAD support
+pipecat-ai>=0.0.50
+pipecat-ai[groq,silero]>=0.0.50
+
+# Speech to Text and Text to Speech
+faster-whisper>=1.0.0
+kokoro-onnx>=0.6.0
+soundfile>=0.12.1
+numpy>=1.26.0
+onnxruntime>=1.17.0
+
+# Web Framework and Networking
+fastapi>=0.110.0
+uvicorn[standard]>=0.28.0
+aiohttp>=3.9.0
+requests>=2.31.0
+websockets>=12.0
+
+# Configuration & Utilities
+pydantic>=2.6.0
+pydantic-settings>=2.2.0
+python-dotenv>=1.0.0
+loguru>=0.7.2
+jinja2>=3.1.3
+python-multipart>=0.0.9

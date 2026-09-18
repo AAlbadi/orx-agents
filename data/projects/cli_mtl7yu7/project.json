@@ -1,0 +1,16 @@
+{
+  "client_id": "cli_mtl7yu7",
+  "project_name": "Seattle Heating & Cooling Project",
+  "business_name": "Seattle Heating & Cooling",
+  "industry": "hvac",
+  "address": "6029 Roosevelt Way Northeast, Seattle, WA 98115",
+  "forwarding_phone": "(206) 414-3809",
+  "assigned_phone": "+1 (833) 420-5227",
+  "owner_phone": "(206) 414-3809",
+  "owner_email": "",
+  "timezone": "America/New_York",
+  "status": "active",
+  "trigger_source": "onboarding",
+  "created_at": "2026-09-18 15:48:23",
+  "updated_at": "2026-09-18 15:48:23"
+}

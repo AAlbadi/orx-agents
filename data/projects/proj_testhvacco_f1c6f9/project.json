@@ -1,0 +1,16 @@
+{
+  "client_id": "proj_testhvacco_f1c6f9",
+  "project_name": "Test HVAC Co Project",
+  "business_name": "Test HVAC Co",
+  "industry": "hvac",
+  "address": "",
+  "forwarding_phone": "",
+  "assigned_phone": "+1 (833) 420-5227",
+  "owner_phone": "",
+  "owner_email": "",
+  "timezone": "America/New_York",
+  "status": "active",
+  "trigger_source": "admin",
+  "created_at": "2026-09-18 15:25:49",
+  "updated_at": "2026-09-18 15:25:49"
+}

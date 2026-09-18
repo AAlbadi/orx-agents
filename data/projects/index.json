@@ -1,0 +1,122 @@
+[
+  {
+    "id": "cli_qwt6a5z",
+    "business_name": "2508 Delware Se St Services",
+    "industry": "hvac",
+    "status": "active",
+    "assigned_phone": "+1 (833) 420-5227",
+    "created_at": "2026-09-18 15:25:49"
+  },
+  {
+    "id": "cli_fv9vn0t",
+    "business_name": "Cardinal Heating and Air",
+    "industry": "hvac",
+    "status": "active",
+    "assigned_phone": "+1 (833) 420-5227",
+    "created_at": "2026-09-18 15:25:49"
+  },
+  {
+    "id": "cli_test_1",
+    "business_name": "Apex Plumbing Specialists",
+    "industry": "plumbing",
+    "status": "active",
+    "assigned_phone": "+1 (833) 420-5227",
+    "created_at": "2026-09-18 15:25:49"
+  },
+  {
+    "id": "proj_metroelectri_c18210",
+    "business_name": "Metro Electrical Experts",
+    "industry": "electrical",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-18 15:31:02"
+  },
+  {
+    "id": "cli_mtl7yu7",
+    "business_name": "Seattle Heating & Cooling",
+    "industry": "hvac",
+    "status": "active",
+    "assigned_phone": "+1 (833) 420-5227",
+    "created_at": "2026-09-18 15:48:23"
+  },
+  {
+    "id": "proj_metroelectri_bc11ba",
+    "business_name": "Metro Electrical Experts",
+    "industry": "electrical",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-18 15:31:48"
+  },
+  {
+    "id": "cli_demo",
+    "business_name": "Apex Climate & Air",
+    "industry": "hvac",
+    "status": "active",
+    "assigned_phone": "+1 (833) 420-5227",
+    "created_at": "2026-09-18 15:25:49"
+  },
+  {
+    "id": "cli_unit_test_hvac_99",
+    "business_name": "Polar Air & Heating",
+    "industry": "hvac",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-18 15:31:48"
+  },
+  {
+    "id": "cli_wwvawp7",
+    "business_name": "San Diego Services",
+    "industry": "general",
+    "status": "active",
+    "assigned_phone": "+1 (833) 420-5227",
+    "created_at": "2026-09-18 15:25:49"
+  },
+  {
+    "id": "proj_testhvacco_f1c6f9",
+    "business_name": "Test HVAC Co",
+    "industry": "hvac",
+    "status": "active",
+    "assigned_phone": "+1 (833) 420-5227",
+    "created_at": "2026-09-18 15:25:49"
+  },
+  {
+    "id": "cli_auto_onboard_plumb_88",
+    "business_name": "Blue River Plumbing",
+    "industry": "plumbing",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-18 15:31:48"
+  },
+  {
+    "id": "cli_e2e_test_99",
+    "business_name": "Apex Heating & Air Conditioning",
+    "industry": "hvac",
+    "status": "active",
+    "assigned_phone": "+1 (833) 420-5227",
+    "created_at": "2026-09-18 15:25:49"
+  },
+  {
+    "id": "cli_w2ud3nt",
+    "business_name": "2508 Delware Se St Minneapolis Services",
+    "industry": "plumbing",
+    "status": "active",
+    "assigned_phone": "+1 (833) 420-5227",
+    "created_at": "2026-09-18 15:25:49"
+  },
+  {
+    "id": "cli_3i5i1vo",
+    "business_name": "2508 Delware Se St Minneapolis Services",
+    "industry": "hvac",
+    "status": "active",
+    "assigned_phone": "+1 (833) 420-5227",
+    "created_at": "2026-09-18 15:25:49"
+  },
+  {
+    "id": "proj_metroelectri_42cd15",
+    "business_name": "Metro Electrical Experts",
+    "industry": "electrical",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-18 15:31:18"
+  }
+]

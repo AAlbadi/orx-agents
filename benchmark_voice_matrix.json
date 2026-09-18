@@ -1,0 +1,197 @@
+{
+  "timestamp": "2026-09-18 09:37:16 UTC",
+  "stt": {
+    "Deepgram Nova-3": {
+      "provider": "Deepgram",
+      "model": "nova-3",
+      "type": "Cloud Streaming / Flagship",
+      "ttfb_ms": 529.27,
+      "cost_per_min_usd": 0.0043,
+      "status": "PASS",
+      "sample_transcript": ""
+    },
+    "Groq Whisper Large-v3 Turbo": {
+      "provider": "Groq",
+      "model": "whisper-large-v3-turbo",
+      "type": "Cloud Batch / Ultra-Fast",
+      "ttfb_ms": 339.87,
+      "cost_per_min_usd": 0.00185,
+      "status": "PASS",
+      "sample_transcript": " ."
+    },
+    "Local Faster-Whisper (base.en)": {
+      "provider": "Local Host (CPU int8)",
+      "model": "base.en",
+      "type": "Zero-Cost On-Premise",
+      "ttfb_ms": 1212.57,
+      "cost_per_min_usd": 0.0,
+      "status": "PASS",
+      "sample_transcript": ""
+    }
+  },
+  "llm": {
+    "Groq LPU (Qwen 3.8 27B)": {
+      "provider": "Groq LPU",
+      "model": "qwen/qwen3.8-27b",
+      "ttft_ms": 148.4,
+      "total_time_ms": 189.01,
+      "tokens_generated": 18,
+      "cost_input_per_m": 0.2,
+      "cost_output_per_m": 0.6,
+      "est_cost_per_min_usd": 0.0006,
+      "status": "PASS",
+      "sample_output": "I'd be happy to schedule a technician for you, could I pleas"
+    },
+    "Google Gemini (gemini-3.5-flash-lite)": {
+      "provider": "Google DeepMind / Google Cloud",
+      "model": "gemini-3.5-flash-lite",
+      "ttft_ms": 477.53,
+      "total_time_ms": 569.25,
+      "tokens_generated": 16,
+      "cost_input_per_m": 0.075,
+      "cost_output_per_m": 0.3,
+      "est_cost_per_min_usd": 0.0003,
+      "status": "PASS",
+      "sample_output": "I would be happy to send a technician out to look at that fo"
+    },
+    "OpenRouter (google/gemma-4-31b-it:free)": {
+      "provider": "OpenRouter",
+      "model": "google/gemma-4-31b-it:free",
+      "ttft_ms": 267.26,
+      "total_time_ms": 267.26,
+      "tokens_generated": 0,
+      "cost_input_per_m": 0.0,
+      "cost_output_per_m": 0.0,
+      "est_cost_per_min_usd": 0.0,
+      "status": "PASS",
+      "sample_output": ""
+    }
+  },
+  "tts": {
+    "Deepgram Flux (Cliff)": {
+      "provider": "Deepgram",
+      "voice": "flux-cliff-en",
+      "type": "Ultra-Low Latency Conversational Voice",
+      "ttfa_ms": 257.63,
+      "total_time_ms": 258.02,
+      "audio_duration_s": 0.01,
+      "rtf": 34.838,
+      "cost_per_char_usd": 3e-05,
+      "cost_per_audio_min_usd": 0.03,
+      "est_cost_per_call_min_usd": 0.015,
+      "status": "PASS"
+    },
+    "Deepgram Aura (Asteria)": {
+      "provider": "Deepgram",
+      "voice": "aura-asteria-en",
+      "type": "Standard Conversational Voice",
+      "ttfa_ms": 241.29,
+      "total_time_ms": 411.61,
+      "audio_duration_s": 4.04,
+      "rtf": 0.102,
+      "cost_per_char_usd": 1.5e-05,
+      "cost_per_audio_min_usd": 0.015,
+      "est_cost_per_call_min_usd": 0.0075,
+      "status": "PASS"
+    },
+    "Local Kokoro ONNX (af_heart)": {
+      "provider": "Local Host (CPU ONNX)",
+      "voice": "af_heart",
+      "type": "Zero-Cost On-Premise",
+      "ttfa_ms": 2313.61,
+      "total_time_ms": 2313.61,
+      "audio_duration_s": 4.07,
+      "rtf": 0.568,
+      "cost_per_char_usd": 0.0,
+      "cost_per_audio_min_usd": 0.0,
+      "est_cost_per_call_min_usd": 0.0,
+      "status": "PASS"
+    }
+  },
+  "pipelines": [
+    {
+      "id": "cliff_production_flagship",
+      "name": "Cliff Production Flagship (Current Default)",
+      "badge": "BEST QUALITY & SOTA HUMAN CADENCE",
+      "stt_provider": "Deepgram Nova-3",
+      "stt_ttfb_ms": 529.27,
+      "llm_provider": "Groq LPU (Qwen 3.8 27B)",
+      "llm_ttft_ms": 148.4,
+      "tts_provider": "Deepgram Flux (Cliff)",
+      "tts_ttfa_ms": 257.63,
+      "e2e_turn_latency_ms": 935.3,
+      "cost_per_minute_usd": 0.0199,
+      "cost_per_1000_minutes_usd": 19.9
+    },
+    {
+      "id": "ultra_fast_hybrid",
+      "name": "Ultra-Fast Zero-Egress Hybrid",
+      "badge": "FASTEST E2E & HIGH QUALITY",
+      "stt_provider": "Deepgram Nova-3",
+      "stt_ttfb_ms": 529.27,
+      "llm_provider": "Groq LPU (Qwen 3.8 27B)",
+      "llm_ttft_ms": 148.4,
+      "tts_provider": "Local Kokoro ONNX (af_heart)",
+      "tts_ttfa_ms": 2313.61,
+      "e2e_turn_latency_ms": 2991.3,
+      "cost_per_minute_usd": 0.0049,
+      "cost_per_1000_minutes_usd": 4.9
+    },
+    {
+      "id": "groq_unified_flagship",
+      "name": "Groq Unified Speech & Reasoning",
+      "badge": "MOST ACCURATE WHISPER TRANSCRIPTION",
+      "stt_provider": "Groq Whisper Large-v3 Turbo",
+      "stt_ttfb_ms": 339.87,
+      "llm_provider": "Groq LPU (Qwen 3.8 27B)",
+      "llm_ttft_ms": 148.4,
+      "tts_provider": "Deepgram Flux (Cliff)",
+      "tts_ttfa_ms": 257.63,
+      "e2e_turn_latency_ms": 745.9,
+      "cost_per_minute_usd": 0.0175,
+      "cost_per_1000_minutes_usd": 17.5
+    },
+    {
+      "id": "deepmind_cloud_native",
+      "name": "DeepMind Gemini + Deepgram Voice",
+      "badge": "HIGHEST REASONING & MULTILINGUAL",
+      "stt_provider": "Deepgram Nova-3",
+      "stt_ttfb_ms": 529.27,
+      "llm_provider": "Google Gemini (gemini-3.5-flash-lite)",
+      "llm_ttft_ms": 477.53,
+      "tts_provider": "Deepgram Flux (Cliff)",
+      "tts_ttfa_ms": 257.63,
+      "e2e_turn_latency_ms": 1264.4,
+      "cost_per_minute_usd": 0.0196,
+      "cost_per_1000_minutes_usd": 19.6
+    },
+    {
+      "id": "openrouter_community",
+      "name": "Open-Source / Community Pipeline",
+      "badge": "CHEAPEST / NEAR-ZERO CLOUD COST",
+      "stt_provider": "Groq Whisper Large-v3 Turbo",
+      "stt_ttfb_ms": 339.87,
+      "llm_provider": "OpenRouter (google/gemma-4-31b-it:free)",
+      "llm_ttft_ms": 267.26,
+      "tts_provider": "Local Kokoro ONNX (af_heart)",
+      "tts_ttfa_ms": 2313.61,
+      "e2e_turn_latency_ms": 2920.7,
+      "cost_per_minute_usd": 0.0019,
+      "cost_per_1000_minutes_usd": 1.9
+    },
+    {
+      "id": "fully_airgapped_local",
+      "name": "100% Air-Gapped Local Stack",
+      "badge": "ZERO RUNTIME COST (AIR-GAPPED)",
+      "stt_provider": "Local Faster-Whisper (base.en)",
+      "stt_ttfb_ms": 1212.57,
+      "llm_provider": "Local Fallback / CPU",
+      "llm_ttft_ms": 180,
+      "tts_provider": "Local Kokoro ONNX (af_heart)",
+      "tts_ttfa_ms": 2313.61,
+      "e2e_turn_latency_ms": 3706.2,
+      "cost_per_minute_usd": 0.0006,
+      "cost_per_1000_minutes_usd": 0.6
+    }
+  ]
+}
