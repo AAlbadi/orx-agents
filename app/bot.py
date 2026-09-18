@@ -24,6 +24,7 @@ from pipecat.audio.vad.silero import SileroVADAnalyzer
 from pipecat.audio.vad.vad_analyzer import VADParams
 from pipecat.frames.frames import (
     AudioRawFrame,
+    ErrorFrame,
     Frame,
     InputAudioRawFrame,
     InterruptionFrame,
@@ -1219,63 +1220,11 @@ async def run_bot(
         caller_id_note = f"The caller's incoming phone number from caller ID is {caller_number}." if caller_number else "The caller is connecting via web audio or private line."
 
         voice_rules = (
-            "\n\n[High-Precision Information Capture Protocol & Voice Guidelines]\n"
-            "You are an elite, highly intelligent voice AI receptionist. You must achieve a 100% success rate extracting and confirming the customer's information by following this exact proactive conversational flow:\n\n"
-            "0. ANTI-REPETITION & MANDATORY SLOT PROGRESSION (CRITICAL):\n"
-            "   - Track collected slots: [1. Issue] -> [2. Address] -> [3. Time Window] -> [4. Name & Phonetic Check] -> [5. Phone & Email].\n"
-            "   - NEVER repeat a question you just asked or ask for information the caller already provided.\n"
-            "   - Once the customer provides their name (e.g. 'Abdul Aziz Bari'), IMMEDIATELY accept and acknowledge it, then advance directly to the next missing detail (spelling verification or callback phone). NEVER re-ask 'May I have your first and last name, please?'.\n"
-            "   - If the customer answers two steps at once, accept both and advance immediately.\n\n"
-            "1. PROACTIVE AMBIGUITY CLARIFICATION PROTOCOL:\n"
-            "   - If caller speech sounds unexpected, garbled, cut off, or contains ambient noise words (e.g. 'box 5 for me', 'anytime box 5'):\n"
-            "   - Proactively clarify their intent politely in context: 'Just to make sure I caught that correctly, did you say anytime tomorrow works for you?'\n"
-            "   - Never guess wildly, never hallucinate, and never freeze.\n\n"
-            "2. MID-CALL REASSURANCE (NO LINE-TEST RESET):\n"
-            "   - If the caller asks 'Are you there?', 'Can you hear me?', or 'Hello?' mid-call:\n"
-            "   - Reassure them immediately within the active context of your current booking step:\n"
-            "     'Yes, I'm right here! I have your name noted down. What is the best callback phone number for your arrival updates?'\n"
-            "   - NEVER reset the conversation or repeat your opening greeting mid-call.\n\n"
-            "3. SERVICE & PROBLEM DIAGNOSIS:\n"
-            "   - Understand what service or problem they have (e.g. AC blowing warm air, furnace maintenance, system leaking).\n"
-            "   - Immediately offer to get a certified technician scheduled.\n\n"
-            "4. CUSTOMER NAME & NATO / AIRLINE PHONETIC DISAMBIGUATION PROTOCOL:\n"
-            "   - Ask for their full name: 'May I have your first and last name, please?'\n"
-            "   - Smart Spelling Verification: If the name is uncommon, unique, hyphenated, foreign, or has multiple spellings (e.g. Albadi, Kaelen, Jon vs John, Smythe vs Smith), ask: 'Could you quickly spell that out for me just so our technician has it 100% accurate in our dispatch system?'\n"
-            "   - Acoustic / Phonetic Disambiguation: When letters with identical acoustic profiles are heard or corrected (B vs D vs P, M vs N, T vs D, F vs S, C vs Z), proactively verify using standard reference words:\n"
-            "     * 'Was that B as in Boy, or D as in David?'\n"
-            "     * 'Was that M as in Mary, or N as in Nancy?'\n"
-            "     * 'Was that T as in Tom, or D as in David?'\n"
-            "   - Read back the confirmed spelling explicitly: 'Got it, that is A-L-B-A-D-I with D as in David, correct?'\n"
-            "   - Instant Self-Correction Adoption: If the customer corrects any letter or detail (e.g. 'No, instead of T it should be D', 'Wait, it\\'s Dave not David'), IMMEDIATELY adopt the correction warmly: 'Got it, updated to D as in David! So that is Albadi. What is the best mobile number...?' NEVER express confusion or say 'I\\'m confused'.\n\n"
-            "5. SERVICE ADDRESS / LOCATION & MANDATORY CONFIRMATION:\n"
-            "   - Ask for their location: 'And what is the street address where you\\'d like our technician to visit?'\n"
-            "   - Read back the street and city clearly to confirm: 'Got it, 2508 Delaware Street in Minneapolis, correct?'\n\n"
-            "6. SCHEDULING TIME WINDOW:\n"
-            "   - Inquire about their preferred date and time: 'We have openings tomorrow morning around 10 AM or Thursday afternoon around 2 PM. Which day and time works best for you?'\n\n"
-            "7. PHONE NUMBER & RHYTHMIC DIGIT READBACK:\n"
-            f"   - {caller_id_note}\n"
-            "   - If an incoming phone number is present, ask: 'Can we send your technician arrival updates and confirmation text to this phone number, or is there a different mobile number you prefer?'\n"
-            "   - If no incoming number is present, ask: 'What is the best mobile phone number where we can text your technician arrival updates?'\n"
-            "   - Always read back phone numbers in conversational cadence: 'Got it, 612... 769... 9890, correct?'\n\n"
-            "8. EMAIL ADDRESS & SMART DOUBLE-CHECK / READBACK:\n"
-            "   - Ask for their email: 'And what\\'s the best email address to send your Google Calendar invite and service confirmation?'\n"
-            "   - Spelled Letters & Dictation: If the caller spells their email letter-by-letter (e.g. 'A-A-L-B-A-D-I' or 'a a l b a d i 9 1 at gmail dot com'), combine the letters cleanly into the email (e.g. aalbadi91@gmail.com).\n"
-            "   - MANDATORY DOUBLE-CHECK: As soon as the customer gives an email, read it back clearly to confirm: 'Just to double-check that, that\\'s [clearly spoken email address], correct?'\n"
-            "   - INSTANT CORRECTION ADOPTION: If the customer clarifies or corrects, immediately adopt it without friction.\n\n"
-            "9. COMPREHENSIVE 5-POINT FINAL BOOKING RECAP:\n"
-            "   - Once confirmed, give a warm, reassuring 5-point recap:\n"
-            "     'You\\'re all set, [Name]! We have you booked for [Service] on [Day/Time] at [Address]. We sent your calendar invite to [Email] and text updates to [Phone]. Is there anything else I can assist you with today?'\n\n"
-            "10. CALL TRANSFER TO HUMAN SPECIALIST:\n"
-            "   - If the caller asks to speak to a human, real person, agent, manager, owner, or reports an emergency (e.g. gas smell, water leak), immediately say: 'I completely understand. Let me connect you with our live team right away. Please hold for just a moment.'\n\n"
-            "11. CALL WRAP-UP & POLITE FAREWELL:\n"
-            "   - When the customer says goodbye, thanks you, or indicates they have no further questions, warmly conclude the call: 'Thank you so much for choosing Comfort Breeze! Have a wonderful day, goodbye!' and never ask another question.\n\n"
-            "12. MULTILINGUAL COURTESY:\n"
-            "   - If the caller speaks Spanish, Arabic, or another language, respond warmly and courteously in that language or offer human assistance.\n\n"
-            "[Spoken Rules]\n"
-            "- Ask only ONE question at a time. Never ask multiple questions in a single turn.\n"
+            "\n\n[Spoken Rules]\n"
             "- Speak naturally in exactly 1 to 2 concise, punchy sentences (under 25 words per turn).\n"
+            "- Ask only ONE clear question at a time to lead the conversation.\n"
             "- Use natural everyday contractions ('I\\'m', 'we\\'ll', 'don\\'t', 'it\\'s', 'let\\'s').\n"
-            "- Conversational Flow & Natural Acknowledgments: Acknowledge what the caller said warmly and conversationally in your own words (e.g. 'Understood', 'I can definitely help with that', 'Perfect', 'Thanks for confirming') before answering or asking the next question.\n"
+            "- Conversational Flow: Acknowledge what the caller said warmly and conversationally in your own words before answering or asking the next question.\n"
             "- Never output bullet points, asterisks, or markdown formatting.\n"
             "- Spell out times, dates, and numbers in conversational words."
         )
@@ -1786,6 +1735,16 @@ async def run_bot(
                 self.call_state["is_llm_generating"] = True
                 user_text = ""
                 if frame.context and hasattr(frame.context, "get_messages"):
+                    all_msgs = frame.context.get_messages()
+                    # Sliding context window: keep system prompt + last 6 conversational turns to strictly enforce <600 tokens per turn
+                    if len(all_msgs) > 7:
+                        sys_msgs = [m for m in all_msgs if m.get("role") == "system"]
+                        conv_msgs = [m for m in all_msgs if m.get("role") != "system"][-6:]
+                        if hasattr(frame.context, "set_messages"):
+                            frame.context.set_messages(sys_msgs + conv_msgs)
+                        elif hasattr(frame.context, "_messages"):
+                            frame.context._messages = sys_msgs + conv_msgs
+
                     for m in reversed(frame.context.get_messages()):
                         if m.get("role") == "user":
                             user_text = str(m.get("content", ""))
@@ -2108,6 +2067,38 @@ async def run_bot(
         enabled=enable_denoising,
     )
 
+    class LLMErrorRecoveryProcessor(FrameProcessor):
+        """Catches upstream LLM exceptions or rate limit errors (413/429) and provides
+        graceful speech recovery so the call never hangs indefinitely on 'Thinking...'."""
+
+        def __init__(self, tts_service, broadcast_fn, call_state: dict):
+            super().__init__()
+            self.tts = tts_service
+            self.broadcast_fn = broadcast_fn
+            self.call_state = call_state
+
+        async def process_frame(self, frame: Frame, direction: FrameDirection):
+            await super().process_frame(frame, direction)
+            if isinstance(frame, ErrorFrame):
+                err_msg = str(getattr(frame, "error", "")).lower()
+                logger.warning(f"⚠️ [LLM-Recovery] Intercepted LLM pipeline error: {err_msg}")
+                self.call_state["is_llm_generating"] = False
+                self.call_state["llm_finished_time"] = time.time()
+                self.call_state["last_user_speech_time"] = time.time()
+
+                # Deliver an immediate conversational recovery response
+                recovery_text = "I'm right here with you! Could you say that one more time?"
+                try:
+                    await self.broadcast_fn("assistant", recovery_text)
+                    from pipecat.frames.frames import TTSSpeakFrame
+                    await self.tts.queue_frame(TTSSpeakFrame(recovery_text))
+                except Exception as e:
+                    logger.error(f"Error dispatching recovery frame: {e}")
+                return
+            await self.push_frame(frame, direction)
+
+    llm_recovery = LLMErrorRecoveryProcessor(tts, broadcast_transcript, call_state)
+
     # 8. Build Pipeline
     pipeline_elements = [transport.input()]
     if enable_denoising:
@@ -2119,6 +2110,7 @@ async def run_bot(
         user_aggregator,                # Sentence aggregator & turn-taking
         turn_trigger,                   # Emits customer transcript and handles instant test turn
         llm,                            # Multi-provider LLM
+        llm_recovery,                   # Instant recovery from rate limits / network drops
         assistant_text_collector,       # Collects full text from LLMTextFrames before TTS
         tts,                            # Fast Kokoro speech synthesis (4-thread optimized)
         assistant_broadcaster,          # Emits assistant response in sync with audio
