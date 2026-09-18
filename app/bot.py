@@ -1263,6 +1263,29 @@ async def run_bot(
         is_gemini = False
         is_groq = True
 
+    class ResilientGroqLLMService(GroqLLMService):
+        """Resilient Groq LLM service that automatically falls back to secondary models
+        (groq/compound-mini with 70,000 token limit) if the primary model hits 429/413 rate limits."""
+
+        async def get_chat_completions(self, context: LLMContext):
+            try:
+                return await super().get_chat_completions(context)
+            except Exception as e:
+                err_str = str(e).lower()
+                if "429" in err_str or "rate limit" in err_str or "413" in err_str or "tpd" in err_str:
+                    curr_model = self._settings.model
+                    fallback_model = "groq/compound-mini" if curr_model != "groq/compound-mini" else "openai/gpt-oss-20b"
+                    logger.warning(
+                        f"⚠️ [LLM-Resilience] Primary model '{curr_model}' rate-limited. "
+                        f"Auto-switching turn to '{fallback_model}' (70k token limit)!"
+                    )
+                    self._settings.model = fallback_model
+                    try:
+                        return await super().get_chat_completions(context)
+                    finally:
+                        self._settings.model = curr_model
+                raise
+
     if is_gemini:
         # Map legacy/old model names to the correct working Gemini 3.6 model
         _GEMINI_MODEL_MAP = {
@@ -1288,7 +1311,7 @@ async def run_bot(
     elif is_groq:
         groq_model = agent_llm if ("gemini" not in agent_llm.lower() and agent_llm not in _DEPRECATED_GROQ_MODELS) else "qwen/qwen3.8-27b"
         logger.info(f"Configuring Groq LLM for '{agent_name}' (model={groq_model})")
-        llm = GroqLLMService(
+        llm = ResilientGroqLLMService(
             api_key=settings.GROQ_API_KEY,
             settings=GroqLLMService.Settings(
                 model=groq_model,
@@ -2098,6 +2121,22 @@ async def run_bot(
             await self.push_frame(frame, direction)
 
     llm_recovery = LLMErrorRecoveryProcessor(tts, broadcast_transcript, call_state)
+
+    if hasattr(llm, "event_handler"):
+        @llm.event_handler("on_error")
+        async def on_llm_pipeline_error(processor, error_frame):
+            err_msg = str(getattr(error_frame, "error", "")).lower()
+            logger.warning(f"⚠️ [LLM on_error Handler] Intercepted pipeline error: {err_msg}")
+            call_state["is_llm_generating"] = False
+            call_state["llm_finished_time"] = time.time()
+            call_state["last_user_speech_time"] = time.time()
+            recovery_text = "I'm right here with you! Could you say that one more time?"
+            try:
+                await broadcast_transcript("assistant", recovery_text)
+                from pipecat.frames.frames import TTSSpeakFrame
+                await tts.queue_frame(TTSSpeakFrame(recovery_text))
+            except Exception as e:
+                logger.error(f"Error dispatching recovery frame from on_error: {e}")
 
     # 8. Build Pipeline
     pipeline_elements = [transport.input()]
