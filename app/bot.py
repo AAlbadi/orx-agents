@@ -1288,7 +1288,7 @@ async def run_bot(
         or not is_gemini
     )
 
-    if is_gemini and settings.GROQ_API_KEY and "flash-lite" in agent_llm.lower():
+    if is_gemini and settings.GROQ_API_KEY and "3.5-flash-lite" in agent_llm.lower():
         # Prevent 43-second stall caused by deprecated/throttled gemini-3.5-flash-lite on voice calls
         logger.warning(f"⚡ [LLM] Detected slow flash-lite model '{agent_llm}' — Auto-accelerating to Groq LPU (qwen/qwen3.8-27b, 200ms TTFT) for seamless realtime voice.")
         is_gemini = False
@@ -1318,8 +1318,8 @@ async def run_bot(
                 raise
 
     if is_gemini:
-        # Native Google GenAI SDK with gemini-3.6-flash
-        gemini_model = "gemini-3.6-flash"
+        # Native Google GenAI SDK with gemini-3.1-flash-lite for blazing fast ~500ms TTFB
+        gemini_model = "gemini-3.1-flash-lite"
         logger.success(f"⚡ [LLM] Activating Native Google GenAI ({gemini_model}) for '{agent_name}'")
         try:
             from pipecat.services.google.llm import GoogleLLMService

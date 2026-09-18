@@ -484,6 +484,13 @@ async def api_simulate_agent_turn(payload: Dict[str, Any] = Body(...)):
     return result
 
 
+@app.post("/api/onboarding/demo-call-script")
+async def api_demo_call_script(profile: Dict[str, Any] = Body(...)):
+    """Generate realistic dual-voice call simulation script tailored to owner profile."""
+    from app.onboarding import generate_call_demo_script
+    return generate_call_demo_script(profile)
+
+
 @app.post("/api/polar/create-checkout")
 async def api_polar_checkout(payload: Dict[str, Any] = Body(...)):
     """Create Polar subscription checkout session."""
@@ -497,7 +504,7 @@ async def api_polar_checkout(payload: Dict[str, Any] = Body(...)):
 @app.post("/api/polar/webhook")
 async def api_polar_webhook(request: Request):
     """Handle incoming Polar subscription webhook events."""
-    from app.onboarding import get_client_profile, save_client_profile
+    from app.onboarding import get_client_profile, save_client_profile, send_activation_sms
     try:
         body = await request.json()
         logger.info(f"Polar Webhook Event: {body.get('type')}")
@@ -511,6 +518,15 @@ async def api_polar_webhook(request: Request):
                 profile["polar_status"] = "active"
                 profile["plan"] = metadata.get("plan", "starter")
                 save_client_profile(profile)
+
+                # Fire activation SMS on new subscription
+                if event_type in ("subscription.created", "order.paid"):
+                    try:
+                        http_base = str(request.base_url).rstrip("/")
+                        send_activation_sms(profile, public_url=http_base)
+                    except Exception as sms_err:
+                        logger.warning(f"Activation SMS failed (non-fatal): {sms_err}")
+
         return {"status": "received"}
     except Exception as e:
         logger.error(f"Polar webhook error: {e}")
@@ -1766,6 +1782,8 @@ async def api_run_denoise_benchmark():
 
 
 # ---------------------------------------------------------
+_speech_cache: Dict[str, bytes] = {}
+
 # Test & Audio APIs
 # ---------------------------------------------------------
 @app.get("/api/test-speech")
@@ -1774,8 +1792,12 @@ async def test_speech_api(
     voice: Optional[str] = Query(None),
     speed: float = Query(1.0),
 ):
-    """Synthesizes speech using Kokoro ONNX and returns real-time WAV audio."""
+    """Synthesizes speech using Kokoro ONNX and returns real-time WAV audio with caching."""
     target_voice = voice or settings.KOKORO_VOICE
+    cache_key = f"{target_voice}:{speed}:{text.strip()}"
+    if cache_key in _speech_cache:
+        return Response(content=_speech_cache[cache_key], media_type="audio/wav")
+
     if target_voice and (target_voice.startswith("flux-") or target_voice.startswith("aura-") or target_voice.lower() == "cliff"):
         voice_id = "flux-cliff-en" if target_voice.lower() == "cliff" else target_voice
         ver = "v2" if "flux" in voice_id else "v1"
@@ -1795,7 +1817,10 @@ async def test_speech_api(
                     samples = np.frombuffer(raw, dtype=np.int16)
                     buf = io.BytesIO()
                     sf.write(buf, samples, 24000, format="WAV", subtype="PCM_16")
-                    return Response(content=buf.getvalue(), media_type="audio/wav")
+                    audio_bytes = buf.getvalue()
+                    if len(_speech_cache) < 300:
+                        _speech_cache[cache_key] = audio_bytes
+                    return Response(content=audio_bytes, media_type="audio/wav")
         except Exception as e:
             logger.warning(f"Deepgram sample error ({e}), falling back to Kokoro...")
 
@@ -1810,7 +1835,10 @@ async def test_speech_api(
     samples, sample_rate = kokoro.create(text, voice=target_voice, speed=speed)
     buf = io.BytesIO()
     sf.write(buf, samples, sample_rate, format="WAV", subtype="PCM_16")
-    return Response(content=buf.getvalue(), media_type="audio/wav")
+    audio_bytes = buf.getvalue()
+    if len(_speech_cache) < 300:
+        _speech_cache[cache_key] = audio_bytes
+    return Response(content=audio_bytes, media_type="audio/wav")
 
 
 @app.get("/api/simulation/full-call")
@@ -2020,8 +2048,9 @@ async def test_llm_api(request: Request):
                 base_url=settings.GEMINI_BASE_URL,
                 api_key=settings.GEMINI_API_KEY,
             )
+            target_model = llm_info.get("model") or settings.GEMINI_MODEL or "gemini-3.1-flash-lite"
             resp = client.chat.completions.create(
-                model=settings.GEMINI_MODEL,
+                model=target_model,
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=50,
             )
@@ -2030,10 +2059,10 @@ async def test_llm_api(request: Request):
             return {
                 "status": "success",
                 "provider": "gemini",
-                "model": settings.GEMINI_MODEL,
+                "model": target_model,
                 "latency_ms": elapsed_ms,
                 "reply": reply,
-                "badge": "⚡ Google Gemini Flash Smart",
+                "badge": f"⚡ Google Gemini ({target_model})",
             }
         elif llm_info["provider"] == "openrouter" and settings.OPENROUTER_API_KEY:
             from openai import OpenAI
