@@ -3034,21 +3034,28 @@ async def api_run_denoise_benchmark():
 _speech_cache: dict[str, tuple[bytes, str]] = {}
 
 VOICE_MAP_DEEPGRAM = {
-    "af_heart": "aura-asteria-en",
-    "riley": "aura-asteria-en",
-    "aura-asteria-en": "aura-asteria-en",
-    "am_adam": "aura-angus-en",
-    "customer": "aura-angus-en",
-    "david": "aura-angus-en",
-    "adam": "aura-angus-en",
-    "aura-angus-en": "aura-angus-en",
-    "michael": "aura-orion-en",
-    "am_michael": "aura-orion-en",
-    "aura-orion-en": "aura-orion-en",
-    "sarah": "aura-luna-en",
-    "af_sarah": "aura-luna-en",
-    "aura-luna-en": "aura-luna-en",
-    "cliff": "aura-orion-en",
+    "af_heart": "flux-heather-en",
+    "riley": "flux-heather-en",
+    "flux-heather-en": "flux-heather-en",
+    "heather": "flux-heather-en",
+    "aura-asteria-en": "flux-heather-en",
+    "am_adam": "flux-cliff-en",
+    "customer": "flux-cliff-en",
+    "david": "flux-cliff-en",
+    "adam": "flux-cliff-en",
+    "cliff": "flux-cliff-en",
+    "flux-cliff-en": "flux-cliff-en",
+    "aura-angus-en": "flux-cliff-en",
+    "michael": "flux-bruce-en",
+    "am_michael": "flux-bruce-en",
+    "bruce": "flux-bruce-en",
+    "flux-bruce-en": "flux-bruce-en",
+    "aura-orion-en": "flux-bruce-en",
+    "sarah": "flux-sienna-en",
+    "af_sarah": "flux-sienna-en",
+    "sienna": "flux-sienna-en",
+    "flux-sienna-en": "flux-sienna-en",
+    "aura-luna-en": "flux-sienna-en",
 }
 
 # Test & Audio APIs
@@ -3059,18 +3066,18 @@ async def test_speech_api(
     voice: Optional[str] = Query(None),
     speed: float = Query(1.0),
 ):
-    """Synthesizes speech using Deepgram Aura (with instant MP3 delivery & caching) or Kokoro fallback."""
-    raw_voice = (voice or "aura-asteria-en").lower().strip()
-    target_voice = VOICE_MAP_DEEPGRAM.get(raw_voice, voice or "aura-asteria-en")
+    """Synthesizes speech using Deepgram Flux (v2) / Aura (v1) with instant MP3 delivery & caching or Kokoro fallback."""
+    raw_voice = (voice or "flux-heather-en").lower().strip()
+    target_voice = VOICE_MAP_DEEPGRAM.get(raw_voice, voice or "flux-heather-en")
 
     cache_key = f"{target_voice}:{text.strip()}"
     if cache_key in _speech_cache:
         cached_data, cached_type = _speech_cache[cache_key]
         return Response(content=cached_data, media_type=cached_type)
 
-    # Fast Deepgram Aura MP3 synthesis
+    # Fast Deepgram Flux / Aura MP3 synthesis
     if settings.DEEPGRAM_API_KEY:
-        dg_voice = target_voice if (target_voice.startswith("aura-") or target_voice.startswith("flux-")) else "aura-asteria-en"
+        dg_voice = target_voice if (target_voice.startswith("aura-") or target_voice.startswith("flux-")) else "flux-heather-en"
         ver = "v2" if "flux" in dg_voice else "v1"
         try:
             import httpx

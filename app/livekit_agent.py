@@ -533,29 +533,29 @@ async def _build_stt_service(model: str = "nova-3"):
 
 
 VOICE_FALLBACK_MAP: Dict[str, str] = {
-    # Kokoro voice mappings to LiveKit voices
-    "af_heart": "aura-2-asteria-en",
-    "af_sarah": "aura-luna-en",
+    # Kokoro voice mappings to Deepgram Flux voices
+    "af_heart": "flux-heather-en",
+    "af_sarah": "flux-sienna-en",
     "af_bella": "flux-alexis-en",
-    "af_nicole": "aura-athena-en",
+    "af_nicole": "flux-heather-en",
     "af_sky": "flux-sienna-en",
-    "af_alloy": "aura-stella-en",
-    "af_jessica": "aura-asteria-en",
+    "af_alloy": "flux-alexis-en",
+    "af_jessica": "flux-heather-en",
     "am_adam": "flux-cliff-en",
     "am_michael": "flux-bruce-en",
     "am_george": "flux-colin-en",
     "am_eric": "flux-wes-en",
     "am_liam": "flux-miles-en",
     "bf_emma": "flux-gemma-en",
-    "bf_isabella": "aura-luna-en",
+    "bf_isabella": "flux-sienna-en",
     "bm_george": "flux-colin-en",
     "bm_lewis": "flux-cliff-en",
 }
 
 
-async def _build_tts_service(voice: str = "aura-2-asteria-en"):
+async def _build_tts_service(voice: str = "flux-heather-en"):
     """Factory for LiveKit TTS service supporting Deepgram Flux (v2 API) and Deepgram Aura (v1 API)."""
-    raw_name = (voice or "aura-2-asteria-en").strip()
+    raw_name = (voice or "flux-heather-en").strip()
     model_name = VOICE_FALLBACK_MAP.get(raw_name, raw_name)
     sess = await get_shared_http_session()
 

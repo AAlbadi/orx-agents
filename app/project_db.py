@@ -303,7 +303,7 @@ def create_project(data: Dict[str, Any], trigger_source: str = "admin") -> Dict[
             f"Thank you for calling {biz_name}. This is {persona_name}, your virtual receptionist. "
             f"How may I help get your service scheduled today?"
         )
-        tts_voice = data.get("persona_voice") or data.get("tts_voice") or "af_heart"
+        tts_voice = data.get("persona_voice") or data.get("tts_voice") or "flux-heather-en"
         voice_speed = float(data.get("voice_speed", 1.0))
         services = data.get("services") or ""
         emergency_triggers = data.get("transfer_rules") or data.get("emergency_triggers") or ""
