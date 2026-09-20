@@ -1231,6 +1231,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             room: roomName,
+            assistant_id: (document.getElementById('sel-template') && document.getElementById('sel-template').value) ? document.getElementById('sel-template').value : 'riley-hvac',
             llm_provider: llmVal[0],
             llm_model: llmVal[1],
             stt_model: sttVal,

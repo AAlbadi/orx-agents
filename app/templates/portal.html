@@ -877,42 +877,46 @@
 
         <div class="sidebar-card" style="margin-top: 16px;">
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-            <h3 class="sidebar-title" style="margin-bottom: 0;">📅 Google Calendar Sync</h3>
-            <span id="portalCalBadge" style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: var(--brand-soft); color: var(--brand);">Live Ready</span>
+            <h3 class="sidebar-title" style="margin-bottom: 0;">📅 Google Calendar FreeBusy</h3>
+            <span id="portalCalBadge" style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: var(--brand-soft); color: var(--brand);">FreeBusy Active</span>
           </div>
-          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
+          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.4;">
             Prevents double-booking by syncing your arrival windows directly with Google Calendar FreeBusy.
           </p>
-          
-          <!-- 1-Click OAuth Connect Button -->
-          <div id="portalGCalOAuthSection" style="margin-bottom: 14px;">
-            <button type="button" id="btnConnectGCal" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 9px 12px; border-radius: 10px; background: #FFFFFF; color: #1F2937; border: 1.5px solid #D1D5DB; font-size: 12.5px; font-weight: 600; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.15s;">
-              <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
-              <span id="btnConnectGCalText">Connect Google Calendar</span>
-            </button>
-            <div id="gcalConnectedInfo" style="display: none; margin-top: 8px; padding: 8px 10px; border-radius: 8px; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); font-size: 11.5px; color: #065F46; justify-content: space-between; align-items: center;">
-              <span id="gcalEmailText">Connected</span>
-              <button type="button" id="btnDisconnectGCal" style="background: none; border: none; color: #DC2626; font-size: 11px; font-weight: 600; cursor: pointer; text-decoration: underline;">Disconnect</button>
+
+          <!-- FreeBusy Email Input & Quick Connect -->
+          <div class="control-group" style="margin-bottom: 10px;">
+            <label class="control-label" style="display: flex; justify-content: space-between; align-items: center;">
+              <span>Google Calendar Email</span>
+              <span style="font-size: 10.5px; color: #059669; font-weight: 700;">⚡ Instant FreeBusy</span>
+            </label>
+            <div style="display: flex; gap: 6px;">
+              <input type="email" class="control-input" id="portalCalId" placeholder="owner@company.com or @gmail.com" value="primary" style="flex: 1;">
+              <button type="button" id="btnConnectFreeBusy" style="background: #10B981; color: #FFF; border: none; border-radius: 8px; padding: 0 12px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.06); transition: all 0.15s;">
+                <span>⚡ Connect</span>
+              </button>
             </div>
           </div>
 
-          <div class="control-group">
-            <label class="control-label">Calendar ID</label>
-            <input type="text" class="control-input" id="portalCalId" placeholder="primary or technician@gmail.com" value="primary">
+          <div id="gcalConnectedInfo" style="display: none; margin-bottom: 10px; padding: 8px 10px; border-radius: 8px; background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); font-size: 11.5px; color: #065F46; justify-content: space-between; align-items: center;">
+            <span id="gcalEmailText">✓ FreeBusy synced</span>
+            <button type="button" id="btnDisconnectGCal" style="background: none; border: none; color: #DC2626; font-size: 11px; font-weight: 600; cursor: pointer; text-decoration: underline;">Change</button>
           </div>
+
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
             <div class="control-group">
-              <label class="control-label">Morning Cap</label>
+              <label class="control-label">Morning Window Cap</label>
               <input type="number" class="control-input" id="portalMorningCap" min="1" max="10" value="2">
             </div>
             <div class="control-group">
-              <label class="control-label">Afternoon Cap</label>
+              <label class="control-label">Afternoon Window Cap</label>
               <input type="number" class="control-input" id="portalAfternoonCap" min="1" max="10" value="2">
             </div>
           </div>
+
           <div style="display: flex; gap: 8px;">
-            <button type="button" class="btn-save-settings" id="btnSavePortalCal" style="flex: 1; padding: 8px 10px; font-size: 12px;">Save Calendar</button>
-            <button type="button" id="btnTestPortalCal" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text-main);">Test Live</button>
+            <button type="button" class="btn-save-settings" id="btnSavePortalCal" style="flex: 1; padding: 8px 10px; font-size: 12px;">Save Settings</button>
+            <button type="button" id="btnTestPortalCal" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text-main);">Test FreeBusy</button>
           </div>
           <div id="portalCalStatus" style="font-size: 11px; margin-top: 8px; color: var(--text-muted); font-family: var(--font-mono);"></div>
         </div>
@@ -2075,24 +2079,76 @@
       }
     });
 
+    // Instant FreeBusy Connect by Email
+    document.getElementById("btnConnectFreeBusy")?.addEventListener("click", async () => {
+      const cid = currentClient?.id || clientId;
+      if (!cid) return;
+      const calInput = document.getElementById("portalCalId");
+      const email = calInput?.value.trim() || currentClient?.owner_email || "";
+      if (!email || !email.includes("@")) {
+        alert("Please enter your Google Calendar email (e.g. technician@company.com or @gmail.com)");
+        calInput?.focus();
+        return;
+      }
+      const btn = document.getElementById("btnConnectFreeBusy");
+      const statusDiv = document.getElementById("portalCalStatus");
+      const badge = document.getElementById("portalCalBadge");
+      const connInfo = document.getElementById("gcalConnectedInfo");
+      const emailText = document.getElementById("gcalEmailText");
+
+      if (btn) btn.innerHTML = "<span>Syncing...</span>";
+      if (statusDiv) statusDiv.textContent = "Connecting FreeBusy sync...";
+
+      try {
+        const res = await fetch(`/api/projects/${encodeURIComponent(cid)}/calendar/freebusy`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            client_id: cid,
+            email: email,
+            morning_slot_capacity: parseInt(document.getElementById("portalMorningCap")?.value || "2", 10),
+            afternoon_slot_capacity: parseInt(document.getElementById("portalAfternoonCap")?.value || "2", 10),
+          })
+        });
+        const data = await res.json();
+        if (data.success || data.connected) {
+          if (btn) btn.innerHTML = "<span>✓ Synced</span>";
+          if (connInfo) connInfo.style.display = "flex";
+          if (emailText) emailText.textContent = `✓ FreeBusy synced with ${email}`;
+          if (badge) {
+            badge.textContent = "🟢 FreeBusy Synced";
+            badge.style.color = "var(--success)";
+            badge.style.background = "var(--success-soft)";
+          }
+          if (statusDiv) statusDiv.textContent = data.message || "✓ FreeBusy active! Double-booking prevention live.";
+        } else {
+          if (btn) btn.innerHTML = "<span>⚡ Connect</span>";
+          if (statusDiv) statusDiv.textContent = "⚠️ " + (data.detail || "Failed to connect FreeBusy");
+        }
+      } catch (err) {
+        if (btn) btn.innerHTML = "<span>⚡ Connect</span>";
+        if (statusDiv) statusDiv.textContent = "Error: " + err.message;
+      }
+    });
+
     document.getElementById("btnTestPortalCal")?.addEventListener("click", async () => {
       const cid = currentClient?.id || clientId;
       if (!cid) return;
       const statusDiv = document.getElementById("portalCalStatus");
       const badge = document.getElementById("portalCalBadge");
       const calId = document.getElementById("portalCalId").value.trim();
-      statusDiv.textContent = "Testing Google Calendar...";
+      statusDiv.textContent = "Testing FreeBusy live availability...";
 
       try {
         const res = await fetch(`/api/projects/${encodeURIComponent(cid)}/calendar/test`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ calendar_id: calId })
+          body: JSON.stringify({ calendar_id: calId, email: calId })
         });
         const data = await res.json();
         if (data.connected) {
-          statusDiv.textContent = `✓ ${data.message || "Connected to Google Calendar"}`;
-          badge.textContent = "🟢 Live Synced";
+          statusDiv.textContent = `✓ ${data.message || "FreeBusy verified! Calendar sync active."}`;
+          badge.textContent = "🟢 FreeBusy Synced";
           badge.style.color = "var(--success)";
           badge.style.background = "var(--success-soft)";
         } else {
@@ -2104,34 +2160,35 @@
       }
     });
 
-    // 1-Click Google Calendar OAuth in Portal
+    // 1-Click Google Calendar OAuth & FreeBusy Status in Portal
     async function checkPortalGCalStatus() {
       const cid = currentClient?.id || clientId;
       if (!cid) return;
       try {
         const res = await fetch(`/api/auth/google/status?client_id=${encodeURIComponent(cid)}`);
         const st = await res.json();
-        const connectBtn = document.getElementById("btnConnectGCal");
         const connInfo = document.getElementById("gcalConnectedInfo");
         const emailText = document.getElementById("gcalEmailText");
         const badge = document.getElementById("portalCalBadge");
         const calIdInput = document.getElementById("portalCalId");
 
-        if (st.is_connected && st.user_email) {
-          if (connectBtn) connectBtn.style.display = "none";
+        const linkedEmail = st.user_email || currentClient?.google_calendar_id || currentClient?.owner_email || "";
+
+        if ((st.is_connected && st.user_email) || (currentClient?.calendar_connected && linkedEmail)) {
           if (connInfo) connInfo.style.display = "flex";
-          if (emailText) emailText.textContent = `✓ Linked to ${st.user_email}`;
+          if (emailText) emailText.textContent = `✓ FreeBusy synced with ${linkedEmail}`;
           if (badge) {
-            badge.textContent = "🟢 Live Synced";
+            badge.textContent = "🟢 FreeBusy Synced";
             badge.style.color = "var(--success)";
             badge.style.background = "var(--success-soft)";
           }
           if (calIdInput && (!calIdInput.value || calIdInput.value === "primary")) {
-            calIdInput.value = st.user_email;
+            calIdInput.value = linkedEmail;
           }
         } else {
-          if (connectBtn) connectBtn.style.display = "flex";
-          if (connInfo) connInfo.style.display = "none";
+          if (calIdInput && (!calIdInput.value || calIdInput.value === "primary") && currentClient?.owner_email) {
+            calIdInput.value = currentClient.owner_email;
+          }
         }
       } catch (e) {}
     }

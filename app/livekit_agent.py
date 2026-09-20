@@ -1003,7 +1003,12 @@ async def _agent_room_worker(
                 user_away_timeout=12.0,
             )
 
-            agent_id = config.get("assistant_id") or config.get("agent_id") or config.get("template_id") or "marcus-sales"
+            agent_id = (
+                config.get("assistant_id")
+                or config.get("agent_id")
+                or config.get("template_id")
+                or ("riley-hvac" if any(w in instructions.lower() for w in ["riley", "hvac", "heating", "air condition", "comfort breeze", "climate"]) else "marcus-sales")
+            )
             agent = ResilientVoiceAgent(
                 instructions=instructions,
                 fallback_llm=fallback_llm_service,

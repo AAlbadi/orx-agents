@@ -381,18 +381,19 @@ class VoiceStateMachine:
         self.confirmed_mobile: Optional[str] = None
         self.detected_objection: Optional[str] = None
 
-        # Determine persona type cleanly without collision
-        if any(k in self.agent_id for k in ["ana", "marcus", "sales", "tpl-outbound-sales"]):
-            self.persona = "marcus_sales"
-            self.agent_name = "Ana" if ("ana" in self.agent_id or "ana" in self.base_prompt.lower()) else "Marcus"
-            self.current_stage = "hook"
-        elif any(k in self.agent_id for k in ["riley", "hvac", "tpl-hvac"]):
+        # Determine persona type cleanly by agent_id and prompt content
+        base_lower = self.base_prompt.lower()
+        if any(k in self.agent_id for k in ["riley", "hvac", "tpl-hvac"]) or any(k in base_lower for k in ["comfort breeze", "hvac", "air conditioning", "heating", "furnace", "apex climate", "riley"]):
             self.persona = "riley_hvac"
             self.current_stage = "greeting"
-        elif any(k in self.agent_id for k in ["maya", "medical", "tpl-medical", "dental"]):
+        elif any(k in self.agent_id for k in ["maya", "medical", "tpl-medical", "dental"]) or any(k in base_lower for k in ["maya", "medical", "dental", "clinic", "health"]):
             self.persona = "maya_medical"
             self.current_stage = "triage"
-        elif any(k in self.agent_id for k in ["cloud", "tpl-outbound-cloud", "sdr", "saas"]):
+        elif any(k in self.agent_id for k in ["ana", "marcus", "sales", "tpl-outbound-sales"]) or any(k in base_lower for k in ["marcus", "ana", "b2b sales"]):
+            self.persona = "marcus_sales"
+            self.agent_name = "Ana" if ("ana" in self.agent_id or "ana" in base_lower) else "Marcus"
+            self.current_stage = "hook"
+        elif any(k in self.agent_id for k in ["cloud", "tpl-outbound-cloud", "sdr", "saas"]) or ("cloud" in base_lower and "sdr" in base_lower):
             self.persona = "cloud_sdr"
             self.current_stage = "opener"
         else:
