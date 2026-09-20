@@ -22,6 +22,8 @@ services:
     env_file:
       - .env
     volumes:
+      # Mount application code for live updates
+      - ./app:/app/app
       # Persist client databases, recordings, and configurations
       - ./data:/app/data
       # Persist downloaded models and local caches outside the container
