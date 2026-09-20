@@ -520,16 +520,44 @@ async def _build_stt_service(model: str = "nova-3"):
         "Comfort Breeze", "HVAC", "air conditioning", "furnace", "thermostat",
         "compressor", "Freon", "ductwork", "technician", "diagnostic"
     ]
-    return deepgram.STT(
-        model=model or "nova-3",
-        api_key=settings.DEEPGRAM_API_KEY,
-        http_session=sess,
-        smart_format=True,
-        numerals=True,
-        endpointing_ms=450,
-        keyterm=keyterms,
-        interim_results=True,
-    )
+    raw_model = (model or "nova-3").lower().strip()
+    
+    # Normalize model names: "deepgram-nova-3", "nova-3-general", "deepgram", etc. -> "nova-3"
+    if "nova-3" in raw_model or raw_model == "deepgram" or not raw_model:
+        stt_model = "nova-3"
+    elif "nova-2" in raw_model:
+        stt_model = "nova-2"
+    else:
+        stt_model = raw_model
+
+    stt_kwargs = {
+        "model": stt_model,
+        "api_key": settings.DEEPGRAM_API_KEY,
+        "http_session": sess,
+        "smart_format": True,
+        "numerals": True,
+        "endpointing_ms": 450,
+        "interim_results": True,
+    }
+    # Keyterm Prompting is strictly available for Nova-3 in Deepgram
+    if stt_model == "nova-3":
+        stt_kwargs["keyterm"] = keyterms
+    elif stt_model in ("nova-2", "general"):
+        stt_kwargs["keywords"] = keyterms
+
+    try:
+        return deepgram.STT(**stt_kwargs)
+    except Exception as e:
+        logger.warning(f"[LiveKit STT] Deepgram STT init with model '{stt_model}' failed ({e}). Falling back to safe nova-3.")
+        return deepgram.STT(
+            model="nova-3",
+            api_key=settings.DEEPGRAM_API_KEY,
+            http_session=sess,
+            smart_format=True,
+            numerals=True,
+            endpointing_ms=450,
+            interim_results=True,
+        )
 
 
 VOICE_FALLBACK_MAP: Dict[str, str] = {
@@ -559,20 +587,29 @@ async def _build_tts_service(voice: str = "flux-heather-en"):
     model_name = VOICE_FALLBACK_MAP.get(raw_name, raw_name)
     sess = await get_shared_http_session()
 
-    # Deepgram Flux uses the /v2/speak endpoint
-    if model_name.startswith("flux-"):
-        logger.info(f"[LiveKit TTS] Initializing Deepgram Flux v2 voice: {model_name}")
+    try:
+        # Deepgram Flux uses the /v2/speak endpoint
+        if model_name.startswith("flux-"):
+            logger.info(f"[LiveKit TTS] Initializing Deepgram Flux v2 voice: {model_name}")
+            return deepgram.TTS(
+                model=model_name,
+                base_url="https://api.deepgram.com/v2/speak",
+                api_key=settings.DEEPGRAM_API_KEY,
+                http_session=sess,
+            )
+        else:
+            logger.info(f"[LiveKit TTS] Initializing Deepgram Aura voice: {model_name}")
+            return deepgram.TTS(
+                model=model_name,
+                base_url="https://api.deepgram.com/v1/speak",
+                api_key=settings.DEEPGRAM_API_KEY,
+                http_session=sess,
+            )
+    except Exception as e:
+        logger.warning(f"[LiveKit TTS] Failed to initialize voice '{model_name}': {e}. Falling back to default flux-heather-en.")
         return deepgram.TTS(
-            model=model_name,
+            model="flux-heather-en",
             base_url="https://api.deepgram.com/v2/speak",
-            api_key=settings.DEEPGRAM_API_KEY,
-            http_session=sess,
-        )
-    else:
-        logger.info(f"[LiveKit TTS] Initializing Deepgram Aura voice: {model_name}")
-        return deepgram.TTS(
-            model=model_name,
-            base_url="https://api.deepgram.com/v1/speak",
             api_key=settings.DEEPGRAM_API_KEY,
             http_session=sess,
         )
@@ -1044,7 +1081,12 @@ async def _agent_room_worker(
                 "greeting",
                 "Hi there! I'm Aria, running on LiveKit with Groq and Deepgram. How can I help you today?"
             )
-            await asyncio.sleep(0.4)
+            # Wait up to 3.0s for the browser participant to connect so greeting audio isn't missed
+            wait_deadline = time.time() + 3.0
+            while len(room.remote_participants) == 0 and time.time() < wait_deadline and room.isconnected():
+                await asyncio.sleep(0.25)
+
+            await asyncio.sleep(0.2)
             try:
                 session.say(greeting)
                 logger.info(f"[LiveKit Agent] Greeting sent to room: {room_name}")

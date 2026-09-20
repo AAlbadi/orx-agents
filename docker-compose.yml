@@ -1,4 +1,16 @@
 services:
+  livekit-server:
+    image: livekit/livekit-server:latest
+    container_name: livekit-server
+    restart: unless-stopped
+    command: --dev --bind 0.0.0.0
+    ports:
+      - "7880:7880"
+      - "7881:7881"
+      - "7882:7882/udp"
+    networks:
+      - voice-network
+
   voice-agent:
     build:
       context: .
