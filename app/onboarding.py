@@ -2232,7 +2232,7 @@ def create_polar_checkout_session(plan_id: str, client_id: str, success_url: str
             "checkout_url": f"{custom_checkout_link}{sep}client_id={client_id}",
             "product_id": product_id,
             "plan": plan_id,
-            "amount": "$49/mo" if plan_id == "starter" else "$99/mo",
+            "amount": "$99/mo" if plan_id == "starter" else "$249/mo",
         }
 
     # 2. Polar Python SDK Checkout Session
@@ -2260,5 +2260,5 @@ def create_polar_checkout_session(plan_id: str, client_id: str, success_url: str
         "checkout_url": test_checkout_url,
         "product_id": product_id,
         "plan": plan_id,
-        "amount": "$49/mo" if plan_id == "starter" else "$99/mo",
+        "amount": "$99/mo" if plan_id == "starter" else "$249/mo",
     }

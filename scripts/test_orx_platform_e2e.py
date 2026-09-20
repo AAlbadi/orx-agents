@@ -372,8 +372,8 @@ async def run_e2e_suite():
             r_stats2 = await client.get(f"/api/projects/{test_client_id}/stats")
             s2 = r_stats2.json()
             
-            # 142.5s = 2.4 min * $0.09 = ~$0.22
-            cost_tracked = s2.get("total_calls") >= 1 and s2.get("total_minutes") > 2.0 and s2.get("estimated_cost") > 0.15
+            # 142.5s = 2.4 min (covered by 200 min base = $99.00)
+            cost_tracked = s2.get("total_calls") >= 1 and s2.get("total_minutes") > 2.0 and s2.get("estimated_cost") >= 99.0
             
             # Query client calls
             r_calls = await client.get(f"/api/admin/clients/{test_client_id}/calls")
@@ -382,7 +382,7 @@ async def run_e2e_suite():
             
             passed = cost_tracked and has_logged_call
             record_test("T10", "Metered Usage Billing & Call Logs", passed,
-                        f"{s2.get('total_minutes')} min tracked -> ${s2.get('estimated_cost')} @ $0.09/min")
+                        f"{s2.get('total_minutes')} min tracked -> ${s2.get('estimated_cost')} ($99/mo base + $0.15/min overage)")
         except Exception as e:
             record_test("T10", "Metered Usage Billing & Call Logs", False, str(e))
 

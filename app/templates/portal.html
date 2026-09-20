@@ -523,9 +523,11 @@
             We sent an SMS to your cell with your dedicated number and carrier quick-dial code. Complete your 1-tap carrier connection below to start routing calls.
           </p>
           <div style="display: flex; gap: 10px; font-size: 11.5px; font-weight: 700; color: #065F46;">
-            <span>✓ $1.00 Billed to Polar</span>
+            <span>✓ $99/mo Starter Plan</span>
             <span>•</span>
-            <span>✓ $0.09/min Metered Usage</span>
+            <span>✓ 200 Min Included</span>
+            <span>•</span>
+            <span>✓ $0.15/min Overage</span>
             <span>•</span>
             <span>✓ Dedicated Line Assigned</span>
           </div>
@@ -543,7 +545,7 @@
       <div>
         <a href="https://polar.sh" target="_blank" class="btn-polar-badge">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-          <span id="planBadge">Polar Active • $1 + $0.09/min</span>
+          <span id="planBadge">Polar Active • $99/mo (200 min incl.)</span>
         </a>
       </div>
     </header>
@@ -644,7 +646,7 @@
         <div class="stat-sub" id="statAppointmentsSub">Loading...</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Usage Cost</div>
+        <div class="stat-label">Monthly Plan & Usage</div>
         <div class="stat-val" id="statCost">—</div>
         <div class="stat-sub" id="statMinutes">Loading...</div>
       </div>
@@ -675,25 +677,27 @@
           <div style="display: flex; align-items: center; justify-content: space-between;">
             <div>
               <span style="font-size: 13px; color: var(--text-secondary);">Current Plan</span>
-              <div style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin-top: 2px;" id="subPlanName">Starter</div>
+              <div style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin-top: 2px;" id="subPlanName">Starter Plan</div>
             </div>
             <span id="subStatusBadge" style="padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 600; background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.2);">Active</span>
           </div>
           <div style="display: flex; gap: 12px;">
             <div style="flex: 1; padding: 12px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border);">
-              <div style="font-size: 11px; color: var(--text-tertiary);">Activation Fee</div>
-              <div style="font-size: 16px; font-weight: 700; color: var(--text-primary);">$1.00</div>
+              <div style="font-size: 11px; color: var(--text-tertiary);">Monthly Base</div>
+              <div style="font-size: 16px; font-weight: 700; color: var(--text-primary);">$99.00</div>
+              <div style="font-size: 10px; color: var(--text-tertiary); margin-top: 2px;">200 min included</div>
             </div>
             <div style="flex: 1; padding: 12px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border);">
-              <div style="font-size: 11px; color: var(--text-tertiary);">Per-Minute Rate</div>
-              <div style="font-size: 16px; font-weight: 700; color: var(--text-primary);">$0.09</div>
+              <div style="font-size: 11px; color: var(--text-tertiary);">Overage Rate</div>
+              <div style="font-size: 16px; font-weight: 700; color: var(--text-primary);">$0.15/min</div>
+              <div style="font-size: 10px; color: var(--text-tertiary); margin-top: 2px;">After 200 min</div>
             </div>
           </div>
           <div style="padding: 12px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border);">
-            <div style="font-size: 11px; color: var(--text-tertiary);">Estimated Usage This Month</div>
+            <div style="font-size: 11px; color: var(--text-tertiary);">Current Month Estimated Total</div>
             <div style="display: flex; align-items: baseline; gap: 8px; margin-top: 4px;">
-              <span style="font-size: 22px; font-weight: 800; color: #10b981;" id="subMonthCost">$0.00</span>
-              <span style="font-size: 12px; color: var(--text-tertiary);" id="subMonthMinutes">0 min</span>
+              <span style="font-size: 22px; font-weight: 800; color: #10b981;" id="subMonthCost">$99.00</span>
+              <span style="font-size: 12px; color: var(--text-tertiary);" id="subMonthMinutes">0 min used (200 min incl.)</span>
             </div>
           </div>
           <a href="https://polar.sh" target="_blank" style="display: block; text-align: center; padding: 10px; border-radius: 12px; background: rgba(16,185,129,0.08); color: #10b981; font-size: 13px; font-weight: 600; text-decoration: none; border: 1px solid rgba(16,185,129,0.15); transition: all 0.2s;" onmouseover="this.style.background='rgba(16,185,129,0.15)'" onmouseout="this.style.background='rgba(16,185,129,0.08)'">
@@ -1092,10 +1096,28 @@
         if (el("statCallsTotal")) el("statCallsTotal").textContent = `${s.total_calls || 0} total • ${s.unique_callers || 0} unique callers`;
         if (el("statAppointments")) el("statAppointments").textContent = s.total_appointments || 0;
         if (el("statAppointmentsSub")) el("statAppointmentsSub").textContent = `${s.appointments_this_week || 0} this week`;
-        if (el("statCost")) el("statCost").textContent = `$${(s.estimated_cost || 0).toFixed(2)}`;
-        if (el("statMinutes")) el("statMinutes").textContent = `${s.total_minutes || 0} min this month`;
-        if (el("subMonthCost")) el("subMonthCost").textContent = `$${(s.estimated_cost || 0).toFixed(2)}`;
-        if (el("subMonthMinutes")) el("subMonthMinutes").textContent = `${s.total_minutes || 0} min`;
+        const totalMins = s.total_minutes || 0;
+        const incMins = s.included_minutes || 200;
+        const overageMins = s.overage_minutes || 0;
+        const estCost = s.estimated_cost != null ? s.estimated_cost : 99.00;
+
+        if (el("statCost")) el("statCost").textContent = `$${estCost.toFixed(2)}`;
+        if (el("statMinutes")) {
+          if (overageMins > 0) {
+            el("statMinutes").textContent = `${totalMins} min (${overageMins}m overage @ $0.15)`;
+          } else {
+            const rem = Math.max(0, incMins - totalMins).toFixed(1);
+            el("statMinutes").textContent = `${totalMins} / ${incMins} min (${rem} min left)`;
+          }
+        }
+        if (el("subMonthCost")) el("subMonthCost").textContent = `$${estCost.toFixed(2)}`;
+        if (el("subMonthMinutes")) {
+          if (overageMins > 0) {
+            el("subMonthMinutes").textContent = `${totalMins} min (${incMins}m incl. + ${overageMins}m overage)`;
+          } else {
+            el("subMonthMinutes").textContent = `${totalMins} min used (200 min included)`;
+          }
+        }
       } catch (e) {
         console.error("Failed to load stats:", e);
       }

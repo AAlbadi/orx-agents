@@ -1612,8 +1612,22 @@ async def api_project_stats(client_id: str):
         cur.execute("SELECT COUNT(DISTINCT caller_phone) as cnt FROM call_logs WHERE caller_phone IS NOT NULL")
         stats["unique_callers"] = cur.fetchone()["cnt"]
 
-        # Estimated cost ($0.09/min)
-        stats["estimated_cost"] = round(stats["total_minutes"] * 0.09, 2)
+        # Billing ($99/mo Starter Plan: includes 200 min, then $0.15/min overage)
+        base_fee = 99.00
+        included_mins = 200.0
+        overage_rate = 0.15
+        total_mins = stats.get("total_minutes", 0.0)
+        overage_mins = max(0.0, round(total_mins - included_mins, 1))
+        overage_cost = round(overage_mins * overage_rate, 2)
+        total_bill = round(base_fee + overage_cost, 2)
+
+        stats["plan"] = "starter"
+        stats["base_fee"] = base_fee
+        stats["included_minutes"] = included_mins
+        stats["overage_minutes"] = overage_mins
+        stats["overage_rate"] = overage_rate
+        stats["overage_cost"] = overage_cost
+        stats["estimated_cost"] = total_bill
 
         conn.close()
     except Exception as e:
