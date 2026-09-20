@@ -24,10 +24,6 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -U pip setuptools wheel && \
     pip install --no-cache-dir -r requirements.txt
 
-# Copy model pre-fetch script and download models during build to ensure instant container startup
-COPY scripts/download_models.py scripts/
-RUN python scripts/download_models.py
-
 # Copy application source code
 COPY . .
 
