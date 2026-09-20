@@ -13,7 +13,7 @@
     "industry": "hvac",
     "status": "active",
     "assigned_phone": "+18334205227",
-    "created_at": "2026-09-20 18:21:16"
+    "created_at": "2026-09-20 20:08:28"
   },
   {
     "id": "cli_fv9vn0t",
@@ -22,6 +22,14 @@
     "status": "active",
     "assigned_phone": "+1 (833) 420-5227",
     "created_at": "2026-09-18 15:25:49"
+  },
+  {
+    "id": "cli_e2e_prod_1789921811",
+    "business_name": "Lone Star Heating & Air",
+    "industry": "hvac",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-20 20:30:11"
   },
   {
     "id": "cli_mer9s2f",
@@ -53,7 +61,15 @@
     "industry": "hvac",
     "status": "active",
     "assigned_phone": "+18339912114",
-    "created_at": "2026-09-20 18:21:16"
+    "created_at": "2026-09-20 20:08:29"
+  },
+  {
+    "id": "cli_audit_master_test1",
+    "business_name": "Blue Ridge Master Plumbing",
+    "industry": "plumbing",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-20 20:30:50"
   },
   {
     "id": "cli_e2e_prod_1789914076",
@@ -61,7 +77,7 @@
     "industry": "hvac",
     "status": "active",
     "assigned_phone": "+18334205227",
-    "created_at": "2026-09-20 18:21:16"
+    "created_at": "2026-09-20 20:08:29"
   },
   {
     "id": "proj_endpoint_test_101",
@@ -77,7 +93,7 @@
     "industry": "hvac",
     "status": "active",
     "assigned_phone": "+1 (833) 420-5227",
-    "created_at": "2026-09-20 18:21:16"
+    "created_at": "2026-09-20 20:08:29"
   },
   {
     "id": "cli_e2e_verify_1789912291",
@@ -85,7 +101,15 @@
     "industry": "hvac",
     "status": "active",
     "assigned_phone": "+18339912291",
-    "created_at": "2026-09-20 18:21:16"
+    "created_at": "2026-09-20 20:08:29"
+  },
+  {
+    "id": "test_launch_1789923847",
+    "business_name": "Summit Elite Heating & Air",
+    "industry": "hvac",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-20 21:14:22"
   },
   {
     "id": "cli_e2e_verify_1789912093",
@@ -93,7 +117,7 @@
     "industry": "hvac",
     "status": "active",
     "assigned_phone": "+18339912093",
-    "created_at": "2026-09-20 18:21:16"
+    "created_at": "2026-09-20 20:08:29"
   },
   {
     "id": "cli_49wtywt",
@@ -102,6 +126,14 @@
     "status": "active",
     "assigned_phone": "+1 (833) 420-5227",
     "created_at": "2026-09-19 13:43:16"
+  },
+  {
+    "id": "test_launch_1789923877",
+    "business_name": "Summit Elite Heating & Air",
+    "industry": "hvac",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-20 21:14:22"
   },
   {
     "id": "admin_test_1789813860",
@@ -117,7 +149,7 @@
     "industry": "hvac",
     "status": "active",
     "assigned_phone": "+18339912206",
-    "created_at": "2026-09-20 18:21:16"
+    "created_at": "2026-09-20 20:08:29"
   },
   {
     "id": "client_onb_subscriber_202",
@@ -133,7 +165,15 @@
     "industry": "hvac",
     "status": "active",
     "assigned_phone": "+18339914127",
-    "created_at": "2026-09-20 18:22:07"
+    "created_at": "2026-09-20 20:08:29"
+  },
+  {
+    "id": "cli_e2e_prod_1789924463",
+    "business_name": "Lone Star Heating & Air",
+    "industry": "hvac",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-20 21:14:23"
   },
   {
     "id": "cli_sqts4ks",
@@ -144,12 +184,36 @@
     "created_at": "2026-09-18 22:40:53"
   },
   {
+    "id": "cli_resale_test99",
+    "business_name": "Evergreen Plumbing & Heating",
+    "industry": "plumbing",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-20 22:54:39"
+  },
+  {
+    "id": "cli_e2e_answering_rules",
+    "business_name": "Apex Test Routing HVAC",
+    "industry": "hvac",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-20 20:08:29"
+  },
+  {
     "id": "cli_ec8eped",
     "business_name": "Serenity Air Heating & Air Conditioning",
     "industry": "hvac",
     "status": "active",
     "assigned_phone": "+1 (833) 420-5227",
     "created_at": "2026-09-18 20:51:37"
+  },
+  {
+    "id": "cli_audit_1789933622",
+    "business_name": "Lone Star Climate Care",
+    "industry": "hvac",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-20 23:47:51"
   },
   {
     "id": "proj_metroelectri_c18210",
@@ -173,7 +237,7 @@
     "industry": "hvac",
     "status": "active",
     "assigned_phone": "+18339912249",
-    "created_at": "2026-09-20 18:21:16"
+    "created_at": "2026-09-20 20:08:29"
   },
   {
     "id": "admin_test_1789813817",
@@ -182,6 +246,14 @@
     "status": "active",
     "assigned_phone": "+1 (833) 420-5227",
     "created_at": "2026-09-19 14:30:17"
+  },
+  {
+    "id": "test_term_01efd2",
+    "business_name": "Titan Cooling & Heating",
+    "industry": "hvac",
+    "status": "active",
+    "assigned_phone": "+1 (833) 420-5227",
+    "created_at": "2026-09-20 20:24:56"
   },
   {
     "id": "proj_dynamiccoola_840928",
@@ -197,7 +269,7 @@
     "industry": "hvac",
     "status": "active",
     "assigned_phone": "+18339912590",
-    "created_at": "2026-09-20 18:21:16"
+    "created_at": "2026-09-20 20:08:29"
   },
   {
     "id": "proj_apexpremierh_55aa71",
@@ -206,6 +278,14 @@
     "status": "active",
     "assigned_phone": "+1 (833) 420-5227",
     "created_at": "2026-09-18 23:31:31"
+  },
+  {
+    "id": "cli_4idrk5g",
+    "business_name": "North 000 East Road",
+    "industry": "hvac",
+    "status": "active",
+    "assigned_phone": "+1 (833) 420-5227",
+    "created_at": "2026-09-20 21:34:45"
   },
   {
     "id": "cli_mtl7yu7",
@@ -232,6 +312,14 @@
     "created_at": "2026-09-18 15:31:48"
   },
   {
+    "id": "cli_audit_master_1789921920",
+    "business_name": "Blue Ridge Master Plumbing",
+    "industry": "plumbing",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-20 20:32:00"
+  },
+  {
     "id": "cli_vkrxwyn",
     "business_name": "Seattle Heating & Cooling",
     "industry": "hvac",
@@ -245,7 +333,7 @@
     "industry": "hvac",
     "status": "active",
     "assigned_phone": "+18339912553",
-    "created_at": "2026-09-20 18:21:16"
+    "created_at": "2026-09-20 20:08:29"
   },
   {
     "id": "cli_obga2ew",
@@ -261,7 +349,55 @@
     "industry": "hvac",
     "status": "active",
     "assigned_phone": "+18334205227",
-    "created_at": "2026-09-20 18:21:16"
+    "created_at": "2026-09-20 20:08:28"
+  },
+  {
+    "id": "cli_audit_master_1789921975",
+    "business_name": "Blue Ridge Master Plumbing",
+    "industry": "plumbing",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-20 20:33:22"
+  },
+  {
+    "id": "test_launch_1789923775",
+    "business_name": "Summit Elite Heating & Air",
+    "industry": "hvac",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-20 21:14:22"
+  },
+  {
+    "id": "cli_rv0se7k",
+    "business_name": "LAW SEATTLE",
+    "industry": "legal",
+    "status": "active",
+    "assigned_phone": "+1 (833) 420-5227",
+    "created_at": "2026-09-20 22:24:59"
+  },
+  {
+    "id": "cli_e2e_prod_1789933723",
+    "business_name": "Lone Star Heating & Air",
+    "industry": "hvac",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-20 23:48:43"
+  },
+  {
+    "id": "audit_test_client_1789920620",
+    "business_name": "Audit Test HVAC Pros",
+    "industry": "hvac",
+    "status": "active",
+    "assigned_phone": "+1 (833) 420-5227",
+    "created_at": "2026-09-20 20:10:20"
+  },
+  {
+    "id": "cli_audit_master_1789921996",
+    "business_name": "Blue Ridge Master Plumbing",
+    "industry": "plumbing",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-20 20:47:13"
   },
   {
     "id": "cli_e2e_verify_1789912348",
@@ -269,7 +405,7 @@
     "industry": "hvac",
     "status": "active",
     "assigned_phone": "+18339912348",
-    "created_at": "2026-09-20 18:21:16"
+    "created_at": "2026-09-20 20:08:29"
   },
   {
     "id": "cli_demo",
@@ -285,7 +421,7 @@
     "industry": "hvac",
     "status": "active",
     "assigned_phone": "+18339912526",
-    "created_at": "2026-09-20 18:21:16"
+    "created_at": "2026-09-20 20:08:29"
   },
   {
     "id": "cli_uxtdsew",
@@ -294,6 +430,14 @@
     "status": "active",
     "assigned_phone": "+1 (833) 420-5227",
     "created_at": "2026-09-19 17:15:27"
+  },
+  {
+    "id": "cli_e2e_prod_1789922833",
+    "business_name": "Lone Star Heating & Air",
+    "industry": "hvac",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-20 20:47:14"
   },
   {
     "id": "cli_d070bfcff5",
@@ -320,12 +464,44 @@
     "created_at": "2026-09-18 15:25:49"
   },
   {
+    "id": "cli_e2e_prod_1789920530",
+    "business_name": "Lone Star Heating & Air",
+    "industry": "hvac",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-20 20:08:50"
+  },
+  {
+    "id": "cli_audit_master_1789922853",
+    "business_name": "Blue Ridge Master Plumbing",
+    "industry": "plumbing",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-20 21:14:22"
+  },
+  {
+    "id": "cli_audit_master_1789921820",
+    "business_name": "Blue Ridge Master Plumbing",
+    "industry": "plumbing",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-20 20:31:55"
+  },
+  {
     "id": "cli_e2e_prod_1789898200",
     "business_name": "Lone Star Heating & Air",
     "industry": "hvac",
     "status": "active",
     "assigned_phone": "+18334205227",
-    "created_at": "2026-09-20 18:21:16"
+    "created_at": "2026-09-20 20:08:28"
+  },
+  {
+    "id": "cli_audit_1789933692",
+    "business_name": "Lone Star Climate Care",
+    "industry": "hvac",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-20 23:48:32"
   },
   {
     "id": "cli_e2e_prod_1789912516",
@@ -333,7 +509,15 @@
     "industry": "hvac",
     "status": "active",
     "assigned_phone": "+18334205227",
-    "created_at": "2026-09-20 18:21:16"
+    "created_at": "2026-09-20 20:08:29"
+  },
+  {
+    "id": "cli_audit_master_1789920505",
+    "business_name": "Blue Ridge Master Plumbing",
+    "industry": "plumbing",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-20 20:08:50"
   },
   {
     "id": "cli_e2e_verify_1789912037",
@@ -341,7 +525,15 @@
     "industry": "hvac",
     "status": "active",
     "assigned_phone": "+1 (833) 420-5227",
-    "created_at": "2026-09-20 18:21:16"
+    "created_at": "2026-09-20 20:08:29"
+  },
+  {
+    "id": "cli_audit_master_1789921629",
+    "business_name": "Blue Ridge Master Plumbing",
+    "industry": "plumbing",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-20 20:30:11"
   },
   {
     "id": "proj_testhvacco_f1c6f9",
@@ -352,12 +544,20 @@
     "created_at": "2026-09-18 15:25:49"
   },
   {
+    "id": "cli_audit_1789933446",
+    "business_name": "Lone Star Climate Care",
+    "industry": "hvac",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-20 23:44:28"
+  },
+  {
     "id": "cli_e2e_prod_1789912504",
     "business_name": "Lone Star Heating & Air",
     "industry": "hvac",
     "status": "active",
     "assigned_phone": "+18334205227",
-    "created_at": "2026-09-20 18:21:16"
+    "created_at": "2026-09-20 20:08:29"
   },
   {
     "id": "cli_3c42c8b780",
@@ -373,7 +573,15 @@
     "industry": "hvac",
     "status": "active",
     "assigned_phone": "+18334205227",
-    "created_at": "2026-09-20 18:21:16"
+    "created_at": "2026-09-20 20:08:28"
+  },
+  {
+    "id": "cli_audit_master_1789921861",
+    "business_name": "Blue Ridge Master Plumbing",
+    "industry": "plumbing",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-20 20:32:27"
   },
   {
     "id": "cli_test_verification_01",
@@ -400,6 +608,14 @@
     "created_at": "2026-09-18 23:25:33"
   },
   {
+    "id": "cli_audit_test_1789921840",
+    "business_name": "New Client Business",
+    "industry": "hvac",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-20 20:30:40"
+  },
+  {
     "id": "cli_auto_onboard_plumb_88",
     "business_name": "Blue River Plumbing",
     "industry": "plumbing",
@@ -413,7 +629,15 @@
     "industry": "hvac",
     "status": "active",
     "assigned_phone": "+1 (833) 420-5227",
-    "created_at": "2026-09-20 18:21:16"
+    "created_at": "2026-09-20 20:08:29"
+  },
+  {
+    "id": "cli_e2e_prod_1789934897",
+    "business_name": "Lone Star Heating & Air",
+    "industry": "hvac",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-21 00:08:17"
   },
   {
     "id": "cli_e2e_test_99",
@@ -421,7 +645,7 @@
     "industry": "hvac",
     "status": "active",
     "assigned_phone": "+1 (833) 420-5227",
-    "created_at": "2026-09-20 18:21:16"
+    "created_at": "2026-09-20 20:08:28"
   },
   {
     "id": "cli_e2e_prod_1789911600",
@@ -429,7 +653,7 @@
     "industry": "hvac",
     "status": "active",
     "assigned_phone": "+18334205227",
-    "created_at": "2026-09-20 18:21:16"
+    "created_at": "2026-09-20 20:08:29"
   },
   {
     "id": "cli_nkdmwts",
@@ -448,12 +672,28 @@
     "created_at": "2026-09-18 15:25:49"
   },
   {
+    "id": "cli_audit_1789934911",
+    "business_name": "Lone Star Climate Care",
+    "industry": "hvac",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-21 00:08:46"
+  },
+  {
     "id": "admin_test_1789814322",
     "business_name": "Apex Climate Solutions",
     "industry": "hvac",
     "status": "active",
     "assigned_phone": "+1 (833) 420-5227",
     "created_at": "2026-09-19 14:38:42"
+  },
+  {
+    "id": "cli_avoel76",
+    "business_name": "Seattle Heating & Cooling",
+    "industry": "hvac",
+    "status": "active",
+    "assigned_phone": "+1 (833) 420-5227",
+    "created_at": "2026-09-20 21:51:03"
   },
   {
     "id": "cli_3i5i1vo",
@@ -472,12 +712,20 @@
     "created_at": "2026-09-18 15:31:18"
   },
   {
+    "id": "cli_e2e_schedule_muscat_01",
+    "business_name": "Apex Muscat HVAC",
+    "industry": "hvac",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-20 20:27:55"
+  },
+  {
     "id": "cli_e2e_verify_1789912397",
     "business_name": "Lonestar Heating & Air Services",
     "industry": "hvac",
     "status": "active",
     "assigned_phone": "+18339912397",
-    "created_at": "2026-09-20 18:21:16"
+    "created_at": "2026-09-20 20:08:29"
   },
   {
     "id": "test_tone_client_101",
@@ -486,5 +734,21 @@
     "status": "active",
     "assigned_phone": "+1 (833) 420-5227",
     "created_at": "2026-09-19 15:32:47"
+  },
+  {
+    "id": "cli_audit_master_1789920062",
+    "business_name": "Blue Ridge Master Plumbing",
+    "industry": "plumbing",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-20 20:08:29"
+  },
+  {
+    "id": "cli_audit_master_1789921940",
+    "business_name": "Blue Ridge Master Plumbing",
+    "industry": "plumbing",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-20 20:33:06"
   }
 ]

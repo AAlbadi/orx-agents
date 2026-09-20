@@ -1223,12 +1223,18 @@
     }
     .add-custom-btn:hover { background: #EAE8DE; }
 
-    /* Voice Persona Cards (Box 6) */
+    /* Voice Persona Cards (Box 2 / Q2) - 5 Agent Grid */
     .persona-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
       margin-bottom: 18px;
+    }
+    @media (max-width: 900px) {
+      .persona-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 600px) {
+      .persona-grid { grid-template-columns: repeat(2, 1fr); }
     }
     .persona-card {
       background: #FFFFFF;
@@ -4379,6 +4385,32 @@
                   <span>▶ Listen</span>
                 </button>
               </div>
+              <div class="persona-card" data-pname="Ana" data-pvoice="aura-asteria-en">
+                <div class="persona-avatar">🌺</div>
+                <div style="flex: 1;">
+                  <div class="persona-name">Ana</div>
+                  <div class="persona-tag">Bright, upbeat & personable</div>
+                </div>
+                <button type="button" class="btn-persona-audition" id="btnAuditionAna">
+                  <span class="audition-equalizer">
+                    <span class="eq-bar"></span><span class="eq-bar"></span><span class="eq-bar"></span><span class="eq-bar"></span>
+                  </span>
+                  <span>▶ Listen</span>
+                </button>
+              </div>
+              <div class="persona-card" data-pname="Sarah" data-pvoice="aura-luna-en">
+                <div class="persona-avatar">👩‍💼</div>
+                <div style="flex: 1;">
+                  <div class="persona-name">Sarah</div>
+                  <div class="persona-tag">Polite & professional front-desk</div>
+                </div>
+                <button type="button" class="btn-persona-audition" id="btnAuditionSarah">
+                  <span class="audition-equalizer">
+                    <span class="eq-bar"></span><span class="eq-bar"></span><span class="eq-bar"></span><span class="eq-bar"></span>
+                  </span>
+                  <span>▶ Listen</span>
+                </button>
+              </div>
               <div class="persona-card" data-pname="Michael" data-pvoice="aura-orion-en">
                 <div class="persona-avatar">👔</div>
                 <div style="flex: 1;">
@@ -4392,13 +4424,13 @@
                   <span>▶ Listen</span>
                 </button>
               </div>
-              <div class="persona-card" data-pname="Sarah" data-pvoice="aura-luna-en">
-                <div class="persona-avatar">🤝</div>
+              <div class="persona-card" data-pname="David" data-pvoice="aura-helios-en">
+                <div class="persona-avatar">👷</div>
                 <div style="flex: 1;">
-                  <div class="persona-name">Sarah</div>
-                  <div class="persona-tag">Polite & professional front-desk</div>
+                  <div class="persona-name">David</div>
+                  <div class="persona-tag">Direct, energetic & reliable</div>
                 </div>
-                <button type="button" class="btn-persona-audition" id="btnAuditionSarah">
+                <button type="button" class="btn-persona-audition" id="btnAuditionDavid">
                   <span class="audition-equalizer">
                     <span class="eq-bar"></span><span class="eq-bar"></span><span class="eq-bar"></span><span class="eq-bar"></span>
                   </span>
@@ -6779,19 +6811,29 @@
       };
     }
 
-    document.getElementById("btnAuditionRiley").addEventListener("click", (e) => {
+    document.getElementById("btnAuditionRiley")?.addEventListener("click", (e) => {
       e.stopPropagation();
       playKokoroAudition(document.getElementById("btnAuditionRiley"), "aura-asteria-en", `Thank you for calling ${state.bizName || 'our company'}. This is Riley. How may I assist you today?`);
     });
 
-    document.getElementById("btnAuditionMichael").addEventListener("click", (e) => {
+    document.getElementById("btnAuditionAna")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      playKokoroAudition(document.getElementById("btnAuditionAna"), "aura-asteria-en", `Hi there! Thanks for calling ${state.bizName || 'our company'}. This is Ana. What can we help you with today?`);
+    });
+
+    document.getElementById("btnAuditionSarah")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      playKokoroAudition(document.getElementById("btnAuditionSarah"), "aura-luna-en", `Good day! Thanks for reaching out to ${state.bizName || 'our company'}. My name is Sarah. Are you scheduling an appointment today?`);
+    });
+
+    document.getElementById("btnAuditionMichael")?.addEventListener("click", (e) => {
       e.stopPropagation();
       playKokoroAudition(document.getElementById("btnAuditionMichael"), "aura-orion-en", `Thanks for calling ${state.bizName || 'our company'}. This is Michael. How can we get your service taken care of today?`);
     });
 
-    document.getElementById("btnAuditionSarah").addEventListener("click", (e) => {
+    document.getElementById("btnAuditionDavid")?.addEventListener("click", (e) => {
       e.stopPropagation();
-      playKokoroAudition(document.getElementById("btnAuditionSarah"), "aura-luna-en", `Good day! Thanks for reaching out to ${state.bizName || 'our company'}. My name is Sarah. Are you scheduling an appointment today?`);
+      playKokoroAudition(document.getElementById("btnAuditionDavid"), "aura-helios-en", `Hello! You've reached ${state.bizName || 'our company'}. This is David. How can I assist you right away?`);
     });
 
     // Q1: Pricing Policy Selection

@@ -1223,22 +1223,18 @@
     }
     .add-custom-btn:hover { background: #EAE8DE; }
 
-    /* Voice Persona Cards (Box 6) */
+    /* Voice Persona Cards (Box 2 / Q2) - 5 Agent Grid */
     .persona-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
       margin-bottom: 18px;
     }
-    @media (max-width: 860px) {
-      .persona-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
+    @media (max-width: 900px) {
+      .persona-grid { grid-template-columns: repeat(3, 1fr); }
     }
-    @media (max-width: 520px) {
-      .persona-grid {
-        grid-template-columns: 1fr;
-      }
+    @media (max-width: 600px) {
+      .persona-grid { grid-template-columns: repeat(2, 1fr); }
     }
     .persona-card {
       background: #FFFFFF;
@@ -2284,42 +2280,37 @@
     /* Scenario Navigation Bar */
     .scenario-nav-bar {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      background: #0F172A;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      background: #1C1B18;
       padding: 6px;
-      border-radius: 12px;
-      margin-bottom: 16px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      margin-bottom: 14px;
     }
-    @media (max-width: 600px) {
-      .scenario-nav-bar { grid-template-columns: 1fr; }
+    @media (max-width: 700px) {
+      .scenario-nav-bar { grid-template-columns: repeat(2, 1fr); }
     }
     .scenario-tab-btn {
       background: transparent;
       border: 1px solid transparent;
-      color: #94A3B8;
-      border-radius: 9px;
-      padding: 11px 14px;
-      font-size: 13px;
+      color: #9C988F;
+      border-radius: 6px;
+      padding: 8px 6px;
+      font-size: 11px;
       font-weight: 700;
       cursor: pointer;
       text-align: center;
-      transition: all 0.15s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
+      transition: all 0.12s ease;
     }
     .scenario-tab-btn:hover {
-      color: #F8FAFC;
-      background: rgba(255, 255, 255, 0.06);
+      color: #FFF;
+      background: #282723;
     }
     .scenario-tab-btn.active {
-      background: #1E293B;
-      color: #38BDF8;
-      border-color: rgba(56, 189, 248, 0.35);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+      background: #2A2925;
+      color: #FFF;
+      border-color: #3E3C36;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     }
 
     /* AI Decision Telemetry HUD */
@@ -2730,14 +2721,13 @@
 
     /* Call Outcome Card */
     .call-outcome-card {
-      background: #F8FAFC;
-      border: 1.5px solid #86EFAC;
-      border-radius: 16px;
-      padding: 18px 20px;
+      background: #F4F9F5;
+      border: 1.5px solid #A8D5BA;
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
       margin-bottom: 20px;
       display: none;
       animation: fadeInTurn 0.4s ease-out;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
     }
     .outcome-header {
       display: flex;
@@ -4161,12 +4151,9 @@
               <div class="disc-field">
                 <label class="disc-label">
                   <span>Business Name *</span>
-                  <span class="disc-label-hint">What your AI receptionist says when answering</span>
+                  <span class="disc-label-hint">What Riley says when answering</span>
                 </label>
-                <input type="text" class="disc-input" id="discBizNameInput" placeholder="e.g. Apex Heating & Cooling" required>
-                <div id="bizNameError" style="display: none; color: #DC2626; font-size: 12px; font-weight: 600; margin-top: 5px;">
-                  ⚠️ Business name is required to personalize your AI receptionist.
-                </div>
+                <input type="text" class="disc-input" id="discBizNameInput" placeholder="e.g. Apex Heating & Cooling">
               </div>
 
               <div class="disc-field">
@@ -4175,11 +4162,8 @@
                   <span class="disc-label-hint">Live search & manual entry supported</span>
                 </label>
                 <div class="address-autocomplete-wrapper">
-                  <input type="text" class="disc-input" id="discAddressInput" placeholder="e.g. 14027 Interurban Ave S, Seattle, WA or Greater Metro Area" autocomplete="street-address" required>
+                  <input type="text" class="disc-input" id="discAddressInput" placeholder="e.g. 14027 Interurban Ave S, Seattle, WA or Greater Metro Area" autocomplete="street-address">
                   <div class="places-dropdown" id="addressDropdown"></div>
-                </div>
-                <div id="bizAddressError" style="display: none; color: #DC2626; font-size: 12px; font-weight: 600; margin-top: 5px;">
-                  ⚠️ Business address or service area is required so your AI receptionist can book jobs and handle caller dispatch.
                 </div>
               </div>
 
@@ -4223,10 +4207,10 @@
           </div>
 
           <h2 class="focus-title" style="font-size: 22px; font-weight: 800; margin-bottom: 6px;">
-            💬 Where should your AI receptionist text your leads?
+            💬 Where should Riley text your leads?
           </h2>
           <p class="focus-sub" style="font-size: 14px; margin-bottom: 18px;">
-            Whenever your AI receptionist books an appointment, captures caller details, or flags an emergency, you'll receive a live SMS alert instantly.
+            Whenever Riley books an appointment, captures caller details, or flags an emergency, you'll receive a live SMS alert instantly.
           </p>
 
 
@@ -4248,7 +4232,7 @@
                     <span class="sms-option-tag">Recommended if mobile</span>
                   </div>
                   <div class="sms-option-desc">
-                    Your AI receptionist will send instant call alerts, booking summaries, and customer info directly to this number.
+                    Riley will send instant call alerts, booking summaries, and customer info directly to this number.
                   </div>
                 </div>
               </div>
@@ -4325,8 +4309,9 @@
               <div class="q-step-title">What type of work do you do?</div>
               <div class="q-step-sub">Pick your trade to load your services and pricing rules.</div>
             </div>
-            <div id="q1RileyFeedback" style="display: none; background: #F0FDF4; border: 1.5px solid #C4DDD0; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; font-size: 13px; color: var(--brand); font-weight: 600; text-align: left; align-items: center;">
+            <div id="q1RileyFeedback" style="display: none; background: #F0FDF4; border: 1.5px solid #C4DDD0; border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; font-size: 13px; color: var(--brand); font-weight: 600; text-align: left; align-items: center; justify-content: space-between;">
               <span>✅ Trade set to <strong id="q1TradeName">HVAC & Climate Control</strong></span>
+              <button type="button" class="btn-quick-next" id="btnQuickContinueQ1" onclick="window.showQStep ? window.showQStep(2) : null">Continue →</button>
             </div>
             <div class="trade-grid">
               <div class="trade-tile selected" data-trade="hvac">
@@ -4380,18 +4365,18 @@
           <div class="playbook-substep" id="qStep2">
             <div class="q-header-box" style="text-align: center; padding-bottom: 4px;">
               <div style="font-size: 30px; margin-bottom: 4px;">🎙️</div>
-              <div class="q-step-title">Choose your AI receptionist's voice</div>
+              <div class="q-step-title">Choose your receptionist's voice</div>
               <div class="q-step-sub">Tap ▶ Listen to audition each voice live.</div>
             </div>
             <div id="q2RileyFeedback" style="display: none; background: var(--brand-soft); border-radius: 10px; padding: 8px 12px; margin-bottom: 10px; font-size: 12px; color: var(--brand); font-weight: 600; text-align: center;">
               ✅ Selected <strong>Riley</strong> — warm & friendly
             </div>
-            <div class="persona-grid" style="grid-template-columns: repeat(5, 1fr);">
-              <div class="persona-card active" data-pname="Riley" data-pvoice="flux-meghan-en">
+            <div class="persona-grid">
+              <div class="persona-card active" data-pname="Riley" data-pvoice="aura-asteria-en">
                 <div class="persona-avatar">🌸</div>
                 <div style="flex: 1;">
                   <div class="persona-name">Riley</div>
-                  <div class="persona-tag">Warm, friendly &amp; empathetic</div>
+                  <div class="persona-tag">Warm, friendly & empathetic</div>
                 </div>
                 <button type="button" class="btn-persona-audition" id="btnAuditionRiley">
                   <span class="audition-equalizer">
@@ -4400,11 +4385,11 @@
                   <span>▶ Listen</span>
                 </button>
               </div>
-              <div class="persona-card" data-pname="Ana" data-pvoice="flux-heather-en">
+              <div class="persona-card" data-pname="Ana" data-pvoice="aura-asteria-en">
                 <div class="persona-avatar">🌺</div>
                 <div style="flex: 1;">
                   <div class="persona-name">Ana</div>
-                  <div class="persona-tag">Energetic, bright &amp; personable</div>
+                  <div class="persona-tag">Bright, upbeat & personable</div>
                 </div>
                 <button type="button" class="btn-persona-audition" id="btnAuditionAna">
                   <span class="audition-equalizer">
@@ -4413,11 +4398,11 @@
                   <span>▶ Listen</span>
                 </button>
               </div>
-              <div class="persona-card" data-pname="Sarah" data-pvoice="flux-sienna-en">
+              <div class="persona-card" data-pname="Sarah" data-pvoice="aura-luna-en">
                 <div class="persona-avatar">👩‍💼</div>
                 <div style="flex: 1;">
                   <div class="persona-name">Sarah</div>
-                  <div class="persona-tag">Polite &amp; professional front-desk</div>
+                  <div class="persona-tag">Polite & professional front-desk</div>
                 </div>
                 <button type="button" class="btn-persona-audition" id="btnAuditionSarah">
                   <span class="audition-equalizer">
@@ -4426,11 +4411,11 @@
                   <span>▶ Listen</span>
                 </button>
               </div>
-              <div class="persona-card" data-pname="Michael" data-pvoice="flux-bruce-en">
+              <div class="persona-card" data-pname="Michael" data-pvoice="aura-orion-en">
                 <div class="persona-avatar">👔</div>
                 <div style="flex: 1;">
                   <div class="persona-name">Michael</div>
-                  <div class="persona-tag">Crisp, calm &amp; confident</div>
+                  <div class="persona-tag">Crisp, calm & confident</div>
                 </div>
                 <button type="button" class="btn-persona-audition" id="btnAuditionMichael">
                   <span class="audition-equalizer">
@@ -4439,11 +4424,11 @@
                   <span>▶ Listen</span>
                 </button>
               </div>
-              <div class="persona-card" data-pname="David" data-pvoice="flux-cliff-en">
+              <div class="persona-card" data-pname="David" data-pvoice="aura-helios-en">
                 <div class="persona-avatar">👷</div>
                 <div style="flex: 1;">
                   <div class="persona-name">David</div>
-                  <div class="persona-tag">Dependable, direct &amp; energetic</div>
+                  <div class="persona-tag">Direct, energetic & reliable</div>
                 </div>
                 <button type="button" class="btn-persona-audition" id="btnAuditionDavid">
                   <span class="audition-equalizer">
@@ -4478,7 +4463,7 @@
             <div class="q-header-box" style="text-align: center; padding-bottom: 8px;">
               <div style="font-size: 30px; margin-bottom: 4px;">🕒</div>
               <div class="q-step-title">Working Hours & Night Calls</div>
-              <div class="q-step-sub">Your AI receptionist answers 24/7. When can jobs be booked?</div>
+              <div class="q-step-sub">Riley answers 24/7. When can jobs be booked?</div>
             </div>
             <div id="q4RileyFeedback" style="display: none; background: var(--brand-soft); border-radius: 10px; padding: 8px 12px; margin-bottom: 10px; font-size: 12px; color: var(--brand); font-weight: 600; text-align: center;">
               ✅ After hours → book earliest morning slot
@@ -4486,7 +4471,7 @@
 
             <!-- Riley Answering Coverage Pills -->
             <div style="margin-bottom: 14px;">
-              <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; text-align: center;">AI Receptionist Answering:</div>
+              <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px; text-align: center;">Riley Call Answering:</div>
               <div class="schedule-mode-grid" id="scheduleModeGrid" style="display: flex; gap: 8px;">
                 <div class="schedule-mode-card selected" data-mode="always_24_7" style="flex: 1; padding: 10px 8px; text-align: center;">
                   <div style="font-size: 12.5px; font-weight: 700; color: var(--text-main);">⚡ 24/7 Always</div>
@@ -4507,7 +4492,7 @@
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
                   <div style="font-size: 12.5px; font-weight: 700; color: #1E293B; display: flex; align-items: center; gap: 6px;">
                     <span>⏱️</span>
-                    <span>When should your AI receptionist pick up overflow calls?</span>
+                    <span>When should Riley pick up overflow calls?</span>
                   </div>
                   <span style="font-size: 11px; color: #64748B;">Your cell rings first</span>
                 </div>
@@ -4521,7 +4506,7 @@
                   </select>
                 </div>
                 <div style="font-size: 11.5px; color: #64748B; margin-top: 6px; line-height: 1.4;">
-                  📲 Cell rings normally for <strong id="overflowRingText">15 seconds (3 rings)</strong>. If you don't answer, your AI receptionist takes the call automatically.
+                  📲 Cell rings normally for <strong id="overflowRingText">15 seconds (3 rings)</strong>. If you don't answer, Riley takes the call automatically.
                 </div>
               </div>
             </div>
@@ -4596,7 +4581,7 @@
                   <div class="qa-opt-radio"></div>
                   <div>
                     <div class="qa-opt-title">Take caller details & text me an alert</div>
-                    <div class="qa-opt-sub">Your AI receptionist texts full caller info and issue directly to your cell.</div>
+                    <div class="qa-opt-sub">Riley texts full caller info and issue directly to your cell.</div>
                   </div>
                 </div>
               </div>
@@ -4608,7 +4593,7 @@
             <div class="q-header-box" style="text-align: center; padding-bottom: 4px;">
               <div style="font-size: 30px; margin-bottom: 4px;">💰</div>
               <div class="q-step-title">Pricing & booking rules</div>
-              <div class="q-step-sub">Tell your AI receptionist how to quote fees and schedule appointments.</div>
+              <div class="q-step-sub">Tell Riley how to quote fees and schedule appointments.</div>
             </div>
             <div id="q5RileyFeedback" style="display: none; background: var(--brand-soft); border-radius: 10px; padding: 8px 12px; margin-bottom: 10px; font-size: 12px; color: var(--brand); font-weight: 600; text-align: center;">
               ✅ Pricing & booking rules saved
@@ -4618,58 +4603,41 @@
             <div class="qa-card" style="margin-bottom: 16px;">
               <div class="qa-header">
                 <div class="qa-num">1</div>
-                <div class="qa-title">What should your AI receptionist tell callers about pricing?</div>
+                <div class="qa-title">What should Riley tell callers about pricing?</div>
               </div>
               <div class="qa-desc">When a caller asks: "How much to come take a look?"</div>
               <div class="qa-options-grid" id="pricingOptionsGrid">
-                <div class="qa-opt-card active" data-pricing="Diagnostic fee applied to repair" id="optPricingDiag">
+                <div class="qa-opt-card active" data-pricing="Diagnostic fee applied to repair">
                   <div class="qa-opt-radio"></div>
-                  <div style="flex: 1;">
+                  <div>
                     <div class="qa-opt-title">Diagnostic fee credited toward repair (Recommended)</div>
                     <div class="qa-opt-sub">Visit fee is deducted from the final repair bill.</div>
-                    
-                    <!-- Option to add how much the fee is -->
-                    <div id="diagFeeToggleRow" style="margin-top: 8px; display: flex; align-items: center; gap: 8px;">
-                      <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #065F46; cursor: pointer; margin: 0; user-select: none;" onclick="event.stopPropagation()">
-                        <input type="checkbox" id="chkSpecifyDiagFee" style="width: 15px; height: 15px; accent-color: #10B981; cursor: pointer;">
-                        <span>Specify exact fee amount (e.g. $89)</span>
-                      </label>
-                    </div>
-
-                    <div id="diagFeeInputWrap" style="margin-top: 8px; display: none; align-items: center; gap: 8px; flex-wrap: wrap; background: rgba(16, 185, 129, 0.08); padding: 8px 12px; border-radius: 8px; border: 1px dashed rgba(16, 185, 129, 0.35);">
-                      <label for="diagFeeAmountInput" style="font-size: 12px; font-weight: 700; color: #065F46; margin: 0;">Fee Amount:</label>
-                      <div style="position: relative; width: 105px;">
-                        <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-weight: 700; color: #059669; font-size: 14px;">$</span>
-                        <input type="number" id="diagFeeAmountInput" placeholder="89" min="0" step="1" style="width: 100%; height: 32px; padding-left: 22px; padding-right: 8px; border: 1.5px solid #10B981; border-radius: 6px; font-size: 13.5px; font-weight: 700; color: #065F46; background: #FFF; box-sizing: border-box;" onclick="event.stopPropagation()">
-                      </div>
-                      <span style="font-size: 11.5px; color: #047857; font-weight: 600;">credited toward repair</span>
-                    </div>
                   </div>
                 </div>
-                <div class="qa-opt-card" data-pricing="100% Free on-site estimate" id="optPricingFree">
+                <div class="qa-opt-card" data-pricing="100% Free on-site estimate">
                   <div class="qa-opt-radio"></div>
                   <div>
                     <div class="qa-opt-title">100% Free on-site estimate</div>
                     <div class="qa-opt-sub">Zero dispatch fee or obligation for estimates.</div>
                   </div>
                 </div>
-                <div class="qa-opt-card" data-pricing="Quote on inspection after technician evaluates" id="optPricingUpfront">
+                <div class="qa-opt-card" data-pricing="Quote on inspection after technician evaluates">
                   <div class="qa-opt-radio"></div>
                   <div>
                     <div class="qa-opt-title">Upfront quote after technician inspects on-site</div>
                     <div class="qa-opt-sub">Technician evaluates on-site before giving price.</div>
                   </div>
                 </div>
-                <div class="qa-opt-card" data-pricing="custom" id="optPricingCustom">
+                <div class="qa-opt-card" data-pricing="custom">
                   <div class="qa-opt-radio"></div>
-                  <div style="flex: 1;">
+                  <div>
                     <div class="qa-opt-title">✍️ Custom Fee or Hourly Rate</div>
                     <div class="qa-opt-sub">Type your specific trip fee or hourly rate.</div>
-                    <div class="qa-custom-wrap" id="customPricingWrap" style="display: none; margin-top: 8px;">
-                      <input type="text" class="qa-custom-input" id="customPricingInput" placeholder="e.g. $75 service fee, or $100/hr labor..." onclick="event.stopPropagation()" style="width: 100%; box-sizing: border-box; height: 34px; padding: 0 10px; border: 1.5px solid #10B981; border-radius: 6px; font-size: 13px;">
-                    </div>
                   </div>
                 </div>
+              </div>
+              <div class="qa-custom-wrap" id="customPricingWrap" style="display: none;">
+                <input type="text" class="qa-custom-input" id="customPricingInput" placeholder="e.g. $89 service fee, or $100/hr labor...">
               </div>
             </div>
 
@@ -4677,70 +4645,25 @@
             <div class="qa-card">
               <div class="qa-header">
                 <div class="qa-num">2</div>
-                <div class="qa-title">How should your AI receptionist lock in the appointment?</div>
+                <div class="qa-title">How should Riley lock in the appointment?</div>
               </div>
               <div class="qa-desc">When a caller says: "When can someone come out?"</div>
               <div class="qa-options-grid" id="bookingOptionsGrid">
-                <div class="qa-opt-card active" data-booking="Book arrival window" id="optBookingWindow" style="border: 2px solid #10B981; background: #F0FDF4;">
+                <div class="qa-opt-card active" data-booking="Book arrival window" style="border: 2px solid #10B981; background: #F0FDF4;">
                   <div class="qa-opt-radio"></div>
                   <div style="flex: 1;">
                     <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
                       <div class="qa-opt-title" style="font-weight: 800; color: #065F46;">⚡ Book a 2-hour arrival window on calendar (Recommended)</div>
                       <span style="font-size: 10.5px; font-weight: 700; background: #10B981; color: #FFF; padding: 2px 8px; border-radius: 12px; white-space: nowrap;">Books for you</span>
                     </div>
-                    <div class="qa-opt-sub" style="margin-top: 3px; color: #047857;">Your AI receptionist locks in the appointment slot with the caller. <em>(We'll connect your Google or Outlook calendar right after setup).</em></div>
+                    <div class="qa-opt-sub" style="margin-top: 3px; color: #047857;">Riley locks in the appointment slot with the caller. <em>(We'll connect your Google or Outlook calendar right after setup).</em></div>
                   </div>
                 </div>
-                <div class="qa-opt-card" data-booking="Text caller details & owner schedules" id="optBookingTextDetails">
+                <div class="qa-opt-card" data-booking="Text caller details & owner schedules">
                   <div class="qa-opt-radio"></div>
-                  <div style="flex: 1;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                      <div class="qa-opt-title" style="font-weight: 700;">Text me caller details — you will reach out to schedule</div>
-                      <span style="font-size: 10.5px; font-weight: 700; background: #6366F1; color: #FFF; padding: 2px 8px; border-radius: 12px; white-space: nowrap;">Lead Dispatch</span>
-                    </div>
-                    <div class="qa-opt-sub" style="margin-top: 3px;">Your AI receptionist tells the customer you will reach out to arrange a booking day, and texts you their info so you decide if you want the job.</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Part C: When to Transfer to a Human -->
-            <div class="qa-card" style="margin-top: 16px;">
-              <div class="qa-header">
-                <div class="qa-num">3</div>
-                <div class="qa-title">When should your AI receptionist transfer the call to a human?</div>
-              </div>
-              <div class="qa-desc">Choose when the live call should ring your cell phone or office line:</div>
-              <div class="qa-options-grid" id="humanTransferOptionsGrid">
-                <div class="qa-opt-card active" data-transferpolicy="life_safety_emergencies" id="optTransferSafety" style="border: 2px solid #10B981; background: #F0FDF4;">
-                  <div class="qa-opt-radio"></div>
-                  <div style="flex: 1;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
-                      <div class="qa-opt-title" style="font-weight: 800; color: #065F46;">🚨 Life & safety emergencies only (Recommended)</div>
-                      <span style="font-size: 10.5px; font-weight: 700; background: #10B981; color: #FFF; padding: 2px 8px; border-radius: 12px; white-space: nowrap;">Standard</span>
-                    </div>
-                    <div class="qa-opt-sub" style="margin-top: 3px; color: #047857;">Transfers immediately for burst pipes, gas leaks, electrical fire hazards, or flooding. Handles routine bookings autonomously.</div>
-                  </div>
-                </div>
-                <div class="qa-opt-card" data-transferpolicy="caller_demands_human" id="optTransferDemands">
-                  <div class="qa-opt-radio"></div>
-                  <div style="flex: 1;">
-                    <div class="qa-opt-title" style="font-weight: 700;">👤 When caller specifically asks or demands a human</div>
-                    <div class="qa-opt-sub" style="margin-top: 3px;">If a customer asks to speak with an owner, manager, or live operator, Your AI receptionist connects them immediately.</div>
-                  </div>
-                </div>
-                <div class="qa-opt-card" data-transferpolicy="unresolved_queries" id="optTransferUnresolved">
-                  <div class="qa-opt-radio"></div>
-                  <div style="flex: 1;">
-                    <div class="qa-opt-title" style="font-weight: 700;">🔍 Complex or out-of-scope technical inquiries</div>
-                    <div class="qa-opt-sub" style="margin-top: 3px;">Transfers if the caller asks complex engineering questions outside your listed services and standard pricing.</div>
-                  </div>
-                </div>
-                <div class="qa-opt-card" data-transferpolicy="never_transfer_take_message" id="optTransferNever">
-                  <div class="qa-opt-radio"></div>
-                  <div style="flex: 1;">
-                    <div class="qa-opt-title" style="font-weight: 700;">📴 Never transfer — take a detailed message & send SMS alert</div>
-                    <div class="qa-opt-sub" style="margin-top: 3px;">Your AI receptionist stays on the call, captures full issue and contact details, and texts you an instant high-priority alert.</div>
+                  <div>
+                    <div class="qa-opt-title">Text me caller details — you will reach out to schedule</div>
+                    <div class="qa-opt-sub">Riley tells the customer you will reach out to arrange a booking day, and texts you their info so you decide if you want the job.</div>
                   </div>
                 </div>
               </div>
@@ -4749,35 +4672,41 @@
 
           <!-- Sub-Step Navigation Action Bar -->
           <div class="focus-actions">
-            <button type="button" class="btn-focus-back" id="btnBack2" onclick="handleBackPlaybookStep()">← Back to Voice</button>
-            <button type="button" class="btn-focus-next" id="btnNext2" onclick="handleNextPlaybookStep()">
-              <span>Next: 🚨 Emergencies →</span>
+            <button type="button" class="btn-focus-back" id="btnBack2" onclick="if(window.showQStep) window.showQStep((window.state?.playbookSubStep || 1) - 1)">← Back to Business Info</button>
+            <button type="button" class="btn-focus-next" id="btnNext2" onclick="if(window.showQStep) window.showQStep((window.state?.playbookSubStep || 1) + 1)">
+              <span>Next Question →</span>
             </button>
           </div>
         </div>
 
         <!-- BOX 3: Live Call Simulation Theater ("The Wow Moment") -->
         <div class="focus-step" id="box3">
-          <h2 class="focus-title" style="font-size: 24px; font-weight: 800; letter-spacing: -0.02em;">🎧 Hear <span class="receptionist-name-val">Riley</span> in Action</h2>
-          <p class="focus-sub" style="font-size: 13.5px; color: var(--text-muted); margin-bottom: 16px;">Real homeowner calls answered with your exact services, hours, and pricing.</p>
+          <h2 class="focus-title">🎧 Test-Drive Riley: Hear Your AI Receptionist Live</h2>
+          <p class="focus-sub">Listen to Riley answer real customer calls using your exact trade, hours, and pricing rules.</p>
 
-          <!-- 2 Clean Scenario Selection Tabs -->
+          <!-- Challenging Scenario Selection Pills -->
           <div class="scenario-nav-bar" id="scenarioNavBar">
             <button type="button" class="scenario-tab-btn active" data-scenario="routine_booking">
-              <span>⚡ Daytime Service Call</span>
+              <span>⚡ 1. Routine Service Call</span>
             </button>
             <button type="button" class="scenario-tab-btn" data-scenario="after_hours_test">
-              <span>🌙 After-Hours Call</span>
+              <span>🌙 2. After-Hours Call (11:45 PM)</span>
+            </button>
+            <button type="button" class="scenario-tab-btn" data-scenario="boundary_challenge">
+              <span>🛑 3. Out-of-Scope / DIY Test</span>
+            </button>
+            <button type="button" class="scenario-tab-btn" data-scenario="emergency_triage">
+              <span>🚨 4. Urgent Emergency Call</span>
             </button>
           </div>
 
-          <!-- Minimalist Interactive Phone Theater Container -->
+          <!-- Interactive Phone Theater Container -->
           <div class="call-theater-shell">
             <div class="call-theater-header">
               <div class="caller-meta">
                 <div class="caller-avatar" id="theaterCallerAvatar">👤</div>
                 <div>
-                  <div class="caller-name" id="theaterCallerName">Alex Miller (Homeowner)</div>
+                  <div class="caller-name" id="theaterCallerName">David Miller (Homeowner)</div>
                   <div class="caller-sub" id="theaterCallerSub">+1 (206) 555-0192 • Incoming Call</div>
                 </div>
               </div>
@@ -4789,6 +4718,27 @@
                 </span>
                 <span class="call-timer" id="theaterCallTimer">00:00</span>
               </div>
+            </div>
+
+            <!-- AI Decision Telemetry HUD -->
+            <div class="telemetry-hud" id="theaterTelemetryHud">
+              <div class="telemetry-item">
+                <span class="telemetry-label">Schedule Check:</span>
+                <span class="telemetry-value" id="hudTimeStatus">IN-HOURS (2:15 PM)</span>
+              </div>
+              <div class="telemetry-item">
+                <span class="telemetry-label">Topic Verification:</span>
+                <span class="telemetry-value cyan" id="hudTopicStatus">AUTHORIZED SERVICE</span>
+              </div>
+              <div class="telemetry-item">
+                <span class="telemetry-label">Policy Match:</span>
+                <span class="telemetry-value" id="hudPolicyCheck">100% MATCH</span>
+              </div>
+            </div>
+
+            <div class="call-scenario-tag" id="theaterScenarioTag" style="margin: 0 14px 10px 14px;">
+              <span>🚨</span>
+              <span id="theaterScenarioText">Scenario: Urgent AC failure during 92°F heatwave</span>
             </div>
 
             <!-- 2026 Minimalist Living Voice Stage -->
@@ -4821,70 +4771,87 @@
               </div>
             </div>
 
-            <!-- Bottom Theater Action Bar -->
-            <div class="call-theater-bottom" style="display: flex; align-items: center; justify-content: space-between; padding: 11px 18px; background: rgba(18, 24, 34, 0.7); border-top: 1px solid rgba(255,255,255,0.06);">
+            <!-- Collapsible Transcript History Bar -->
+            <div class="dialogue-toggle-bar">
               <button type="button" class="dialogue-toggle-btn" id="btnToggleTranscript">
                 <span>📜</span>
-                <span id="toggleTranscriptLabel">View Transcript</span>
+                <span id="toggleTranscriptLabel">View Full Transcript</span>
                 <span id="transcriptArrow">▼</span>
               </button>
-              <button type="button" class="btn-theater-action" id="btnReplayCall" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: #F1F5F9; border-radius: 8px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                <span>🔄</span>
-                <span>Replay Call</span>
+              <button type="button" class="dialogue-toggle-btn" id="btnToggleCustomChat">
+                <span>💬</span>
+                <span id="toggleChatLabel">Test Riley with Custom Question ▼</span>
               </button>
             </div>
 
-            <!-- Collapsible Transcript History Stream -->
-            <div class="call-transcript-list" id="theaterDialogueList" style="display: none;"></div>
+            <!-- Turn-by-Turn Dynamic Dialogue Stream (collapsible, initially hidden) -->
+            <div class="call-transcript-list" id="theaterDialogueList" style="display: none;">
+              <!-- Animated turns are inserted here sequentially with synced audio -->
+            </div>
+
+            <!-- Collapsible Interactive Test Drawer -->
+            <div id="customChatDrawer" style="display: none; padding: 14px 18px; background: #181714; border-top: 1px solid #282723;">
+              <div style="font-size: 11px; color: #9A978E; margin-bottom: 8px;">Try challenging Riley with these questions:</div>
+              <div class="sim-quick-chips" id="simQuickChips">
+                <button type="button" class="sim-chip-btn" data-q="Can I fix the unit myself? Which wire do I touch?">⚡ DIY Challenge</button>
+                <button type="button" class="sim-chip-btn" data-q="I smell gas in my utility room right now!">🚨 Gas Emergency</button>
+                <button type="button" class="sim-chip-btn" data-q="Are you open right now at midnight?">🌙 After-Hours Check</button>
+                <button type="button" class="sim-chip-btn" data-q="Can you guarantee the exact price without coming out?">💲 Price Guarantee</button>
+              </div>
+              <div class="sim-chat-box" id="simLog" style="max-height: 140px;"></div>
+              <div class="sim-input-row" style="margin-top: 8px;">
+                <input type="text" class="sim-text-in" id="simIn" placeholder="Type any tricky question to test Riley...">
+                <button type="button" class="sim-send" id="simSend">Send</button>
+              </div>
+            </div>
+
+            <!-- Bottom Theater Controls -->
+            <div class="call-theater-bottom">
+              <button type="button" class="btn-theater-action" id="btnReplayCall">
+                <span>🔄</span>
+                <span>Replay Scenario Demo</span>
+              </button>
+            </div>
           </div>
 
-          <!-- THE WOW MOMENT: Customer SMS Receipt & Owner Dispatch Alert -->
+          <!-- Call Outcome Card (Revealed upon call completion) -->
           <div class="call-outcome-card" id="theaterOutcomeCard">
-            <div class="outcome-header" style="margin-bottom: 12px;">
-              <div class="outcome-title" style="font-size: 15px; font-weight: 800; color: #065F46;">
-                <span>✨</span>
-                <span id="outcomeTitleText">Call Handled & Dispatched 100% Autonomously</span>
+            <div class="outcome-header">
+              <div class="outcome-title">
+                <span>✅</span>
+                <span id="outcomeTitleText">Call Successfully Handled & Dispatched</span>
               </div>
-              <span class="outcome-badge" id="outcomeBadgeText" style="background: #DCFCE7; color: #15803D; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px;">100% Policy Match</span>
+              <span class="outcome-badge" id="outcomeBadgeText">100% Policy Match</span>
             </div>
-
-            <!-- Simulated Smartphone SMS Delivery Bubble -->
-            <div style="background: #0B0F15; border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 14px 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.35); margin-bottom: 12px;">
-              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">
-                <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: #94A3B8;">
-                  <span>💬 MESSAGES</span>
-                  <span>•</span>
-                  <span style="color: #34D399;">Instant SMS Sent to Caller</span>
-                </div>
-                <span style="font-size: 10.5px; color: #64748B;">Just now</span>
+            <div class="outcome-grid">
+              <div class="outcome-item">
+                <strong>Captured Issue</strong>
+                <span id="outcomeIssue">AC Not Cooling / Warm Air</span>
               </div>
-              <div style="display: flex; align-items: flex-start; gap: 10px;">
-                <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #10B981, #059669); display: flex; align-items: center; justify-content: center; font-size: 15px; color: #FFF; flex-shrink: 0; box-shadow: 0 4px 12px rgba(16,185,129,0.35);">
-                  📲
-                </div>
-                <div style="flex: 1; background: #1E293B; border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; border-top-left-radius: 3px; padding: 11px 14px; color: #F1F5F9; font-size: 12.5px; line-height: 1.45;">
-                  <div style="font-size: 10.5px; font-weight: 700; color: #38BDF8; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em;" id="smsSenderLabel">To Caller: +1 (206) 555-0192</div>
-                  <div id="smsMessageBody" style="color: #F8FAFC; font-weight: 500;">
-                    Hi Alex! You're locked in with Apex Services for today between 1:00 PM – 5:00 PM at 742 Evergreen Terrace. Your technician will text 15 min prior to arrival. View confirmation: <span style="color: #34D399; text-decoration: underline;">https://agents.orxlabs.com/t/892</span>
-                  </div>
-                </div>
+              <div class="outcome-item">
+                <strong>Pricing Quoted</strong>
+                <span id="outcomePricing">Diagnostic fee applied to repair</span>
               </div>
-            </div>
-
-            <!-- Instant Owner Dispatch Notification -->
-            <div style="background: #FFF; border: 1.5px solid #86EFAC; border-radius: 12px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
-              <div style="display: flex; align-items: center; gap: 10px;">
-                <span style="font-size: 20px;">🔔</span>
-                <div>
-                  <div style="font-size: 12px; font-weight: 800; color: #166534;" id="ownerAlertTitle">Dispatched to Business Owner (+1 555-234-5678)</div>
-                  <div style="font-size: 11.5px; color: #15803D; margin-top: 1px;" id="ownerAlertSubtitle">Alex Miller • 742 Evergreen Terr • Quoted: $89 Diag Fee Approved</div>
-                </div>
+              <div class="outcome-item">
+                <strong>Scheduled Slot</strong>
+                <span id="outcomeSlot">Today 1:00 PM – 5:00 PM Window</span>
               </div>
-              <span style="font-size: 10.5px; font-weight: 700; background: #DCFCE7; color: #15803D; border: 1px solid #86EFAC; padding: 3px 8px; border-radius: 6px; white-space: nowrap;">Logged to System</span>
+              <div class="outcome-item">
+                <strong>Physical Address</strong>
+                <span id="outcomeAddress">742 Evergreen Terrace</span>
+              </div>
+              <div class="outcome-item">
+                <strong>Customer Contact</strong>
+                <span id="outcomeContact">David Miller • (206) 555-0192</span>
+              </div>
+              <div class="outcome-item">
+                <strong>Dispatch Delivery</strong>
+                <span id="outcomeEmail">Instant SMS (Live Tracking + 1-Tap Receipt)</span>
+              </div>
             </div>
           </div>
 
-          <div class="focus-actions" style="margin-top: 16px;">
+          <div class="focus-actions">
             <button type="button" class="btn-focus-back" id="btnBack3">← Back to Setup</button>
             <button type="button" class="btn-box3-speak-receptionist" id="btnBox3OpenVoiceSim" style="margin: 0 8px; background: linear-gradient(135deg, #059669, #0D9488); color: #FFF; border: none; border-radius: var(--radius-sm); padding: 10px 18px; font-weight: 700; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(16,185,129,0.3);">
               <span>🎙️ Speak with <span class="receptionist-name-val">Riley</span> (5-Min Test)</span>
@@ -4898,7 +4865,7 @@
         <!-- BOX 4: Dedicated Pay Page & Post-Payment Phone Activation -->
         <div class="focus-step" id="box4">
           <h2 class="focus-title">🚀 Launch Your AI Receptionist</h2>
-          <p class="focus-sub">Never miss a high-paying job again. Your cell rings first — <span class="receptionist-name-val">Riley</span> answers when you're busy or on a ladder.</p>
+          <p class="focus-sub">Never miss a high-paying job again. Your cell rings first — Riley answers when you're busy or on a ladder.</p>
 
           <!-- Live 5-Minute Interactive Voice Simulation Card -->
           <div class="live-voice-sandbox-card">
@@ -4933,45 +4900,59 @@
           <!-- Pricing Hero Card -->
           <div class="pay-card">
             <div class="pay-badge-popular">⚡ 60-Second Setup • Zero Contract • Cancel Anytime</div>
-            <div class="pay-hero-price">$20<span style="font-size: 20px; font-weight: 600; color: var(--text-muted); font-family: inherit;">/mo</span></div>
-            <div class="pay-price-sub">Includes 50 minutes/month (~20 calls) • then only $0.25/min overage • cancel anytime</div>
+            <div class="pay-hero-price">$99<span style="font-size: 20px; font-weight: 600; color: var(--text-muted); font-family: inherit;">/mo</span></div>
+            <div class="pay-price-sub">Includes 200 minutes/month (~70 calls) • then only $0.15/min overage • cancel anytime</div>
 
             <ul class="pay-features-list">
-              <li class="pay-feature-item"><span class="pay-check-icon">✓</span> <span><strong>50 Minutes / Month Included</strong> (then only $0.25/min overage)</span></li>
+              <li class="pay-feature-item"><span class="pay-check-icon">✓</span> <span><strong>200 Minutes / Month Included</strong> (then only $0.15/min overage)</span></li>
               <li class="pay-feature-item"><span class="pay-check-icon">✓</span> <span><strong>24/7/365 Call Answering</strong> in under 2 seconds (Deepgram Nova-3 & Flux)</span></li>
               <li class="pay-feature-item"><span class="pay-check-icon">✓</span> <span><strong>Custom-trained on your trade</strong> with your exact pricing & dispatch rules</span></li>
               <li class="pay-feature-item"><span class="pay-check-icon">✓</span> <span><strong>Dedicated US phone line</strong> provisioned immediately</span></li>
               <li class="pay-feature-item"><span class="pay-check-icon">✓</span> <span><strong>Instant SMS & email summaries</strong> sent to your cell with audio & transcript</span></li>
-              <li class="pay-feature-item"><span class="pay-check-icon">✓</span> <span><strong>Keep your existing number</strong> — your cell rings first, <span class="receptionist-name-val">Riley</span> covers missed calls</span></li>
+              <li class="pay-feature-item"><span class="pay-check-icon">✓</span> <span><strong>Keep your existing number</strong> — your cell rings first, Riley covers missed calls</span></li>
             </ul>
 
             <button type="button" class="btn-polar-main" id="btnPolarCheckout">
-              <span>💳 Activate $20/mo Starter Plan →</span>
+              <span>💳 Activate $99/mo Starter Plan →</span>
             </button>
             <div style="font-size: 11px; color: var(--text-muted); margin-top: 10px;">
               🔒 Encrypted 256-bit checkout via Polar • Apple Pay, Google Pay, Visa, Mastercard, Amex • 30-day money-back guarantee
             </div>
           </div>
 
-          <!-- What Unlocks Immediately After Activation -->
-          <div style="margin-top: 14px; background: #FFFFFF; border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 16px 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; box-shadow: var(--shadow-sm);">
-            <div style="display: flex; align-items: flex-start; gap: 10px;">
-              <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(16, 185, 129, 0.1); color: #059669; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">📲</div>
-              <div>
-                <div style="font-size: 12.5px; font-weight: 700; color: var(--text); margin-bottom: 2px;">1-Tap Carrier Forwarding</div>
-                <div style="font-size: 11.5px; color: var(--text-muted); line-height: 1.4;">
-                  Verizon, AT&T, or T-Mobile dialer. Your cell rings first — <span class="receptionist-name-val">Riley</span> answers missed calls.
+          <!-- 1-Tap Carrier Connect & Calendar Setup (Unlocks Immediately After Payment) -->
+          <div style="margin-top: 14px; background: #FFFFFF; border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 16px 18px; display: flex; align-items: flex-start; gap: 14px; box-shadow: var(--shadow-sm);">
+            <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(16, 185, 129, 0.1); color: #059669; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">📲</div>
+            <div style="flex: 1;">
+              <div style="font-size: 13.5px; font-weight: 700; color: var(--text); margin-bottom: 3px;">1-Tap Phone Line Setup Unlocks Immediately After Activation</div>
+              <div style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">
+                After checkout, you'll be redirected to your dashboard with a 1-tap carrier connect dialer (Verizon *71, AT&T *61*, T-Mobile **61*, or VoIP). Your cell rings first — Riley only answers calls you miss.
+              </div>
+            </div>
+          </div>
+
+          <!-- Calendar Sync Connection (Interactive FreeBusy Zero-Friction) -->
+          <div id="onboardingGCalCard" style="margin-top: 12px; background: linear-gradient(135deg, #F0F7F3, #EAF5EE); border: 1.5px solid #C4DDD0; border-radius: var(--radius-sm); padding: 16px; display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 24px; flex-shrink: 0;">📅</span>
+                <div>
+                  <div style="font-size: 13.5px; font-weight: 700; color: var(--brand); margin-bottom: 2px;">Google Calendar FreeBusy Sync</div>
+                  <div style="font-size: 11.5px; color: var(--text-muted);" id="onboardingGCalDesc">Enter your calendar email (dispatch or personal). Riley checks real-time availability to avoid double-booking.</div>
                 </div>
               </div>
             </div>
-            <div style="display: flex; align-items: flex-start; gap: 10px;">
-              <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(59, 130, 246, 0.1); color: #2563EB; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">📅</div>
-              <div>
-                <div style="font-size: 12.5px; font-weight: 700; color: var(--text); margin-bottom: 2px;">Google Calendar Booking</div>
-                <div style="font-size: 11.5px; color: var(--text-muted); line-height: 1.4;">
-                  Connect your calendar in 1 click in your portal right after activation to prevent double-booking.
-                </div>
-              </div>
+
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <input type="email" id="onboardGCalEmailInput" placeholder="dispatch@mycompany.com or yourname@gmail.com" style="flex: 1; padding: 9px 12px; border: 1.5px solid #C4DDD0; border-radius: 8px; font-size: 12.5px; font-family: inherit; outline: none; background: #FFFFFF; color: #1F2937;">
+              <button type="button" id="btnOnboardGCalFreeBusy" onclick="connectGoogleCalendarFreeBusyOnboarding()" style="background: #059669; border: 1.5px solid #047857; border-radius: 8px; padding: 9px 16px; font-size: 12.5px; font-weight: 700; color: #FFFFFF; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); transition: all 0.15s;">
+                <span id="btnOnboardGCalText">⚡ Connect FreeBusy</span>
+              </button>
+            </div>
+
+            <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: var(--text-muted); padding-top: 2px;">
+              <span>No password or OAuth popups required. Uses Google FreeBusy protocol.</span>
+              <button type="button" id="btnOnboardGCal" onclick="connectGoogleCalendarOnboarding()" style="background: transparent; border: none; color: #4B5563; text-decoration: underline; cursor: pointer; font-size: 11px; padding: 0;">Or sign in via OAuth popup</button>
             </div>
           </div>
 
@@ -5033,17 +5014,15 @@
       afterHoursPolicy: "Book earliest open arrival window & text instant confirmation",
       pricingPolicy: "Diagnostic fee applied to repair",
       bookingAction: "Book arrival window",
-      humanTransferPolicy: "life_safety_emergencies",
       faqs: ["licensed", "financing", "warranty", "sameday"],
       phone: "",
       emergencyTriggers: [],
       personaName: "Riley",
-      personaVoice: "flux-meghan-en",
+      personaVoice: "aura-asteria-en",
       clientId: "cli_" + Math.random().toString(36).substring(2, 9),
       assignedPhone: "+1 (833) 420-5227",
       activeScenario: "routine_booking",
       activeTopicCategory: "core_services",
-      topicCategoryIndex: 0,
       industryCatalog: {}
     };
 
@@ -5143,23 +5122,6 @@
     };
 
     function showBox(num) {
-      if (num > 1) {
-        const bizInput = document.getElementById("discBizNameInput");
-        const addrInput = document.getElementById("discAddressInput");
-        const bizVal = (state.bizName || (bizInput ? bizInput.value : "")).trim();
-        const addrVal = (state.address || (addrInput ? addrInput.value : "")).trim();
-        if (!bizVal || !addrVal) {
-          num = 1;
-          const discoveryCard = document.getElementById("discoveryCard");
-          if (discoveryCard) discoveryCard.classList.add("active");
-          const initialPhoneActions = document.getElementById("initialPhoneActions");
-          if (initialPhoneActions) initialPhoneActions.style.display = "none";
-          if (typeof confirmAndAdvanceBiz === "function") {
-            confirmAndAdvanceBiz();
-          }
-          return;
-        }
-      }
       state.step = num;
       const boxes = [
         document.getElementById("box1"),
@@ -5171,12 +5133,6 @@
       boxes.forEach((box, i) => {
         if (box) box.classList.toggle("active", (i + 1) === num);
       });
-
-      if (num !== 4) {
-        if (typeof stopCallSimulation === "function") {
-          stopCallSimulation();
-        }
-      }
 
       if (num === 2) {
         if (typeof updateSmsStepUI === "function") updateSmsStepUI();
@@ -5346,18 +5302,9 @@
                 item.addEventListener("click", () => {
                   const m = matches[idx];
                   discAddressInput.value = m.address || m.title;
-                  discAddressInput.style.borderColor = "";
-                  discAddressInput.style.backgroundColor = "";
-                  const addrError = document.getElementById("bizAddressError");
-                  if (addrError) addrError.style.display = "none";
-
                   const bizInput = document.getElementById("discBizNameInput");
                   if (bizInput && !bizInput.value.trim() && m.title && m.title !== m.address) {
                     bizInput.value = m.title;
-                    bizInput.style.borderColor = "";
-                    bizInput.style.backgroundColor = "";
-                    const bizError = document.getElementById("bizNameError");
-                    if (bizError) bizError.style.display = "none";
                     const header = document.getElementById("discBizNameHeader");
                     if (header) header.textContent = m.title;
                   }
@@ -5471,56 +5418,9 @@
       const bizInput = document.getElementById("discBizNameInput");
       const addrInput = document.getElementById("discAddressInput");
       const tradeSelect = document.getElementById("discTradeSelect");
-      const bizError = document.getElementById("bizNameError");
-      const addrError = document.getElementById("bizAddressError");
 
-      const bizVal = (bizInput ? bizInput.value : "").trim();
-      const addrVal = (addrInput ? addrInput.value : "").trim();
-
-      let hasError = false;
-
-      // Clear previous error styles
-      if (bizInput) {
-        bizInput.style.borderColor = "";
-        bizInput.style.backgroundColor = "";
-      }
-      if (addrInput) {
-        addrInput.style.borderColor = "";
-        addrInput.style.backgroundColor = "";
-      }
-      if (bizError) bizError.style.display = "none";
-      if (addrError) addrError.style.display = "none";
-
-      if (!bizVal) {
-        if (bizInput) {
-          bizInput.style.borderColor = "#EF4444";
-          bizInput.style.backgroundColor = "#FEF2F2";
-        }
-        if (bizError) bizError.style.display = "block";
-        hasError = true;
-      }
-
-      if (!addrVal) {
-        if (addrInput) {
-          addrInput.style.borderColor = "#EF4444";
-          addrInput.style.backgroundColor = "#FEF2F2";
-        }
-        if (addrError) addrError.style.display = "block";
-        hasError = true;
-      }
-
-      if (hasError) {
-        if (!bizVal && bizInput) {
-          bizInput.focus();
-        } else if (!addrVal && addrInput) {
-          addrInput.focus();
-        }
-        return false;
-      }
-
-      state.bizName = bizVal;
-      state.address = addrVal;
-
+      if (bizInput && bizInput.value.trim()) state.bizName = bizInput.value.trim();
+      if (addrInput && addrInput.value.trim()) state.address = addrInput.value.trim();
       if (tradeSelect && tradeSelect.value) {
         state.trade = tradeSelect.value;
         selectTrade(state.trade);
@@ -5529,45 +5429,15 @@
       if (!state.phone) {
         state.phone = inPhoneQuery.value.trim();
       }
+      if (!state.bizName) {
+        state.bizName = inPhoneQuery.value.trim() || "My Business";
+      }
 
       updateSmsStepUI();
       showBox(2);
-      return true;
     }
 
     if (btnConfirmBiz) btnConfirmBiz.addEventListener("click", confirmAndAdvanceBiz);
-
-    const bizNameEl = document.getElementById("discBizNameInput");
-    if (bizNameEl) {
-      bizNameEl.addEventListener("input", () => {
-        bizNameEl.style.borderColor = "";
-        bizNameEl.style.backgroundColor = "";
-        const err = document.getElementById("bizNameError");
-        if (err) err.style.display = "none";
-      });
-      bizNameEl.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          confirmAndAdvanceBiz();
-        }
-      });
-    }
-
-    const bizAddrEl = document.getElementById("discAddressInput");
-    if (bizAddrEl) {
-      bizAddrEl.addEventListener("input", () => {
-        bizAddrEl.style.borderColor = "";
-        bizAddrEl.style.backgroundColor = "";
-        const err = document.getElementById("bizAddressError");
-        if (err) err.style.display = "none";
-      });
-      bizAddrEl.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          confirmAndAdvanceBiz();
-        }
-      });
-    }
 
     // -----------------------------------------------------------------------
     // STEP 2: SMS ROUTING & NOTIFICATIONS CONTROLLER
@@ -5702,9 +5572,9 @@
     }
 
     const CATEGORY_META = [
-      { key: "core_services", name: "Services", icon: "🛠️", title: "Services You Offer", nextText: "Next: 🚨 Emergencies →", isRadio: false, desc: "Tap the jobs you do. Your AI receptionist will explain these to callers and book them." },
+      { key: "core_services", name: "Services", icon: "🛠️", title: "Services You Offer", nextText: "Next: 🚨 Emergencies →", isRadio: false, desc: "Tap the jobs you do. Riley will explain these to callers and book them." },
       { key: "emergency_topics", name: "Emergencies", icon: "🚨", title: "Urgent Emergencies", nextText: "Next: 🛡️ Safety & Rules →", isRadio: false, desc: "Urgent situations that trigger immediate priority dispatch or cell transfer." },
-      { key: "out_of_scope", name: "Safety & Rules", icon: "🛡️", title: "Safety & Guardrails", nextText: "Next: 🕒 Operating Hours →", isRadio: false, desc: "What your AI receptionist politely declines (e.g. no dangerous DIY repair advice)." }
+      { key: "out_of_scope", name: "Safety & Rules", icon: "🛡️", title: "Safety & Guardrails", nextText: "Next: 🕒 Operating Hours →", isRadio: false, desc: "What Riley politely declines (e.g. no dangerous DIY repair advice)." }
     ];
 
     const EXTRA_CATALOGS = {
@@ -5940,7 +5810,7 @@
           "Severe Auto Accident with Hospitalization"
         ],
         out_of_scope: [
-          "Explicit disclaimer that your AI receptionist is an AI assistant, not an attorney",
+          "Explicit disclaimer that Riley is an assistant, not an attorney",
           "No binding legal advice or outcome guarantees over phone",
           "Maintain strict attorney-client privilege intake protocol"
         ]
@@ -6070,24 +5940,11 @@
       }
     }
 
-    function getDiagnosticPolicyStr() {
-      const chk = document.getElementById("chkSpecifyDiagFee");
-      const input = document.getElementById("diagFeeAmountInput");
-      if (chk && !chk.checked) {
-        return "Diagnostic fee credited toward repair";
-      }
-      const feeVal = input ? input.value.trim().replace("$", "") : "";
-      if (feeVal && !isNaN(feeVal) && Number(feeVal) > 0) {
-        return `$${feeVal} diagnostic fee credited toward repair`;
-      }
-      return "Diagnostic fee credited toward repair";
-    }
-
     function syncPricingPolicy(tid) {
       let policyName = "Diagnostic fee applied to repair";
       let cardVal = "Diagnostic fee applied to repair";
       if (tid.includes("diagnostic") || tid.includes("inspection")) {
-        policyName = getDiagnosticPolicyStr();
+        policyName = "Diagnostic fee applied to repair";
         cardVal = "Diagnostic fee applied to repair";
       } else if (tid.includes("free") || tid.includes("zero")) {
         policyName = "100% Free on-site estimate";
@@ -6111,15 +5968,6 @@
       const customPricingWrap = document.getElementById("customPricingWrap");
       if (customPricingWrap) {
         customPricingWrap.style.display = cardVal === "custom" ? "block" : "none";
-      }
-      const diagFeeToggleRow = document.getElementById("diagFeeToggleRow");
-      if (diagFeeToggleRow) {
-        diagFeeToggleRow.style.display = cardVal === "Diagnostic fee applied to repair" ? "flex" : "none";
-      }
-      const chk = document.getElementById("chkSpecifyDiagFee");
-      const diagFeeInputWrap = document.getElementById("diagFeeInputWrap");
-      if (diagFeeInputWrap) {
-        diagFeeInputWrap.style.display = (cardVal === "Diagnostic fee applied to repair" && chk && chk.checked) ? "flex" : "none";
       }
     }
 
@@ -6449,14 +6297,14 @@
     }
 
     function advanceTopicCategory(delta) {
-      let idx = (typeof state.topicCategoryIndex === "number") ? state.topicCategoryIndex : 0;
+      let idx = state.topicCategoryIndex || 0;
       idx += delta;
       if (idx < 0) {
         showQStep(2); // Go back to Voice
         return;
       }
       if (idx >= CATEGORY_META.length) {
-        showQStep(4); // Advance to Operating Schedule (Working Hours)
+        showQStep(4); // Advance to Operating Schedule
         return;
       }
       state.topicCategoryIndex = idx;
@@ -6472,60 +6320,15 @@
       const btnBack = document.getElementById("btnBack2");
       const btnNext = document.getElementById("btnNext2");
       const badgeElem = document.getElementById("qStepBadge");
-      const titleElem = document.getElementById("qProgressTitle");
-
-      const catIdx = (typeof state.topicCategoryIndex === "number") ? state.topicCategoryIndex : 0;
-      const meta = CATEGORY_META[catIdx] || CATEGORY_META[0];
 
       if (badgeElem) {
-        badgeElem.textContent = `Question 3 of 5: ${meta.name}`;
+        badgeElem.textContent = "Question 3 of 5: Services Offered";
       }
-      if (titleElem) {
-        if (catIdx === 0) titleElem.textContent = "3. What services do you offer?";
-        else if (catIdx === 1) titleElem.textContent = "3. Urgent Emergencies";
-        else titleElem.textContent = "3. Safety Guardrails & Rules";
-      }
-
-      // Update inner header of qStep3
-      const q3HeaderIcon = document.querySelector("#qStep3 .q-header-box div:first-child");
-      const q3HeaderTitle = document.querySelector("#qStep3 .q-step-title");
-      const q3HeaderSub = document.querySelector("#qStep3 .q-step-sub");
-      if (catIdx === 0) {
-        if (q3HeaderIcon) q3HeaderIcon.textContent = "🛠️";
-        if (q3HeaderTitle) q3HeaderTitle.textContent = "What services do you offer?";
-        if (q3HeaderSub) q3HeaderSub.textContent = "Pre-selected for your trade. Tap any to toggle or add custom.";
-      } else if (catIdx === 1) {
-        if (q3HeaderIcon) q3HeaderIcon.textContent = "🚨";
-        if (q3HeaderTitle) q3HeaderTitle.textContent = "Which emergencies do you handle?";
-        if (q3HeaderSub) q3HeaderSub.textContent = "Urgent situations that trigger immediate priority dispatch or cell transfer.";
-      } else if (catIdx === 2) {
-        if (q3HeaderIcon) q3HeaderIcon.textContent = "🛡️";
-        if (q3HeaderTitle) q3HeaderTitle.textContent = "Safety guardrails & rules";
-        if (q3HeaderSub) q3HeaderSub.textContent = "Rules for what your AI receptionist will politely decline (e.g. dangerous DIY repair advice).";
-      }
-
       if (btnBack) {
-        if (catIdx === 0) {
-          btnBack.textContent = "← Back to Voice";
-        } else if (catIdx === 1) {
-          btnBack.textContent = "← Back to Services";
-        } else {
-          btnBack.textContent = "← Back to Emergencies";
-        }
+        btnBack.textContent = "← Back to Voice";
       }
-
       if (btnNext) {
-        btnNext.disabled = false;
-        btnNext.removeAttribute("disabled");
-        btnNext.style.pointerEvents = "auto";
-        btnNext.style.opacity = "1";
-        if (catIdx === 0) {
-          btnNext.innerHTML = "<span>Next: 🚨 Emergencies →</span>";
-        } else if (catIdx === 1) {
-          btnNext.innerHTML = "<span>Next: 🛡️ Safety & Rules →</span>";
-        } else {
-          btnNext.innerHTML = "<span>Next: 🕒 Working Hours →</span>";
-        }
+        btnNext.innerHTML = "<span>Next: Working Hours →</span>";
       }
     }
 
@@ -6905,76 +6708,6 @@
       }
     }
 
-    // Helpers for clean city extraction and trade business name harmonization
-    function extractCleanCity(addrStr) {
-      if (!addrStr) return "";
-      let clean = addrStr.split(/[·|•\n\r]/)[0].trim();
-      clean = clean.replace(/\s*(Property type|Year built|Last sold|Single Family|Multi Family|Condo|Townhouse|Beds?|Baths?|Sq\.?\s*Ft|Square Feet|Zestimate|MLS|Est\.\s*Value|Lot Size).*$/i, "").trim();
-      clean = clean.replace(/[,.-]+$/, "").trim();
-      const listingDescPat = /\b(offering|featuring|features|spacious|gorgeous|stunning|welcome to|luxury|charming|renovated|remodeled|living space|elevator|levels|stories|finished|open concept|custom built|master suite|chef'?s kitchen)\b/i;
-      const streetSuffixPat = /\b(street|st|avenue|ave|boulevard|blvd|road|rd|drive|dr|lane|ln|court|ct|circle|cir|way|place|pl|terrace|ter|parkway|pkwy|highway|hwy|route|rt)\b/i;
-      if (listingDescPat.test(clean) && (/^(offering|featuring|features|welcome|spacious|gorgeous|stunning|luxury|charming)\b/i.test(clean) || !streetSuffixPat.test(clean))) {
-        clean = "";
-      }
-      if (!clean) return "";
-      const parts = clean.split(",").map(p => p.trim()).filter(Boolean);
-      let cand = "";
-      if (parts.length >= 3) {
-        cand = parts[1];
-      } else if (parts.length === 2) {
-        cand = /^[A-Za-z]{2}(\s+\d{5})?$/i.test(parts[1]) ? parts[0] : parts[1];
-      } else {
-        cand = parts[0];
-      }
-      cand = cand.replace(/\b[A-Za-z]{2}\b\s*\d{5}(-\d{4})?$/i, "").replace(/\b\d{5}(-\d{4})?$/, "").replace(/\b[A-Za-z]{2}$/, "").trim();
-      cand = cand.replace(/[,.-]+$/, "").trim();
-      if (/^\d+/.test(cand) || cand.length > 35 || listingDescPat.test(cand)) return "";
-      return cand;
-    }
-
-    const TRADE_UI_KEYWORDS = {
-      hvac: [/\bheating\s*(&|and)?\s*cooling\b/i, /\bhvac\b/i, /\bair\s+conditioning\b/i, /\bfurnace\b/i],
-      plumbing: [/\bplumbing\b/i, /\bplumber(s)?\b/i, /\bdrain(s)?\b/i, /\brooter\b/i],
-      electrical: [/\belectrical\b/i, /\belectric(ians?)?\b/i],
-      roofing: [/\broofing\b/i, /\broof(s)?\b/i, /\bgutter(s)?\b/i],
-      dental_medical: [/\bdental\b/i, /\bdentist(ry)?\b/i, /\bclinic\b/i, /\borthodontic(s)?\b/i],
-      auto: [/\bauto(motive)?\b/i, /\bcar\s+repair\b/i, /\bmechanic(s)?\b/i, /\bmotors?\b/i],
-      legal: [/\blaw(\s+firm|\s+group)?\b/i, /\blegal\b/i, /\battorney(s)?\b/i],
-      restaurant: [/\brestaurant\b/i, /\bbistro\b/i, /\bcafe\b/i, /\bgrill\b/i, /\bdining\b/i],
-      realestate: [/\breal\s*estate\b/i, /\brealty\b/i, /\brealtor(s)?\b/i, /\bproperties\b/i],
-      salon_spa: [/\bsalon\b/i, /\bspa\b/i, /\bbarber(shop)?\b/i, /\bhair\b/i]
-    };
-    const TRADE_UI_SUFFIX = {
-      hvac: "Heating & Cooling",
-      plumbing: "Plumbing & Drain",
-      electrical: "Electrical Services",
-      roofing: "Roofing & Restorations",
-      dental_medical: "Family Dental Care",
-      auto: "Auto Repair & Diagnostics",
-      legal: "Law Group",
-      restaurant: "Bistro & Dining",
-      realestate: "Realty & Property Group",
-      salon_spa: "Salon & Spa",
-      general: "Services"
-    };
-
-    function harmonizeBizName(bizName, targetTrade) {
-      if (!bizName || ["our company", "my business", "apex services"].includes(bizName.trim().toLowerCase())) return bizName;
-      for (const [trade, patterns] of Object.entries(TRADE_UI_KEYWORDS)) {
-        if (trade === targetTrade) continue;
-        for (const pat of patterns) {
-          const m = bizName.match(pat);
-          if (m) {
-            const suffix = TRADE_UI_SUFFIX[targetTrade] || "Services";
-            let prefix = bizName.substring(0, m.index).trim();
-            prefix = prefix.replace(/[\s,&/-]+$/, "").trim();
-            return prefix ? `${prefix} ${suffix}` : suffix;
-          }
-        }
-      }
-      return bizName;
-    }
-
     // Step 2: Trade & Playbook Settings
     function selectTrade(tradeKey) {
       state.trade = tradeKey;
@@ -6984,16 +6717,6 @@
       const t = tradeData[tradeKey] || tradeData.general;
       state.services = [...t.services];
       state.emergencyTriggers = [...t.triggers];
-      if (state.bizName) {
-        const harmonized = harmonizeBizName(state.bizName, tradeKey);
-        if (harmonized !== state.bizName) {
-          state.bizName = harmonized;
-          const bizInput = document.getElementById("discBizNameInput");
-          if (bizInput) bizInput.value = state.bizName;
-          const nameHeader = document.getElementById("discBizNameHeader");
-          if (nameHeader) nameHeader.textContent = state.bizName;
-        }
-      }
       const tradeInput = document.getElementById("discTradeInput");
       if (tradeInput) tradeInput.value = t.name;
       const tradeSelect = document.getElementById("discTradeSelect");
@@ -7007,7 +6730,7 @@
         if (tradeNameElem) {
           tradeNameElem.textContent = t.name;
         } else {
-          tradeFeedback.innerHTML = `<span>✅ Trade set to <strong>${t.name}</strong></span>`;
+          tradeFeedback.innerHTML = `<span>✅ Trade set to <strong>${t.name}</strong></span><button type="button" class="btn-quick-next" id="btnQuickContinueQ1" onclick="if(window.showQStep) window.showQStep(2)">Continue →</button>`;
         }
       }
 
@@ -7034,7 +6757,15 @@
       });
     });
 
-    // Voice Persona Selection & Deepgram Flux Audio Audition
+    // Quick Continue button at top of Question 1
+    document.addEventListener("click", (e) => {
+      if (e.target && (e.target.id === "btnQuickContinueQ1" || e.target.closest("#btnQuickContinueQ1"))) {
+        e.preventDefault();
+        showQStep(2);
+      }
+    });
+
+    // Voice Persona Selection & Real Kokoro Audio Audition
     document.querySelectorAll(".persona-card").forEach(card => {
       card.addEventListener("click", () => {
         document.querySelectorAll(".persona-card").forEach(c => c.classList.remove("active"));
@@ -7048,23 +6779,13 @@
           voiceFeedback.style.display = "block";
           voiceFeedback.innerHTML = `✅ Receptionist voice: <strong>${state.personaName}</strong> (${tagText})`;
         }
-        // Update all dynamic receptionist name displays across the page
-        document.querySelectorAll(".receptionist-name-val").forEach(el => {
-          el.textContent = state.personaName;
-        });
       });
     });
 
     let currentAuditionAudio = null;
-    function playAudition(btnElem, voiceName, customSample) {
-      if (typeof stopCallSimulation === "function") {
-        stopCallSimulation();
-      }
+    function playKokoroAudition(btnElem, voiceName, customSample) {
       if (currentAuditionAudio) {
-        try {
-          currentAuditionAudio.pause();
-          currentAuditionAudio.src = "";
-        } catch(e) {}
+        currentAuditionAudio.pause();
         currentAuditionAudio = null;
         document.querySelectorAll(".btn-persona-audition").forEach(b => b.classList.remove("playing"));
       }
@@ -7090,77 +6811,49 @@
       };
     }
 
-    const btnAudRiley = document.getElementById("btnAuditionRiley");
-    if (btnAudRiley) {
-      btnAudRiley.addEventListener("click", (e) => {
-        e.stopPropagation();
-        playAudition(btnAudRiley, "flux-meghan-en", `Thank you for calling ${state.bizName || 'our company'}. This is Riley. How may I assist you today?`);
-      });
-    }
+    document.getElementById("btnAuditionRiley")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      playKokoroAudition(document.getElementById("btnAuditionRiley"), "aura-asteria-en", `Thank you for calling ${state.bizName || 'our company'}. This is Riley. How may I assist you today?`);
+    });
 
-    const btnAudSarah = document.getElementById("btnAuditionSarah");
-    if (btnAudSarah) {
-      btnAudSarah.addEventListener("click", (e) => {
-        e.stopPropagation();
-        playAudition(btnAudSarah, "flux-sienna-en", `Good day! Thanks for reaching out to ${state.bizName || 'our company'}. My name is Sarah. Are you scheduling an appointment today?`);
-      });
-    }
+    document.getElementById("btnAuditionAna")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      playKokoroAudition(document.getElementById("btnAuditionAna"), "aura-asteria-en", `Hi there! Thanks for calling ${state.bizName || 'our company'}. This is Ana. What can we help you with today?`);
+    });
 
-    const btnAudMichael = document.getElementById("btnAuditionMichael");
-    if (btnAudMichael) {
-      btnAudMichael.addEventListener("click", (e) => {
-        e.stopPropagation();
-        playAudition(btnAudMichael, "flux-bruce-en", `Thanks for calling ${state.bizName || 'our company'}. This is Michael. How can we get your service taken care of today?`);
-      });
-    }
+    document.getElementById("btnAuditionSarah")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      playKokoroAudition(document.getElementById("btnAuditionSarah"), "aura-luna-en", `Good day! Thanks for reaching out to ${state.bizName || 'our company'}. My name is Sarah. Are you scheduling an appointment today?`);
+    });
 
-    const btnAudDavid = document.getElementById("btnAuditionDavid");
-    if (btnAudDavid) {
-      btnAudDavid.addEventListener("click", (e) => {
-        e.stopPropagation();
-        playAudition(btnAudDavid, "flux-cliff-en", `Hey there! Thanks for calling ${state.bizName || 'our company'}. My name is David. How can I help you out today?`);
-      });
-    }
+    document.getElementById("btnAuditionMichael")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      playKokoroAudition(document.getElementById("btnAuditionMichael"), "aura-orion-en", `Thanks for calling ${state.bizName || 'our company'}. This is Michael. How can we get your service taken care of today?`);
+    });
 
-    const btnAudAna = document.getElementById("btnAuditionAna");
-    if (btnAudAna) {
-      btnAudAna.addEventListener("click", (e) => {
-        e.stopPropagation();
-        playAudition(btnAudAna, "flux-heather-en", `Hi! Thanks so much for calling ${state.bizName || 'our company'}. This is Ana — I'm happy to help! What can I do for you today?`);
-      });
-    }
+    document.getElementById("btnAuditionDavid")?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      playKokoroAudition(document.getElementById("btnAuditionDavid"), "aura-helios-en", `Hello! You've reached ${state.bizName || 'our company'}. This is David. How can I assist you right away?`);
+    });
 
     // Q1: Pricing Policy Selection
     const customPricingWrap = document.getElementById("customPricingWrap");
     const customPricingInput = document.getElementById("customPricingInput");
-    const diagFeeToggleRow = document.getElementById("diagFeeToggleRow");
-    const diagFeeInputWrap = document.getElementById("diagFeeInputWrap");
-    const diagFeeAmountInput = document.getElementById("diagFeeAmountInput");
-    const chkSpecifyDiagFee = document.getElementById("chkSpecifyDiagFee");
-
     document.querySelectorAll("#pricingOptionsGrid .qa-opt-card").forEach(card => {
       card.addEventListener("click", () => {
         document.querySelectorAll("#pricingOptionsGrid .qa-opt-card").forEach(c => c.classList.remove("active"));
         card.classList.add("active");
         const val = card.dataset.pricing;
         if (val === "custom") {
-          if (customPricingWrap) customPricingWrap.style.display = "block";
-          if (diagFeeToggleRow) diagFeeToggleRow.style.display = "none";
-          if (diagFeeInputWrap) diagFeeInputWrap.style.display = "none";
-          if (customPricingInput) customPricingInput.focus();
-          state.pricingPolicy = (customPricingInput && customPricingInput.value.trim()) || "Custom pricing specified by owner";
-        } else if (val === "Diagnostic fee applied to repair") {
-          if (customPricingWrap) customPricingWrap.style.display = "none";
-          if (diagFeeToggleRow) diagFeeToggleRow.style.display = "flex";
-          if (diagFeeInputWrap) diagFeeInputWrap.style.display = (chkSpecifyDiagFee && chkSpecifyDiagFee.checked) ? "flex" : "none";
-          state.pricingPolicy = getDiagnosticPolicyStr();
-          syncTopicFromPricing("diagnostic");
+          customPricingWrap.style.display = "block";
+          customPricingInput.focus();
+          state.pricingPolicy = customPricingInput.value.trim() || "Custom pricing specified by owner";
         } else {
-          if (customPricingWrap) customPricingWrap.style.display = "none";
-          if (diagFeeToggleRow) diagFeeToggleRow.style.display = "none";
-          if (diagFeeInputWrap) diagFeeInputWrap.style.display = "none";
+          customPricingWrap.style.display = "none";
           state.pricingPolicy = val;
-          if (val === "100% Free on-site estimate") {
+          if (val === "Diagnostic fee applied to repair") {
+            syncTopicFromPricing("diagnostic");
+          } else if (val === "100% Free on-site estimate") {
             syncTopicFromPricing("free");
           } else if (val === "Quote on inspection after technician evaluates") {
             syncTopicFromPricing("upfront");
@@ -7173,46 +6866,9 @@
         }
       });
     });
-
-    if (chkSpecifyDiagFee) {
-      chkSpecifyDiagFee.addEventListener("change", () => {
-        if (chkSpecifyDiagFee.checked) {
-          if (diagFeeInputWrap) diagFeeInputWrap.style.display = "flex";
-          if (diagFeeAmountInput) {
-            if (!diagFeeAmountInput.value) diagFeeAmountInput.value = "89";
-            diagFeeAmountInput.focus();
-          }
-        } else {
-          if (diagFeeInputWrap) diagFeeInputWrap.style.display = "none";
-        }
-        state.pricingPolicy = getDiagnosticPolicyStr();
-        const q5Feedback = document.getElementById("q5RileyFeedback");
-        if (q5Feedback) {
-          q5Feedback.style.display = "block";
-          q5Feedback.innerHTML = `✅ Pricing set: <strong>${state.pricingPolicy}</strong>`;
-        }
-      });
-    }
-
-    if (diagFeeAmountInput) {
-      diagFeeAmountInput.addEventListener("input", () => {
-        state.pricingPolicy = getDiagnosticPolicyStr();
-        const q5Feedback = document.getElementById("q5RileyFeedback");
-        if (q5Feedback) {
-          q5Feedback.style.display = "block";
-          q5Feedback.innerHTML = `✅ Pricing set: <strong>${state.pricingPolicy}</strong>`;
-        }
-      });
-    }
-
     if (customPricingInput) {
       customPricingInput.addEventListener("input", (e) => {
         state.pricingPolicy = e.target.value.trim() || "Custom pricing specified by owner";
-        const q5Feedback = document.getElementById("q5RileyFeedback");
-        if (q5Feedback) {
-          q5Feedback.style.display = "block";
-          q5Feedback.innerHTML = `✅ Pricing set: <strong>${state.pricingPolicy}</strong>`;
-        }
       });
     }
 
@@ -7221,22 +6877,10 @@
     const customBookingInput = document.getElementById("customBookingInput");
     document.querySelectorAll("#bookingOptionsGrid .qa-opt-card").forEach(card => {
       card.addEventListener("click", () => {
-        document.querySelectorAll("#bookingOptionsGrid .qa-opt-card").forEach(c => {
-          c.classList.remove("active");
-          c.style.border = "1.5px solid var(--border)";
-          c.style.background = "#FFF";
-        });
+        document.querySelectorAll("#bookingOptionsGrid .qa-opt-card").forEach(c => c.classList.remove("active"));
         card.classList.add("active");
         const val = card.dataset.booking;
-        if (val === "Book arrival window") {
-          card.style.border = "2px solid #10B981";
-          card.style.background = "#F0FDF4";
-          state.bookingAction = "Book arrival window";
-        } else if (val === "Text caller details & owner schedules") {
-          card.style.border = "2px solid #6366F1";
-          card.style.background = "#EEF2FF";
-          state.bookingAction = "Text caller details & owner schedules";
-        } else if (val === "custom") {
+        if (val === "custom") {
           if (customBookingWrap) customBookingWrap.style.display = "block";
           if (customBookingInput) {
             customBookingInput.focus();
@@ -7249,10 +6893,7 @@
         const q5Feedback = document.getElementById("q5RileyFeedback");
         if (q5Feedback) {
           q5Feedback.style.display = "block";
-          const label = state.bookingAction.includes("Text")
-            ? "Text caller details (you will reach out to schedule)"
-            : "Book 2-hour arrival window on calendar";
-          q5Feedback.innerHTML = `✅ Booking set: <strong>${label}</strong>`;
+          q5Feedback.innerHTML = `✅ Booking set: <strong>${state.bookingAction}</strong>`;
         }
       });
     });
@@ -7262,36 +6903,13 @@
       });
     }
 
-    // Q3: Human Transfer Policy Selection
-    document.querySelectorAll("#humanTransferOptionsGrid .qa-opt-card").forEach(card => {
-      card.addEventListener("click", () => {
-        document.querySelectorAll("#humanTransferOptionsGrid .qa-opt-card").forEach(c => {
-          c.classList.remove("active");
-          c.style.border = "1.5px solid var(--border)";
-          c.style.background = "#FFF";
-        });
-        card.classList.add("active");
-        const val = card.dataset.transferpolicy || "life_safety_emergencies";
-        state.humanTransferPolicy = val;
-        card.style.border = "2px solid #10B981";
-        card.style.background = "#F0FDF4";
-
-        const q5Feedback = document.getElementById("q5RileyFeedback");
-        if (q5Feedback) {
-          q5Feedback.style.display = "block";
-          const title = card.querySelector(".qa-opt-title")?.textContent || val;
-          q5Feedback.innerHTML = `✅ Transfer rule set: <strong>${title}</strong>`;
-        }
-      });
-    });
-
     // -----------------------------------------------------------------------
     // STEP 2 SUB-STEP CONTROLLER (1 Question at a Time - Mobile First)
     // -----------------------------------------------------------------------
     const TOTAL_SUBSTEPS = 5;
     const subStepTitles = [
       "1. What type of work do you do?",
-      "2. Choose your AI receptionist's voice",
+      "2. Choose your receptionist's voice",
       "3. What services do you offer?",
       "4. Working hours & night calls",
       "5. Pricing & how you book jobs"
@@ -7333,12 +6951,7 @@
       const btnBack = document.getElementById("btnBack2");
       const btnNext = document.getElementById("btnNext2");
       if (btnBack) {
-        if (num === 1) btnBack.textContent = "← Back to SMS Setup";
-        else if (num === 2) btnBack.textContent = "← Back to Trade Profile";
-        else if (num === 3) {
-          // Handled by updateTopicNavButtons()
-        } else if (num === 4) btnBack.textContent = "← Back to Safety & Rules";
-        else if (num === 5) btnBack.textContent = "← Back to Working Hours";
+        btnBack.textContent = num === 1 ? "← Back to SMS Setup" : "← Previous Question";
       }
       if (btnNext) {
         btnNext.disabled = false;
@@ -7347,23 +6960,12 @@
         btnNext.style.opacity = "1";
         if (num === TOTAL_SUBSTEPS) {
           btnNext.innerHTML = "<span>🎧 Save & Test Live Call →</span>";
-        } else if (num === 1) {
-          btnNext.innerHTML = "<span>Next: Voice Setup →</span>";
-        } else if (num === 2) {
-          btnNext.innerHTML = "<span>Next: Services →</span>";
-        } else if (num === 3) {
-          // Handled by updateTopicNavButtons()
-        } else if (num === 4) {
-          btnNext.innerHTML = "<span>Next: Pricing & Booking →</span>";
         } else {
           btnNext.innerHTML = "<span>Next Question →</span>";
         }
       }
 
       if (num === 3) {
-        if (state.topicCategoryIndex === undefined || state.topicCategoryIndex === null || state.topicCategoryIndex < 0 || state.topicCategoryIndex >= CATEGORY_META.length) {
-          state.topicCategoryIndex = 0;
-        }
         renderTopicCatalog(state.trade);
         updateTopicNavButtons();
       }
@@ -7378,81 +6980,15 @@
       }
     }
 
-    function handleNextPlaybookStep() {
-      const currentSub = state.playbookSubStep || 1;
-      if (currentSub === 1) {
-        showQStep(2);
-        return;
-      }
-      if (currentSub === 2) {
-        state.topicCategoryIndex = 0;
-        showQStep(3);
-        return;
-      }
-      if (currentSub === 3) {
-        const catIdx = (typeof state.topicCategoryIndex === "number") ? state.topicCategoryIndex : 0;
-        if (catIdx < CATEGORY_META.length - 1) {
-          advanceTopicCategory(1);
-          return;
-        }
-        showQStep(4);
-        return;
-      }
-      if (currentSub === 4) {
-        showQStep(5);
-        return;
-      }
-      if (currentSub >= 5) {
-        compileAndLaunchCallTheater();
-        return;
-      }
-    }
-
-    function handleBackPlaybookStep() {
-      const currentSub = state.playbookSubStep || 1;
-      if (currentSub <= 1) {
-        showBox(1);
-        return;
-      }
-      if (currentSub === 2) {
-        showQStep(1);
-        return;
-      }
-      if (currentSub === 3) {
-        const catIdx = (typeof state.topicCategoryIndex === "number") ? state.topicCategoryIndex : 0;
-        if (catIdx > 0) {
-          advanceTopicCategory(-1);
-          return;
-        }
-        showQStep(2);
-        return;
-      }
-      if (currentSub === 4) {
-        state.topicCategoryIndex = CATEGORY_META.length - 1; // Return to Safety & Rules
-        showQStep(3);
-        return;
-      }
-      if (currentSub === 5) {
-        showQStep(4);
-        return;
-      }
-    }
-
     // Expose helpers globally so inline event handlers and tests always succeed
     window.state = state;
     window.showBox = showBox;
     window.showQStep = showQStep;
     window.selectTrade = selectTrade;
-    window.handleNextPlaybookStep = handleNextPlaybookStep;
-    window.handleBackPlaybookStep = handleBackPlaybookStep;
-    window.advanceTopicCategory = advanceTopicCategory;
 
     // Dot click direct jump
     document.querySelectorAll("#qProgressDots .q-dot").forEach((dot, idx) => {
-      dot.addEventListener("click", () => {
-        if (idx + 1 === 3) state.topicCategoryIndex = 0;
-        showQStep(idx + 1);
-      });
+      dot.addEventListener("click", () => showQStep(idx + 1));
     });
 
     // Navigation Step 2 (Fast 1-tap progress across all 5 questions)
@@ -7461,7 +6997,12 @@
       btnBack2.onclick = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        handleBackPlaybookStep();
+        const currentSub = state.playbookSubStep || 1;
+        if (currentSub <= 1) {
+          showBox(2);
+        } else {
+          showQStep(currentSub - 1);
+        }
       };
     }
     const btnNext2 = document.getElementById("btnNext2");
@@ -7471,7 +7012,7 @@
       btnNext2.onclick = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        handleNextPlaybookStep();
+        showQStep((state.playbookSubStep || 1) + 1);
       };
     }
 
@@ -7484,36 +7025,13 @@
     let callTimerSecs = 0;
     let isTheaterRunning = false;
     let cachedAudioBlobs = [];
-    let currentCallRunId = 0;
-    let activeTurnTimeoutId = null;
 
     function stopCallSimulation() {
-      currentCallRunId++;
       isTheaterRunning = false;
-      if (activeTurnTimeoutId) {
-        clearTimeout(activeTurnTimeoutId);
-        activeTurnTimeoutId = null;
-      }
       if (callAudioPlaying) {
-        try {
-          callAudioPlaying.pause();
-          callAudioPlaying.currentTime = 0;
-          callAudioPlaying.src = "";
-          callAudioPlaying.onplay = null;
-          callAudioPlaying.onended = null;
-          callAudioPlaying.onerror = null;
-        } catch(e) {}
-        callAudioPlaying = null;
+        callAudioPlaying.pause();
       }
-      if (typeof currentAuditionAudio !== "undefined" && currentAuditionAudio) {
-        try {
-          currentAuditionAudio.pause();
-          currentAuditionAudio.currentTime = 0;
-          currentAuditionAudio.src = "";
-        } catch(e) {}
-        currentAuditionAudio = null;
-        document.querySelectorAll(".btn-persona-audition").forEach(b => b.classList.remove("playing"));
-      }
+      callAudioPlaying = null;
       if (callTimerInterval) {
         clearInterval(callTimerInterval);
         callTimerInterval = null;
@@ -7528,7 +7046,7 @@
       if (stage) stage.classList.remove("speaking", "caller-active");
 
       cachedAudioBlobs.forEach(url => {
-        try { if (url) URL.revokeObjectURL(url); } catch(e) {}
+        try { URL.revokeObjectURL(url); } catch(e) {}
       });
       cachedAudioBlobs = [];
     }
@@ -7545,7 +7063,6 @@
 
     async function compileAndLaunchCallTheater() {
       stopCallSimulation();
-      const thisRunId = currentCallRunId;
       showBox(4);
 
       const dialogueList = document.getElementById("theaterDialogueList");
@@ -7564,9 +7081,9 @@
       if (voiceOrb) voiceOrb.textContent = "✨";
       if (voiceSpeakerIcon) voiceSpeakerIcon.textContent = "🎙️";
       if (voiceSpeakerName) voiceSpeakerName.textContent = "Connecting...";
-      if (voiceSubtitleText) voiceSubtitleText.textContent = "Connecting neural phone line...";
+      if (voiceSubtitleText) voiceSubtitleText.textContent = "Pre-warming neural voices & connecting call demo...";
 
-      dialogueList.innerHTML = `<div style="text-align: center; color: #8C887E; font-size: 12.5px; padding: 18px 0;"><span style="display:inline-block; font-size: 16px;">📞</span> Connecting neural phone line...</div>`;
+      dialogueList.innerHTML = `<div style="text-align: center; color: #8C887E; font-size: 12.5px; padding: 18px 0;"><span style="display:inline-block; font-size: 16px;">📞</span> Pre-warming neural voices & connecting call demo...</div>`;
       outcomeCard.style.display = "none";
       timerElem.textContent = "00:00";
       callTimerSecs = 0;
@@ -7595,15 +7112,6 @@
           allowed_topics: state.allowedTopics,
           custom_topics: state.customTopics,
           schedule_config: state.scheduleConfig,
-          hours: (state.scheduleConfig && state.scheduleConfig.hours_str) || state.hours || "Mon-Fri 8:00 AM - 6:00 PM",
-          timezone: (state.scheduleConfig && state.scheduleConfig.timezone) || state.timezone || "America/New_York",
-          after_hours_action: (state.scheduleConfig && state.scheduleConfig.afterHoursPolicy) || state.afterHoursPolicy || "book_earliest_slot",
-          night_action: (state.scheduleConfig && state.scheduleConfig.afterHoursPolicy) || state.afterHoursPolicy || "book_earliest_slot",
-          answering_coverage: (state.scheduleConfig && state.scheduleConfig.mode) || "always_24_7",
-          answering_mode: (state.scheduleConfig && state.scheduleConfig.mode) || "always_24_7",
-          overflow_delay_seconds: (state.scheduleConfig && state.scheduleConfig.overflowDelaySecs) || 15,
-          transfer_to_human_policy: state.humanTransferPolicy || "life_safety_emergencies",
-          human_transfer_policy: state.humanTransferPolicy || "life_safety_emergencies",
           transfer_rules: state.emergencyTriggers.join("; "),
           assigned_phone: state.assignedPhone
         })
@@ -7618,26 +7126,18 @@
           body: JSON.stringify({
             scenario_id: state.activeScenario,
             business_name: state.bizName,
-            address: state.address || state.query,
-            city: extractCleanCity(state.address || state.query),
             trade: state.trade,
             pricing_policy: state.pricingPolicy,
             booking_action: state.bookingAction,
             persona_name: state.personaName,
             persona_voice: state.personaVoice,
-            schedule_config: state.scheduleConfig,
-            hours: (state.scheduleConfig && state.scheduleConfig.hours_str) || state.hours || "Mon-Fri 8:00 AM - 6:00 PM",
-            timezone: (state.scheduleConfig && state.scheduleConfig.timezone) || state.timezone || "America/New_York",
-            after_hours_action: (state.scheduleConfig && state.scheduleConfig.afterHoursPolicy) || state.afterHoursPolicy || "book_earliest_slot",
-            night_action: (state.scheduleConfig && state.scheduleConfig.afterHoursPolicy) || state.afterHoursPolicy || "book_earliest_slot"
+            schedule_config: state.scheduleConfig
           })
         });
         scriptData = await res.json();
       } catch (e) {
         console.error("Failed to load script", e);
       }
-
-      if (thisRunId !== currentCallRunId) return;
 
       if (!scriptData || !scriptData.turns || scriptData.turns.length === 0) {
         if (voiceSubtitleText) voiceSubtitleText.textContent = "Error loading call demo. Please try again.";
@@ -7646,14 +7146,11 @@
       }
 
       // Populate caller & scenario info
-      const callerNameElem = document.getElementById("theaterCallerName");
-      if (callerNameElem) callerNameElem.textContent = scriptData.customer_name || "Alex Miller (Homeowner)";
-      const callerSubElem = document.getElementById("theaterCallerSub");
-      if (callerSubElem) callerSubElem.textContent = (scriptData.caller_id || "+1 (206) 555-0192") + " • Incoming Call";
-      const scenTextElem = document.getElementById("theaterScenarioText");
-      if (scenTextElem) scenTextElem.textContent = scriptData.scenario_desc || scriptData.issue_title || "Scenario in Progress";
+      document.getElementById("theaterCallerName").textContent = scriptData.customer_name || "David Miller (Homeowner)";
+      document.getElementById("theaterCallerSub").textContent = (scriptData.caller_id || "+1 (206) 555-0192") + " • Incoming Call";
+      document.getElementById("theaterScenarioText").textContent = scriptData.scenario_desc || scriptData.issue_title || "Scenario in Progress";
 
-      // Update AI Decision Telemetry HUD if present
+      // Update AI Decision Telemetry HUD
       const hudTime = document.getElementById("hudTimeStatus");
       const hudTopic = document.getElementById("hudTopicStatus");
       const hudPolicy = document.getElementById("hudPolicyCheck");
@@ -7661,18 +7158,17 @@
       if (scriptData.telemetry) {
         if (hudTime) {
           hudTime.textContent = scriptData.telemetry.time_status || "IN-HOURS";
-          hudTime.className = (scriptData.telemetry.time_status && scriptData.telemetry.time_status.includes("AFTER")) ? "telemetry-value amber" : "telemetry-value";
+          hudTime.className = scriptData.telemetry.time_status.includes("AFTER") ? "telemetry-value amber" : "telemetry-value";
         }
         if (hudTopic) {
           hudTopic.textContent = scriptData.telemetry.topic_status || "AUTHORIZED TOPIC";
-          hudTopic.className = (scriptData.telemetry.topic_status && scriptData.telemetry.topic_status.includes("GUARDRAIL")) ? "telemetry-value amber" : "telemetry-value cyan";
+          hudTopic.className = scriptData.telemetry.topic_status.includes("GUARDRAIL") ? "telemetry-value amber" : "telemetry-value cyan";
         }
         if (hudPolicy) {
           hudPolicy.textContent = scriptData.telemetry.policy_check || "100% MATCH";
         }
       }
 
-      if (thisRunId !== currentCallRunId) return;
       isTheaterRunning = true;
       const turns = scriptData.turns;
       cachedAudioBlobs = new Array(turns.length).fill(null);
@@ -7685,12 +7181,11 @@
 
       // Pre-fetch all audio turns in parallel
       turns.forEach((turn, idx) => {
-        const customerVoice = (state.personaVoice === "flux-cliff-en") ? "flux-bruce-en" : "flux-cliff-en";
-        const voiceToUse = turn.voice || (turn.speaker === "customer" ? customerVoice : (state.personaVoice || "flux-meghan-en"));
+        const voiceToUse = turn.voice || (turn.speaker === "customer" ? "aura-angus-en" : state.personaVoice);
         fetch(`/api/test-speech?text=${encodeURIComponent(turn.text)}&voice=${encodeURIComponent(voiceToUse)}&speed=1.0`)
           .then(res => res.blob())
           .then(blob => {
-            if (thisRunId === currentCallRunId && isTheaterRunning) {
+            if (isTheaterRunning) {
               cachedAudioBlobs[idx] = URL.createObjectURL(blob);
             }
           })
@@ -7701,11 +7196,11 @@
 
       // Wait until Turn 1 audio is loaded in memory before ringing the call
       let waitStart = Date.now();
-      while (!cachedAudioBlobs[0] && isTheaterRunning && (thisRunId === currentCallRunId) && (Date.now() - waitStart < 2500)) {
+      while (!cachedAudioBlobs[0] && isTheaterRunning && (Date.now() - waitStart < 2500)) {
         await new Promise(r => setTimeout(r, 30));
       }
 
-      if (thisRunId !== currentCallRunId || !isTheaterRunning) return;
+      if (!isTheaterRunning) return;
 
       dialogueList.innerHTML = "";
 
@@ -7725,26 +7220,23 @@
 
       // Sequentially play each audio turn
       for (let i = 0; i < turns.length; i++) {
-        if (thisRunId !== currentCallRunId || !isTheaterRunning) break;
+        if (!isTheaterRunning) break;
         const turn = turns[i];
 
         let audioWaitStart = Date.now();
-        while (!cachedAudioBlobs[i] && isTheaterRunning && (thisRunId === currentCallRunId) && (Date.now() - audioWaitStart < 2000)) {
+        while (!cachedAudioBlobs[i] && isTheaterRunning && (Date.now() - audioWaitStart < 2000)) {
           await new Promise(r => setTimeout(r, 30));
         }
-        if (thisRunId !== currentCallRunId || !isTheaterRunning) break;
+        if (!isTheaterRunning) break;
 
-        const custVoice = (state.personaVoice === "flux-cliff-en") ? "flux-bruce-en" : "flux-cliff-en";
-        const voiceForTurn = turn.voice || (turn.speaker === "customer" ? custVoice : (state.personaVoice || "flux-meghan-en"));
+        const voiceForTurn = turn.voice || (turn.speaker === "customer" ? "aura-angus-en" : state.personaVoice);
         const audioUrl = cachedAudioBlobs[i] || `/api/test-speech?text=${encodeURIComponent(turn.text)}&voice=${encodeURIComponent(voiceForTurn)}&speed=1.0`;
 
-        await playSynchronizedTurn(turn, audioUrl, dialogueList, thisRunId);
-        if (thisRunId !== currentCallRunId || !isTheaterRunning) break;
+        await playSynchronizedTurn(turn, audioUrl, dialogueList);
+        if (!isTheaterRunning) break;
 
-        await new Promise(r => setTimeout(r, 250));
+        await new Promise(r => setTimeout(r, 180));
       }
-
-      if (thisRunId !== currentCallRunId || !isTheaterRunning) return;
 
       if (isTheaterRunning) {
         clearInterval(callTimerInterval);
@@ -7769,56 +7261,13 @@
         `;
 
         if (scriptData.outcome) {
-          const outcomeTitle = document.getElementById("outcomeTitleText");
-          if (outcomeTitle) {
-            outcomeTitle.textContent = (scriptData.scenario_id === "after_hours_test")
-              ? "After-Hours Protocol Enforced & Dispatched"
-              : "Call Handled & Dispatched 100% Autonomously";
-          }
-          const outcomeBadge = document.getElementById("outcomeBadgeText");
-          if (outcomeBadge) {
-            outcomeBadge.textContent = (scriptData.scenario_id === "after_hours_test")
-              ? "🌙 Night Schedule Match"
-              : "⚡ 100% Policy Match";
-          }
-
-          // WOW Moment: Simulated Smartphone SMS Delivery Bubble
-          const smsSender = document.getElementById("smsSenderLabel");
-          const smsBody = document.getElementById("smsMessageBody");
-          if (scriptData.outcome.sms_preview) {
-            if (smsSender) {
-              const toPhone = scriptData.outcome.sms_preview.to_phone || scriptData.caller_id || "+1 (206) 555-0192";
-              smsSender.textContent = `To Caller: ${toPhone}`;
-            }
-            if (smsBody) {
-              smsBody.textContent = scriptData.outcome.sms_preview.message_body || "";
-            }
-          }
-
-          // WOW Moment: Business Owner Dispatch Notification
-          const ownerAlertTitle = document.getElementById("ownerAlertTitle");
-          const ownerAlertSubtitle = document.getElementById("ownerAlertSubtitle");
-          if (scriptData.outcome.owner_dispatch) {
-            if (ownerAlertTitle) {
-              ownerAlertTitle.textContent = scriptData.outcome.owner_dispatch.title || `Dispatched to Business Owner (${state.phone || state.smsPhone || "+1 (555) 234-5678"})`;
-            }
-            if (ownerAlertSubtitle) {
-              ownerAlertSubtitle.textContent = scriptData.outcome.owner_dispatch.details || "";
-            }
-          }
-
-          // Legacy fields gracefully populated if present
-          const issueEl = document.getElementById("outcomeIssue");
-          if (issueEl) issueEl.textContent = scriptData.outcome.captured_issue || "Service Consultation";
-          const pricingEl = document.getElementById("outcomePricing");
-          if (pricingEl) pricingEl.textContent = scriptData.outcome.pricing_quoted || state.pricingPolicy;
-          const slotEl = document.getElementById("outcomeSlot");
-          if (slotEl) slotEl.textContent = scriptData.outcome.scheduled_slot || "Scheduled Window";
-          const addrEl = document.getElementById("outcomeAddress");
-          if (addrEl) addrEl.textContent = scriptData.outcome.customer_address || "Customer Address Verified";
+          document.getElementById("outcomeIssue").textContent = scriptData.outcome.captured_issue || "Service Consultation";
+          document.getElementById("outcomePricing").textContent = scriptData.outcome.pricing_quoted || state.pricingPolicy;
+          document.getElementById("outcomeSlot").textContent = scriptData.outcome.scheduled_slot || "Scheduled Window";
+          document.getElementById("outcomeAddress").textContent = scriptData.outcome.customer_address || "Customer Address Verified";
           const contactElem = document.getElementById("outcomeContact");
           if (contactElem) {
-            const name = scriptData.outcome.customer_name || scriptData.customer_name || "Alex Miller";
+            const name = scriptData.outcome.customer_name || scriptData.customer_name || "David Miller";
             const phone = scriptData.outcome.customer_phone || scriptData.caller_id || "+1 (206) 555-0192";
             contactElem.textContent = `${name} • ${phone}`;
           }
@@ -7826,13 +7275,8 @@
           if (emailElem) {
             emailElem.textContent = scriptData.outcome.dispatch_delivery || "Instant SMS (Live Tracking + 1-Tap Receipt)";
           }
-
-          if (outcomeCard) {
-            outcomeCard.style.display = "block";
-          }
-          if (dialogueList) {
-            dialogueList.scrollTop = dialogueList.scrollHeight;
-          }
+          outcomeCard.style.display = "block";
+          dialogueList.scrollTop = dialogueList.scrollHeight;
         }
 
         const btnNext3 = document.getElementById("btnNext3");
@@ -7843,28 +7287,10 @@
       }
     }
 
-    function playSynchronizedTurn(turn, audioUrl, dialogueList, runId) {
+    function playSynchronizedTurn(turn, audioUrl, dialogueList) {
       return new Promise((resolve) => {
-        if (runId !== currentCallRunId || !isTheaterRunning) {
-          resolve();
-          return;
-        }
-
         const isCustomer = turn.speaker === "customer";
-        let avatar = "🌸";
-        if (isCustomer) {
-          avatar = "👤";
-        } else if (state.personaName === "Michael") {
-          avatar = "👔";
-        } else if (state.personaName === "Sarah") {
-          avatar = "👩‍💼";
-        } else if (state.personaName === "David") {
-          avatar = "👷";
-        } else if (state.personaName === "Ana") {
-          avatar = "🎧";
-        } else {
-          avatar = "🌸";
-        }
+        const avatar = isCustomer ? "👤" : (state.personaName === "Michael" ? "👔" : "🌸");
 
         // Update 2026 Voice Stage Visualizer
         const voiceStageCenter = document.getElementById("voiceStageCenter");
@@ -7884,7 +7310,7 @@
         }
         if (voiceOrb) voiceOrb.textContent = avatar;
         if (voiceSpeakerIcon) voiceSpeakerIcon.textContent = isCustomer ? "👤" : "✨";
-        if (voiceSpeakerName) voiceSpeakerName.textContent = turn.name || (isCustomer ? "Customer" : (state.personaName || "Riley"));
+        if (voiceSpeakerName) voiceSpeakerName.textContent = turn.name || (isCustomer ? "Customer" : (state.personaName || "Riley (AI)"));
         if (voiceSubtitleText) voiceSubtitleText.textContent = turn.text;
 
         // Start 2026 Dynamic Wave Equalizer Animation
@@ -7912,28 +7338,18 @@
           </div>
         `;
 
-        const turnAudio = new Audio(audioUrl);
-        callAudioPlaying = turnAudio;
+        callAudioPlaying = new Audio(audioUrl);
 
         let bubbleAppended = false;
         const showBubbleNow = () => {
-          if (!bubbleAppended && runId === currentCallRunId) {
+          if (!bubbleAppended) {
             bubbleAppended = true;
             dialogueList.appendChild(turnDiv);
             dialogueList.scrollTop = dialogueList.scrollHeight;
           }
         };
 
-        let isFinished = false;
         const finishTurn = () => {
-          if (isFinished) return;
-          isFinished = true;
-
-          if (activeTurnTimeoutId) {
-            clearTimeout(activeTurnTimeoutId);
-            activeTurnTimeoutId = null;
-          }
-
           if (waveAnimInterval) {
             clearInterval(waveAnimInterval);
             waveAnimInterval = null;
@@ -7946,48 +7362,30 @@
           const wave = turnDiv.querySelector(".turn-wave");
           if (bubble) bubble.classList.remove("speaking");
           if (wave) wave.style.display = "none";
-
-          if (callAudioPlaying === turnAudio) {
-            callAudioPlaying = null;
-          }
-          try {
-            turnAudio.pause();
-            turnAudio.src = "";
-            turnAudio.onended = null;
-            turnAudio.onerror = null;
-            turnAudio.onplay = null;
-          } catch(e) {}
-
+          callAudioPlaying = null;
           resolve();
         };
 
-        turnAudio.onplay = () => {
-          if (runId !== currentCallRunId) {
-            finishTurn();
-            return;
-          }
+        callAudioPlaying.onplay = () => {
           showBubbleNow();
         };
 
-        turnAudio.onended = finishTurn;
-        turnAudio.onerror = () => {
+        callAudioPlaying.onended = finishTurn;
+        callAudioPlaying.onerror = () => {
           console.warn("Audio turn failed to play, continuing transcript");
           finishTurn();
         };
 
         const wordCount = turn.text.split(" ").length;
-        const maxDurationMs = Math.max(3000, (wordCount / 2.0) * 1000 + 3500);
-        activeTurnTimeoutId = setTimeout(() => {
+        const maxDurationMs = Math.max(3000, (wordCount / 2.2) * 1000 + 2500);
+        const timeoutId = setTimeout(() => {
           finishTurn();
         }, maxDurationMs);
 
-        turnAudio.play().then(() => {
-          if (runId !== currentCallRunId) {
-            finishTurn();
-            return;
-          }
+        callAudioPlaying.play().then(() => {
           showBubbleNow();
         }).catch(() => {
+          clearTimeout(timeoutId);
           finishTurn();
         });
       });
@@ -8024,7 +7422,7 @@
       btnToggleCustomChat.addEventListener("click", () => {
         const isHidden = customChatDrawer.style.display === "none";
         customChatDrawer.style.display = isHidden ? "block" : "none";
-        toggleChatLabel.textContent = isHidden ? "Hide Custom Question ▲" : "Test Receptionist with Custom Question ▼";
+        toggleChatLabel.textContent = isHidden ? "Hide Custom Question ▲" : "Test Riley with Custom Question ▼";
         if (isHidden) {
           const simIn = document.getElementById("simIn");
           if (simIn) simIn.focus();
@@ -8160,17 +7558,15 @@
     // Polar Checkout Trigger in Step 4
     document.getElementById("btnPolarCheckout").addEventListener("click", async () => {
       const btn = document.getElementById("btnPolarCheckout");
-
-      if (!state.bizName || !state.address) {
-        alert("Please enter your business name and address before activating your AI receptionist.");
-        showBox(1);
-        return;
-      }
-
-      btn.innerHTML = `<span>Connecting to Polar Checkout... ⚡</span>`;
+      btn.innerHTML = `<span>Connecting to Checkout... ⚡</span>`;
       btn.disabled = true;
 
-      const effectiveCalEmail = state.google_calendar_id || state.owner_email || "";
+      const calInputEmail = (document.getElementById("onboardGCalEmailInput")?.value || "").trim();
+      const effectiveCalEmail = calInputEmail || state.google_calendar_id || "primary";
+      if (calInputEmail && calInputEmail.includes("@")) {
+        state.google_calendar_id = calInputEmail;
+        state.calendar_connected = true;
+      }
 
       // 1. Immediately send full user playbook info to system to provision agent & dedicated database
       try {
@@ -8197,18 +7593,10 @@
             custom_topics: state.customTopics,
             schedule_config: state.scheduleConfig,
             hours: (state.scheduleConfig && state.scheduleConfig.hours_str) || state.hours || "Mon-Fri 8:00 AM - 6:00 PM",
-            timezone: (state.scheduleConfig && state.scheduleConfig.timezone) || state.timezone || "America/New_York",
-            after_hours_action: (state.scheduleConfig && state.scheduleConfig.afterHoursPolicy) || state.afterHoursPolicy || "book_earliest_slot",
-            night_action: (state.scheduleConfig && state.scheduleConfig.afterHoursPolicy) || state.afterHoursPolicy || "book_earliest_slot",
-            answering_coverage: (state.scheduleConfig && state.scheduleConfig.mode) || "always_24_7",
-            answering_mode: (state.scheduleConfig && state.scheduleConfig.mode) || "always_24_7",
-            overflow_delay_seconds: (state.scheduleConfig && state.scheduleConfig.overflowDelaySecs) || 15,
-            transfer_to_human_policy: state.humanTransferPolicy || "life_safety_emergencies",
-            human_transfer_policy: state.humanTransferPolicy || "life_safety_emergencies",
             transfer_rules: Array.isArray(state.emergencyTriggers) ? state.emergencyTriggers.join("; ") : (state.emergencyTriggers || ""),
             assigned_phone: state.assignedPhone,
             plan: "starter",
-            polar_status: "pending_payment",
+            polar_status: "active",
             google_calendar_id: effectiveCalEmail,
             calendar_sync_enabled: (effectiveCalEmail && effectiveCalEmail.includes("@")) ? 1 : 1
           })
@@ -8225,27 +7613,26 @@
         console.warn("Onboarding project provisioning sync notice:", err);
       }
 
-      // 2. Generate Polar subscription checkout session & navigate directly to Polar checkout portal
+      // 2. Generate Polar subscription checkout session
       try {
-        const successUrl = `${window.location.origin}/portal?client_id=${encodeURIComponent(state.clientId)}&activated=1`;
+        const successUrl = `${window.location.origin}/portal?client_id=${state.clientId}&activated=1`;
         const res = await fetch("/api/polar/create-checkout", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             plan: "starter",
             client_id: state.clientId,
-            customer_email: effectiveCalEmail,
             success_url: successUrl
           })
         });
         const data = await res.json();
-        if (data && data.checkout_url) {
+        if (data.checkout_url) {
           window.location.href = data.checkout_url;
         } else {
-          window.location.href = `/portal?client_id=${encodeURIComponent(state.clientId)}&activated=1`;
+          window.location.href = `/portal?client_id=${state.clientId}&activated=1`;
         }
       } catch (e) {
-        window.location.href = `/portal?client_id=${encodeURIComponent(state.clientId)}&activated=1`;
+        window.location.href = `/portal?client_id=${state.clientId}&activated=1`;
       }
     });
 
@@ -8280,7 +7667,120 @@
       });
     }
 
+    async function connectGoogleCalendarFreeBusyOnboarding() {
+      const emailInput = document.getElementById("onboardGCalEmailInput");
+      const email = (emailInput ? emailInput.value : "").trim() || state.owner_email || "";
+      if (!email || !email.includes("@")) {
+        alert("Please enter a valid Google Calendar email address (e.g. dispatch@mycompany.com or yourname@gmail.com).");
+        if (emailInput) emailInput.focus();
+        return;
+      }
+      const cid = state.clientId || `cli_${Math.random().toString(36).substring(2, 9)}`;
+      state.clientId = cid;
+      const btn = document.getElementById("btnOnboardGCalFreeBusy");
+      const btnText = document.getElementById("btnOnboardGCalText");
+      const desc = document.getElementById("onboardingGCalDesc");
+      if (btnText) btnText.textContent = "Syncing...";
+      if (btn) btn.disabled = true;
 
+      try {
+        const res = await fetch(`/api/projects/${encodeURIComponent(cid)}/calendar/freebusy`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            client_id: cid,
+            email: email
+          })
+        });
+        const data = await res.json();
+        if (data.success || data.connected) {
+          state.google_calendar_id = email;
+          state.calendar_connected = true;
+          if (desc) {
+            desc.style.color = "#059669";
+            desc.textContent = `✓ FreeBusy Linked to ${email}. Real-time double-booking prevention active!`;
+          }
+          if (btn) {
+            btn.style.background = "#10B981";
+            btn.style.borderColor = "#059669";
+          }
+          if (btnText) btnText.textContent = "✓ Connected";
+        } else {
+          alert("Could not connect calendar: " + (data.detail || "Unknown error"));
+          if (btnText) btnText.textContent = "⚡ Connect FreeBusy";
+          if (btn) btn.disabled = false;
+        }
+      } catch (err) {
+        alert("Error connecting Google Calendar: " + err.message);
+        if (btnText) btnText.textContent = "⚡ Connect FreeBusy";
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    async function connectGoogleCalendarOnboarding() {
+      const cid = state.clientId || `cli_${Math.random().toString(36).substring(2, 9)}`;
+      state.clientId = cid;
+      const btnText = document.getElementById("btnOnboardGCalText");
+      if (btnText) btnText.textContent = "Opening Google...";
+
+      try {
+        const urlParams = new URLSearchParams({ client_id: cid });
+        const res = await fetch(`/api/auth/google/url?${urlParams.toString()}`);
+        const data = await res.json();
+        const authUrl = data.url;
+
+        const width = 500, height = 600;
+        const left = (window.screen.width - width) / 2;
+        const top = (window.screen.height - height) / 2;
+        window.open(authUrl, 'GoogleAuth', `width=${width},height=${height},top=${top},left=${left}`);
+
+        const onOAuthMsg = function(ev) {
+          if (ev.data && ev.data.type === 'gcal_connected') {
+            window.removeEventListener('message', onOAuthMsg);
+            const desc = document.getElementById("onboardingGCalDesc");
+            const btn = document.getElementById("btnOnboardGCal");
+            if (desc) desc.textContent = `✓ Linked to ${ev.data.email || "Google Calendar"}. Real-time FreeBusy active!`;
+            if (btn) {
+              btn.style.background = "#10B981";
+              btn.style.color = "#FFFFFF";
+              btn.style.borderColor = "#059669";
+              btn.innerHTML = "<span>✓ Connected</span>";
+              btn.disabled = true;
+            }
+            state.google_calendar_id = ev.data.email || "primary";
+            state.calendar_connected = true;
+          }
+        };
+        window.addEventListener('message', onOAuthMsg);
+
+        setTimeout(async () => {
+          try {
+            const statusRes = await fetch(`/api/auth/google/status?client_id=${encodeURIComponent(cid)}`);
+            const st = await statusRes.json();
+            if (st.is_connected && st.user_email) {
+              const desc = document.getElementById("onboardingGCalDesc");
+              const btn = document.getElementById("btnOnboardGCal");
+              if (desc) desc.textContent = `✓ Linked to ${st.user_email}. Real-time FreeBusy active!`;
+              if (btn) {
+                btn.style.background = "#10B981";
+                btn.style.color = "#FFFFFF";
+                btn.style.borderColor = "#059669";
+                btn.innerHTML = "<span>✓ Connected</span>";
+                btn.disabled = true;
+              }
+              state.google_calendar_id = st.user_email;
+              state.calendar_connected = true;
+            } else if (btnText) {
+              btnText.textContent = "Connect Google";
+            }
+          } catch(e) {
+            if (btnText) btnText.textContent = "Connect Google";
+          }
+        }, 3000);
+      } catch (err) {
+        if (btnText) btnText.textContent = "Connect Google";
+      }
+    }
 
     // Initialization Sequence
     initTimezones();

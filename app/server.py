@@ -941,6 +941,58 @@ async def api_marcus_campaign_status(request: Request):
     }
 
 
+@app.get("/api/marcus/seattle-leads")
+async def api_marcus_seattle_leads(request: Request):
+    """Return the curated list of 50 vetted Seattle/WA HVAC contractor leads."""
+    require_marcus_auth(request)
+    import csv
+    leads_file = Path("data/seattle_hvac_leads_50.csv")
+    if not leads_file.exists():
+        leads_file = Path("/app/data/seattle_hvac_leads_50.csv")
+    if not leads_file.exists():
+        raise HTTPException(status_code=404, detail="Seattle HVAC leads file not found")
+    
+    leads = []
+    with open(leads_file, mode="r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for idx, row in enumerate(reader):
+            leads.append({
+                "id": f"seattle_lead_{idx + 1}",
+                "business_name": row.get("business_name", ""),
+                "phone_number": row.get("phone_number", ""),
+                "address": row.get("address", ""),
+                "operating_hours": row.get("operating_hours", ""),
+                "status": "Ready",
+            })
+    return {"total": len(leads), "leads": leads}
+
+
+@app.get("/api/marcus/sunday-leads")
+async def api_marcus_sunday_leads(request: Request):
+    """Return the 20 vetted HVAC contractors that are open on Sundays in Seattle/WA."""
+    require_marcus_auth(request)
+    import csv
+    leads_file = Path("data/seattle_hvac_sunday_leads_20.csv")
+    if not leads_file.exists():
+        leads_file = Path("/app/data/seattle_hvac_sunday_leads_20.csv")
+    if not leads_file.exists():
+        raise HTTPException(status_code=404, detail="Sunday leads file not found")
+
+    leads = []
+    with open(leads_file, mode="r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for idx, row in enumerate(reader):
+            leads.append({
+                "id": f"sunday_lead_{idx + 1}",
+                "business_name": row.get("business_name", ""),
+                "phone_number": row.get("phone_number", ""),
+                "address": row.get("address", ""),
+                "operating_hours": row.get("operating_hours", ""),
+                "status": "Ready",
+            })
+    return {"total": len(leads), "leads": leads, "note": "These businesses have confirmed Sunday availability."}
+
+
 @app.post("/api/marcus/outbound-call")
 async def api_marcus_outbound_call(request: Request, payload: Dict[str, Any] = Body(...)):
     """Initiate an outbound LiveKit AI phone call using Ana or Marcus for B2B HVAC sales outreach."""
