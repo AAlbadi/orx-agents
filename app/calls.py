@@ -994,6 +994,7 @@ def save_call_session(
     audio_pcm_bytes: Optional[bytes] = None,
     status: str = "completed",
     sample_rate: int = 16000,
+    extra_metadata: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
     Saves a completed call session:
@@ -1039,6 +1040,11 @@ def save_call_session(
         "turn_count": len(transcript or []),
         "status": status,
     }
+
+    if extra_metadata:
+        for k, v in extra_metadata.items():
+            if v is not None:
+                call_entry[k] = v
 
     # Remove existing entry if updating
     calls = [c for c in storage.get("calls", []) if c.get("call_id") != call_id]

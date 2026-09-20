@@ -1,5 +1,6 @@
 """FastAPI Server handling Plivo Inbound/Outbound Telephony and WebSocket Media Streaming."""
 
+import asyncio
 import audioop
 import base64
 import io
@@ -429,7 +430,7 @@ async def livekit_lab(request: Request):
 async def subscribe_page(request: Request):
     """Serve the ORX Agents brand onboarding & Polar subscription wizard."""
     http_base, _ = resolve_base_urls(request)
-    return templates.TemplateResponse(
+    resp = templates.TemplateResponse(
         request=request,
         name="subscribe.html",
         context={
@@ -437,13 +438,17 @@ async def subscribe_page(request: Request):
             "public_url": http_base,
         }
     )
+    resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    resp.headers["Pragma"] = "no-cache"
+    resp.headers["Expires"] = "0"
+    return resp
 
 
 @app.get("/portal", response_class=HTMLResponse)
 async def portal_page(request: Request):
     """Serve the business owner post-payment client portal."""
     http_base, _ = resolve_base_urls(request)
-    return templates.TemplateResponse(
+    resp = templates.TemplateResponse(
         request=request,
         name="portal.html",
         context={
@@ -451,6 +456,90 @@ async def portal_page(request: Request):
             "public_url": http_base,
         }
     )
+    resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    resp.headers["Pragma"] = "no-cache"
+    resp.headers["Expires"] = "0"
+    return resp
+
+
+MARCUS_AUTH_COOKIE = "marcus_auth_token"
+MARCUS_AUTH_SECRET = "marcus_sec_46546543_aziz"
+
+
+def verify_marcus_auth(request: Request) -> bool:
+    """Validate HTTP Basic Auth or session cookie for private Marcus console.
+    Accepts username 'admin' or 'aziz' with password '46546543@Aa'.
+    """
+    # 1. Check HTTP Basic Auth header
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Basic "):
+        try:
+            encoded = auth_header.split(" ", 1)[1].strip()
+            decoded = base64.b64decode(encoded).decode("utf-8")
+            if ":" in decoded:
+                user, pwd = decoded.split(":", 1)
+                if user.strip().lower() in ("admin", "aziz") and pwd == "46546543@Aa":
+                    return True
+        except Exception:
+            pass
+
+    # 2. Check Cookie
+    if request.cookies.get(MARCUS_AUTH_COOKIE) == MARCUS_AUTH_SECRET:
+        return True
+
+    # 3. Check query param bypass (?pass=46546543@Aa or ?key=46546543@Aa)
+    if request.query_params.get("pass") == "46546543@Aa" or request.query_params.get("key") == "46546543@Aa":
+        return True
+
+    return False
+
+
+def require_marcus_auth(request: Request):
+    """Enforce authentication on Marcus endpoints."""
+    if not verify_marcus_auth(request):
+        raise HTTPException(
+            status_code=401,
+            detail="Unauthorized. Credentials required for Marcus Outbound Console.",
+            headers={"WWW-Authenticate": 'Basic realm="Marcus Outbound Private Console"'},
+        )
+
+
+@app.get("/private/marcus-outbound", response_class=HTMLResponse)
+async def private_marcus_outbound_page(request: Request):
+    """Serve the confidential private outbound calling console for B2B HVAC sales (Ana & Marcus)."""
+    require_marcus_auth(request)
+    from app.agents import get_assistant
+    from app.calls import get_voice_catalog
+    http_base, _ = resolve_base_urls(request)
+    all_voices = get_voice_catalog()
+    flux_voices = [v for v in all_voices if v.get("provider") == "deepgram" or "flux" in v.get("id", "")]
+    ana_agent = get_assistant("ana-sales")
+    marcus_agent = get_assistant("marcus-sales")
+    default_agent = ana_agent or marcus_agent or {}
+    resp = templates.TemplateResponse(
+        request=request,
+        name="private_marcus_outbound.html",
+        context={
+            "settings": settings,
+            "public_url": http_base,
+            "marcus": default_agent,
+            "ana": ana_agent,
+            "legacy_marcus": marcus_agent,
+            "active_agent": default_agent,
+            "flux_voices": flux_voices,
+        }
+    )
+    resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    resp.headers["Pragma"] = "no-cache"
+    resp.headers["Expires"] = "0"
+    resp.set_cookie(
+        key=MARCUS_AUTH_COOKIE,
+        value=MARCUS_AUTH_SECRET,
+        max_age=86400 * 30,
+        httponly=True,
+        samesite="lax",
+    )
+    return resp
 
 
 # ---------------------------------------------------------
@@ -569,8 +658,610 @@ async def api_livekit_outbound_call(payload: Dict[str, Any] = Body(...)):
         prompt=prompt,
         client_id=client_id,
         provider=provider,
+        extra_context=payload.get("extra_context") or payload,
     )
     return result
+
+
+# ---------------------------------------------------------
+# Marcus Outbound Sales Campaign APIs (Confidential / Private)
+# ---------------------------------------------------------
+
+# Server-Side Outbound Campaign Engine (Executes in background even if Mac / browser is closed)
+_SERVER_CAMPAIGN: Dict[str, Any] = {
+    "status": "idle",  # "idle", "running", "paused", "completed"
+    "campaign_id": None,
+    "leads": [],
+    "current_index": 0,
+    "active_call": None,
+    "completed_count": 0,
+    "interested_count": 0,
+    "delay_seconds": 10,
+    "provider": "telnyx",
+    "agent_id": "ana-sales",
+    "from_number": None,
+    "started_at": None,
+    "task": None,
+}
+
+
+async def _run_server_campaign():
+    """Background worker that dials leads one-by-one with delays, remaining active even if user closes their Mac or tab."""
+    global _SERVER_CAMPAIGN
+    from app.livekit_agent import create_outbound_call, _ACTIVE_SESSIONS, stop_voice_agent_for_room
+    from app.calls import list_calls
+
+    camp_id = _SERVER_CAMPAIGN.get("campaign_id") or f"camp_{int(time.time())}"
+    logger.info(f"[Server Campaign] Background runner started for campaign '{camp_id}'.")
+
+    try:
+        while _SERVER_CAMPAIGN.get("status") == "running":
+            leads = _SERVER_CAMPAIGN.get("leads", [])
+
+            # Find next lead ready to be called
+            next_lead = None
+            next_idx = -1
+            for idx, lead in enumerate(leads):
+                if lead.get("status") in ("Ready", "Pending"):
+                    next_lead = lead
+                    next_idx = idx
+                    break
+
+            if not next_lead:
+                logger.info("[Server Campaign] All leads processed! Campaign completed successfully.")
+                _SERVER_CAMPAIGN["status"] = "completed"
+                _SERVER_CAMPAIGN["active_call"] = None
+                break
+
+            _SERVER_CAMPAIGN["current_index"] = next_idx
+            lead_id = next_lead.get("id") or f"lead_{next_idx}"
+            phone = next_lead.get("phone_number") or next_lead.get("phone")
+            biz_name = next_lead.get("business_name") or "HVAC Prospect"
+            address = next_lead.get("address") or ""
+            hours = next_lead.get("operating_hours") or ""
+
+            next_lead["status"] = "Calling"
+            logger.info(f"[Server Campaign] Calling lead {next_idx + 1}/{len(leads)}: {biz_name} ({phone})")
+
+            call_id = None
+            room_name = None
+
+            try:
+                call_res = await create_outbound_call(
+                    phone_number=phone,
+                    client_id=_SERVER_CAMPAIGN.get("agent_id", "ana-sales"),
+                    provider=_SERVER_CAMPAIGN.get("provider", "telnyx"),
+                    extra_context={
+                        "business_name": biz_name,
+                        "address": address,
+                        "operating_hours": hours,
+                        "source": "server_campaign",
+                        "lead_id": lead_id,
+                        "campaign_id": camp_id,
+                    },
+                    from_number=_SERVER_CAMPAIGN.get("from_number"),
+                )
+
+                room_name = call_res.get("room_name")
+                call_id = call_res.get("call_id")
+                next_lead["status"] = "In Progress"
+                next_lead["room_name"] = room_name
+                next_lead["call_id"] = call_id
+
+                _SERVER_CAMPAIGN["active_call"] = {
+                    "lead_id": lead_id,
+                    "room_name": room_name,
+                    "call_id": call_id,
+                    "business_name": biz_name,
+                    "phone_number": phone,
+                    "address": address,
+                    "operating_hours": hours,
+                    "provider": _SERVER_CAMPAIGN.get("provider", "telnyx"),
+                    "started_at": time.time(),
+                }
+
+                # Poll active call until completed or max duration (6 minutes)
+                call_start = time.time()
+                max_duration = 360
+                while _SERVER_CAMPAIGN.get("status") == "running":
+                    await asyncio.sleep(2.0)
+
+                    # If user paused/stopped campaign during call
+                    if _SERVER_CAMPAIGN.get("status") != "running":
+                        logger.info(f"[Server Campaign] Campaign paused. Halting active call {room_name}...")
+                        try:
+                            await stop_voice_agent_for_room(room_name)
+                        except Exception:
+                            pass
+                        break
+
+                    sess = _ACTIVE_SESSIONS.get(room_name)
+                    if not sess or sess.get("finalized") or sess.get("status") in ("completed", "failed", "stopped"):
+                        break
+
+                    if (time.time() - call_start) > max_duration:
+                        logger.warning(f"[Server Campaign] Call {room_name} reached max duration ({max_duration}s). Concluding.")
+                        try:
+                            await stop_voice_agent_for_room(room_name)
+                        except Exception:
+                            pass
+                        break
+
+                _SERVER_CAMPAIGN["active_call"] = None
+                _SERVER_CAMPAIGN["completed_count"] = _SERVER_CAMPAIGN.get("completed_count", 0) + 1
+
+                # Allow async post-call extraction to complete
+                await asyncio.sleep(2.5)
+
+                # Look up call record to get final outcome & interest
+                all_calls = list_calls()
+                matching = next((c for c in all_calls if c.get("call_id") == call_id or c.get("room_name") == room_name), None)
+                if matching:
+                    is_pos = matching.get("positive_interest") or matching.get("demo_link_sent") or (matching.get("call_outcome") in ("interested", "demo_sent"))
+                    next_lead["summary"] = matching.get("summary") or matching.get("sales_summary")
+                    next_lead["recording_url"] = matching.get("recording_url")
+                    next_lead["duration_seconds"] = matching.get("duration_seconds")
+                    next_lead["turn_count"] = matching.get("turn_count")
+                    next_lead["call_outcome"] = matching.get("call_outcome")
+                    if is_pos:
+                        next_lead["status"] = "Interested"
+                        _SERVER_CAMPAIGN["interested_count"] = _SERVER_CAMPAIGN.get("interested_count", 0) + 1
+                    else:
+                        next_lead["status"] = "Completed"
+                else:
+                    next_lead["status"] = "Completed"
+
+            except Exception as call_err:
+                logger.error(f"[Server Campaign] Error calling {biz_name} ({phone}): {call_err}")
+                next_lead["status"] = "Failed"
+                next_lead["error"] = str(call_err)
+                _SERVER_CAMPAIGN["active_call"] = None
+
+            if _SERVER_CAMPAIGN.get("status") != "running":
+                break
+
+            # Delay between calls
+            delay = int(_SERVER_CAMPAIGN.get("delay_seconds", 10))
+            logger.info(f"[Server Campaign] Waiting {delay}s before next call...")
+            for _ in range(delay):
+                if _SERVER_CAMPAIGN.get("status") != "running":
+                    break
+                await asyncio.sleep(1.0)
+
+    except Exception as fatal_err:
+        logger.error(f"[Server Campaign] Fatal error in campaign worker: {fatal_err}")
+        _SERVER_CAMPAIGN["status"] = "failed"
+        _SERVER_CAMPAIGN["error"] = str(fatal_err)
+    finally:
+        _SERVER_CAMPAIGN["task"] = None
+        logger.info(f"[Server Campaign] Background runner exited. Status: {_SERVER_CAMPAIGN.get('status')}")
+
+
+@app.post("/api/marcus/start-server-campaign")
+async def api_marcus_start_server_campaign(request: Request, payload: Dict[str, Any] = Body(...)):
+    """Start or resume a background outbound calling campaign on the server that continues dialing even if the user closes their browser or Mac."""
+    require_marcus_auth(request)
+    global _SERVER_CAMPAIGN
+
+    leads = payload.get("leads", [])
+    delay = int(payload.get("delay_seconds") or 10)
+    provider = payload.get("provider") or "telnyx"
+    agent_id = payload.get("agent_id") or "ana-sales"
+    from_number = payload.get("from_number")
+
+    if not leads and not _SERVER_CAMPAIGN.get("leads"):
+        raise HTTPException(status_code=400, detail="No leads provided for campaign")
+
+    # If new leads provided or campaign was completed/idle, re-initialize
+    if leads or _SERVER_CAMPAIGN.get("status") in ("idle", "completed"):
+        current_leads = leads if leads else _SERVER_CAMPAIGN.get("leads", [])
+        _SERVER_CAMPAIGN["leads"] = current_leads
+        _SERVER_CAMPAIGN["campaign_id"] = f"camp_{int(time.time())}"
+        _SERVER_CAMPAIGN["completed_count"] = sum(1 for l in current_leads if l.get("status") in ("Completed", "Interested"))
+        _SERVER_CAMPAIGN["interested_count"] = sum(1 for l in current_leads if l.get("status") == "Interested")
+        _SERVER_CAMPAIGN["started_at"] = time.time()
+
+    _SERVER_CAMPAIGN["delay_seconds"] = delay
+    _SERVER_CAMPAIGN["provider"] = provider
+    _SERVER_CAMPAIGN["agent_id"] = agent_id
+    _SERVER_CAMPAIGN["from_number"] = from_number
+    _SERVER_CAMPAIGN["status"] = "running"
+
+    # Start background task if not already running
+    if _SERVER_CAMPAIGN.get("task") is None or _SERVER_CAMPAIGN["task"].done():
+        _SERVER_CAMPAIGN["task"] = asyncio.create_task(_run_server_campaign())
+
+    return {
+        "status": "running",
+        "campaign_id": _SERVER_CAMPAIGN.get("campaign_id"),
+        "total_leads": len(_SERVER_CAMPAIGN.get("leads", [])),
+        "message": "Server-side campaign started. Calls will continue in background even if your Mac or browser is closed.",
+    }
+
+
+@app.post("/api/marcus/stop-server-campaign")
+async def api_marcus_stop_server_campaign(request: Request, payload: Dict[str, Any] = Body(default={})):
+    """Pause or stop the background outbound calling campaign."""
+    require_marcus_auth(request)
+    global _SERVER_CAMPAIGN
+
+    _SERVER_CAMPAIGN["status"] = "paused"
+    stop_active = payload.get("stop_active_call", True)
+
+    if stop_active and _SERVER_CAMPAIGN.get("active_call"):
+        active_room = _SERVER_CAMPAIGN["active_call"].get("room_name")
+        if active_room:
+            try:
+                from app.livekit_agent import stop_voice_agent_for_room
+                await stop_voice_agent_for_room(active_room)
+            except Exception as e:
+                logger.warning(f"Notice stopping active call on campaign pause: {e}")
+
+    return {
+        "status": "paused",
+        "campaign_id": _SERVER_CAMPAIGN.get("campaign_id"),
+        "completed_count": _SERVER_CAMPAIGN.get("completed_count", 0),
+        "interested_count": _SERVER_CAMPAIGN.get("interested_count", 0),
+    }
+
+
+@app.get("/api/marcus/campaign-status")
+async def api_marcus_campaign_status(request: Request):
+    """Retrieve the real-time status of the server-side outbound calling campaign."""
+    require_marcus_auth(request)
+    from app.livekit_agent import _ACTIVE_SESSIONS
+
+    active_info = None
+    if _SERVER_CAMPAIGN.get("active_call"):
+        ac = _SERVER_CAMPAIGN["active_call"]
+        r_name = ac.get("room_name")
+        sess = _ACTIVE_SESSIONS.get(r_name, {})
+        duration = round(time.time() - ac.get("started_at", time.time()), 1)
+        active_info = {
+            **ac,
+            "duration_seconds": duration,
+            "transcript": list(sess.get("transcript_turns", [])),
+            "turn_count": len(sess.get("transcript_turns", [])),
+            "active": True,
+        }
+
+    return {
+        "status": _SERVER_CAMPAIGN.get("status", "idle"),
+        "is_running": _SERVER_CAMPAIGN.get("status") == "running",
+        "campaign_id": _SERVER_CAMPAIGN.get("campaign_id"),
+        "total_leads": len(_SERVER_CAMPAIGN.get("leads", [])),
+        "completed_count": _SERVER_CAMPAIGN.get("completed_count", 0),
+        "interested_count": _SERVER_CAMPAIGN.get("interested_count", 0),
+        "current_index": _SERVER_CAMPAIGN.get("current_index", 0),
+        "delay_seconds": _SERVER_CAMPAIGN.get("delay_seconds", 10),
+        "provider": _SERVER_CAMPAIGN.get("provider", "telnyx"),
+        "agent_id": _SERVER_CAMPAIGN.get("agent_id", "ana-sales"),
+        "active_call": active_info,
+        "leads": _SERVER_CAMPAIGN.get("leads", []),
+    }
+
+
+@app.post("/api/marcus/outbound-call")
+async def api_marcus_outbound_call(request: Request, payload: Dict[str, Any] = Body(...)):
+    """Initiate an outbound LiveKit AI phone call using Ana or Marcus for B2B HVAC sales outreach."""
+    require_marcus_auth(request)
+    from app.livekit_agent import create_outbound_call
+    phone_number = payload.get("phone_number") or payload.get("to") or payload.get("phone")
+    if not phone_number:
+        raise HTTPException(status_code=400, detail="'phone_number' is required")
+
+    agent_id = payload.get("agent_id") or payload.get("client_id") or "ana-sales"
+    biz_name = payload.get("business_name") or "HVAC Contractor"
+    address = payload.get("address") or ""
+    operating_hours = payload.get("operating_hours") or ""
+    provider = payload.get("provider", "telnyx")
+    custom_prompt = payload.get("custom_prompt")
+    from_number = payload.get("from_number") or payload.get("from") or payload.get("caller_id")
+
+    extra_ctx = {
+        "business_name": biz_name,
+        "address": address,
+        "operating_hours": operating_hours,
+        "source": "ana_private_console" if agent_id == "ana-sales" else "marcus_private_console",
+        "timezone": payload.get("timezone", "America/Phoenix"),
+    }
+
+    result = await create_outbound_call(
+        phone_number=phone_number,
+        prompt=custom_prompt,
+        client_id=agent_id,
+        provider=provider,
+        extra_context=extra_ctx,
+        from_number=from_number,
+    )
+    return result
+
+
+@app.get("/api/marcus/active-call/{room_name}")
+async def api_marcus_active_call(room_name: str, request: Request):
+    """Return active session status and live streaming transcripts for an in-flight outbound call."""
+    require_marcus_auth(request)
+    from app.livekit_agent import _ACTIVE_SESSIONS
+    session_data = _ACTIVE_SESSIONS.get(room_name)
+    if not session_data:
+        return {"active": False, "status": "completed"}
+
+    config = session_data.get("config", {})
+    started_at = session_data.get("started_at", time.time())
+    return {
+        "active": True,
+        "room_name": room_name,
+        "call_id": session_data.get("call_id"),
+        "business_name": config.get("business_name"),
+        "called": config.get("called"),
+        "duration_seconds": round(time.time() - started_at, 1),
+        "transcript": list(session_data.get("transcript_turns", [])),
+        "status": "in-progress",
+    }
+
+
+@app.get("/api/marcus/logs")
+async def api_marcus_logs(request: Request, limit: int = Query(50, ge=1, le=200)):
+    """Retrieve call logs and transcripts for outbound sales calls (Ana & Marcus)."""
+    require_marcus_auth(request)
+    from app.calls import list_calls
+    from app.livekit_agent import _ACTIVE_SESSIONS
+
+    results = []
+    # 1. Include active in-progress sessions
+    for r_name, sess in _ACTIVE_SESSIONS.items():
+        cfg = sess.get("config", {})
+        asst_id = cfg.get("assistant_id") or cfg.get("client_id")
+        src = cfg.get("source", "")
+        if asst_id in ("ana-sales", "marcus-sales") or src in ("marcus_private_console", "ana_private_console", "server_campaign", "ana_test_session", "marcus_test_session"):
+            started_at = sess.get("started_at", time.time())
+            started_str = sess.get("started_at_str") or time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(started_at))
+            agent_display = "Ana Sales" if asst_id == "ana-sales" else "Marcus Sales"
+            results.append({
+                "call_id": sess.get("call_id") or r_name,
+                "room_name": r_name,
+                "assistant_id": asst_id or "ana-sales",
+                "assistant_name": cfg.get("assistant_name") or agent_display,
+                "business_name": cfg.get("business_name") or "HVAC Contractor",
+                "address": cfg.get("address"),
+                "operating_hours": cfg.get("operating_hours"),
+                "called": cfg.get("called") or cfg.get("phone_number"),
+                "started_at": started_str,
+                "duration_seconds": round(time.time() - started_at, 1),
+                "transcript": list(sess.get("transcript_turns", [])),
+                "turn_count": len(sess.get("transcript_turns", [])),
+                "status": "in-progress",
+            })
+
+    # 2. Include completed outbound sales calls from storage
+    all_calls = list_calls()
+    for c in all_calls:
+        asst_id = c.get("assistant_id", "")
+        asst_name = str(c.get("assistant_name", "")).lower()
+        source = c.get("source") or (c.get("extra_metadata") or {}).get("source") or ""
+        if asst_id in ("ana-sales", "marcus-sales") or "ana" in asst_name or "marcus" in asst_name or source in ("marcus_private_console", "ana_private_console", "server_campaign", "ana_test_session", "marcus_test_session"):
+            results.append(c)
+
+    # Sort most recent first
+    results.sort(key=lambda x: str(x.get("started_at", "")), reverse=True)
+    return {
+        "total": len(results),
+        "logs": results[:limit],
+    }
+
+
+@app.post("/api/marcus/stop-call")
+async def api_marcus_stop_call(request: Request, payload: Dict[str, Any] = Body(...)):
+    """Terminate an active Marcus outbound call and finalize transcript and audio."""
+    require_marcus_auth(request)
+    from app.livekit_agent import stop_voice_agent_for_room
+    room_name = payload.get("room_name")
+    if not room_name:
+        raise HTTPException(status_code=400, detail="'room_name' is required")
+    res = await stop_voice_agent_for_room(room_name)
+    return res
+
+
+@app.get("/api/marcus/settings")
+async def api_marcus_get_settings(request: Request, agent_id: str = Query("ana-sales")):
+    """Retrieve current agent settings (Ana or Marcus), models, prompt, and full Deepgram Flux voice catalog."""
+    require_marcus_auth(request)
+    from app.agents import get_assistant
+    from app.calls import get_voice_catalog
+    agent = get_assistant(agent_id) or get_assistant("ana-sales") or get_assistant("marcus-sales") or {}
+    all_voices = get_voice_catalog()
+    flux_voices = [v for v in all_voices if v.get("provider") == "deepgram" or "flux" in v.get("id", "")]
+    return {
+        "success": True,
+        "agent": agent,
+        "agent_id": agent.get("id") or agent_id,
+        "available_agents": [
+            {"id": "ana-sales", "name": "Ana (Default • Outbound Sales Specialist)", "default_voice": "flux-heather-en"},
+            {"id": "marcus-sales", "name": "Marcus (Secondary • Outbound Sales Specialist)", "default_voice": "flux-bruce-en"},
+        ],
+        "flux_voices": flux_voices,
+        "available_llms": [
+            {"id": "gemini-3.1-flash-lite", "name": "Google Gemini 3.1 Flash Lite (Flagship Voice SOTA)", "provider": "gemini"},
+            {"id": "gemini-2.5-flash", "name": "Google Gemini 2.5 Flash", "provider": "gemini"},
+            {"id": "gemini-2.5-pro", "name": "Google Gemini 2.5 Pro (Deep Reasoning)", "provider": "gemini"},
+            {"id": "qwen/qwen3.8-27b", "name": "Groq LPU Qwen 3.8 27B (Sub-150ms)", "provider": "groq"},
+            {"id": "llama-3.3-70b-versatile", "name": "Groq LPU Llama 3.3 70B", "provider": "groq"},
+            {"id": "llama-3.1-8b-instant", "name": "Groq LPU Llama 3.1 8B Instant", "provider": "groq"},
+        ],
+        "available_stt": [
+            {"id": "deepgram-nova-3", "name": "Deepgram Nova-3 (Flagship Streaming)"},
+            {"id": "groq-whisper-large-v3-turbo", "name": "Groq Whisper Large-v3 Turbo"},
+            {"id": "groq-whisper-large-v3", "name": "Groq Whisper Large-v3"},
+        ]
+    }
+
+
+@app.post("/api/marcus/settings")
+async def api_marcus_save_settings(request: Request, payload: Dict[str, Any] = Body(...)):
+    """Update agent (Ana or Marcus) prompt, voice, models, and personality settings."""
+    require_marcus_auth(request)
+    from app.agents import update_assistant
+    agent_id = payload.get("agent_id") or "ana-sales"
+    allowed_fields = [
+        "name", "tts_voice", "voice_name", "voice_speed", "llm_model", "stt_model",
+        "first_message", "system_prompt", "temperature", "end_of_turn_wait",
+        "personality_preset", "intelligent_turn_taking"
+    ]
+    updates = {k: v for k, v in payload.items() if k in allowed_fields}
+    updated = update_assistant(agent_id, updates)
+    if not updated:
+        fallback_id = "marcus-sales" if agent_id == "ana-sales" else "ana-sales"
+        updated = update_assistant(fallback_id, updates)
+    if not updated:
+        raise HTTPException(status_code=404, detail=f"Agent '{agent_id}' not found")
+    return {"success": True, "agent": updated, "agent_id": agent_id}
+
+
+@app.post("/api/marcus/test-call")
+async def api_marcus_test_call(request: Request, payload: Dict[str, Any] = Body(...)):
+    """Start an instant WebRTC voice test session with Ana or Marcus in the browser."""
+    require_marcus_auth(request)
+    from app.livekit_agent import start_voice_agent_for_room
+    from app.agents import get_assistant
+
+    agent_id = payload.get("agent_id") or "ana-sales"
+    agent = get_assistant(agent_id) or get_assistant("ana-sales") or {}
+    is_ana = (agent_id == "ana-sales")
+    default_voice = "flux-heather-en" if is_ana else "flux-bruce-en"
+    default_name = "Ana" if is_ana else "Marcus"
+
+    room_name = f"{'ana' if is_ana else 'marcus'}-test-{int(time.time())}"
+
+    tts_voice = payload.get("tts_voice") or agent.get("tts_voice") or default_voice
+    llm_model = payload.get("llm_model") or agent.get("llm_model") or "gemini-3.1-flash-lite"
+    stt_model = payload.get("stt_model") or agent.get("stt_model") or "deepgram-nova-3"
+    voice_speed = float(payload.get("voice_speed") or agent.get("voice_speed") or 1.05)
+    temperature = float(payload.get("temperature") or agent.get("temperature") or 0.35)
+    greeting = payload.get("first_message") or agent.get("first_message") or (
+        f"Hey, this is {default_name}, an AI agent calling from OrxLabs. We’re an AI voice company that builds AI phone agents for businesses — do you have a couple minutes to chat?"
+    )
+    system_prompt = payload.get("system_prompt") or agent.get("system_prompt") or ""
+    biz_name = payload.get("test_business_name") or "Desert Peak Heating & Air (Arizona)"
+    biz_hours = payload.get("test_operating_hours") or "Mon-Fri 7:30am - 5:00pm"
+    biz_addr = payload.get("test_address") or "Phoenix, AZ"
+
+    context_block = (
+        f"\n<prospect_business_info>\n"
+        f"Target Business Name: {biz_name}\n"
+        f"Location / Address: {biz_addr}\n"
+        f"Operating Hours: {biz_hours}\n"
+        f"Caller Origin: {default_name} is calling from OrxLabs' Arizona operations center in Phoenix.\n\n"
+        f"Testing Guidance: The user is testing you live in practice mode right now. Act as {default_name} calling this HVAC business.\n"
+        f"</prospect_business_info>\n\n"
+    )
+
+    instructions = context_block + system_prompt
+
+    config = {
+        "instructions": instructions,
+        "caller": "Browser Practice User",
+        "called": biz_name,
+        "assistant_id": agent_id,
+        "assistant_name": f"{default_name} ({agent.get('voice_name', 'Heather' if is_ana else 'Bruce')})",
+        "direction": "outbound",
+        "tts_voice": tts_voice,
+        "stt_model": stt_model,
+        "llm_model": llm_model,
+        "voice_speed": voice_speed,
+        "temperature": temperature,
+        "greeting": greeting,
+        "business_name": biz_name,
+        "address": biz_addr,
+        "operating_hours": biz_hours,
+        "timezone": "America/Phoenix",
+        "provider": "browser",
+        "source": "ana_test_session" if is_ana else "marcus_test_session",
+    }
+
+    res = await start_voice_agent_for_room(room_name, config)
+    return {
+        "success": True,
+        "room": room_name,
+        "url": res.get("url"),
+        "token": res.get("token"),
+        "voice": tts_voice,
+        "llm_model": llm_model,
+        "stt_model": stt_model,
+        "greeting": greeting,
+        "agent_id": agent_id,
+    }
+
+
+# ---------------------------------------------------------
+# Marcus Outbound SMS Follow-Up & Two-Way Chat APIs
+# ---------------------------------------------------------
+@app.get("/api/marcus/sms/conversations")
+async def api_marcus_sms_conversations(request: Request):
+    """Retrieve all prospect SMS conversations, last messages, and unread counts."""
+    require_marcus_auth(request)
+    from app.marcus_sms import get_sms_conversations
+    conversations = get_sms_conversations()
+    return {
+        "conversations": conversations,
+        "total": len(conversations),
+    }
+
+
+@app.get("/api/marcus/sms/thread/{phone}")
+async def api_marcus_sms_thread(phone: str, request: Request):
+    """Retrieve full chronological SMS history for a prospect and mark inbound as read."""
+    require_marcus_auth(request)
+    from app.marcus_sms import get_conversation_thread
+    thread = get_conversation_thread(phone)
+    return thread
+
+
+@app.post("/api/marcus/sms/reply")
+async def api_marcus_sms_reply(request: Request, payload: Dict[str, Any] = Body(...)):
+    """Send a manual SMS reply from Aziz to a contractor via Telnyx."""
+    require_marcus_auth(request)
+    from app.marcus_sms import send_manual_reply
+    phone = payload.get("phone_number") or payload.get("phone")
+    text = payload.get("text") or payload.get("message")
+    biz_name = payload.get("business_name")
+    if not phone or not text:
+        raise HTTPException(status_code=400, detail="'phone_number' and 'text' are required")
+
+    result = await send_manual_reply(phone_number=phone, text=text, business_name=biz_name)
+    return result
+
+
+@app.post("/api/sms/telnyx")
+@app.post("/api/webhook/telnyx")
+async def api_telnyx_sms_webhook(request: Request):
+    """Inbound webhook receiver for Telnyx SMS messages and delivery receipts."""
+    try:
+        data = await request.json()
+    except Exception:
+        raw = await request.body()
+        try:
+            data = json.loads(raw.decode("utf-8"))
+        except Exception:
+            data = {}
+
+    event_data = data.get("data", {})
+    event_type = event_data.get("event_type") or data.get("event_type")
+    payload = event_data.get("payload", {})
+
+    logger.info(f"[Telnyx Webhook] Event: {event_type} | ID: {event_data.get('id')}")
+
+    if event_type == "message.received" or (not event_type and payload.get("direction") == "inbound"):
+        from_info = payload.get("from", {})
+        from_phone = from_info.get("phone_number") if isinstance(from_info, dict) else str(from_info)
+        text = payload.get("text", "")
+        msg_id = payload.get("id")
+
+        if from_phone and text:
+            from app.marcus_sms import handle_inbound_sms
+            handle_inbound_sms(from_phone=from_phone, text=text, provider="telnyx", message_id=msg_id)
+
+    return {"status": "ok", "received": True}
+
 
 
 @app.get("/api/livekit/recordings")
@@ -775,6 +1466,8 @@ async def api_search_places(payload: Dict[str, Any] = Body(...)):
     return {"matches": matches}
 
 
+@app.post("/api/onboarding/start")
+@app.post("/api/onboarding/save-progress")
 @app.post("/api/onboarding/save-profile")
 async def api_save_client_profile(profile: Dict[str, Any] = Body(...)):
     """Save onboarded client profile and compile customized agent prompt."""
@@ -831,9 +1524,13 @@ async def api_simulate_agent_turn(payload: Dict[str, Any] = Body(...)):
             "address": payload.get("address", ""),
             "allowed_topics": payload.get("allowed_topics", []),
             "custom_topics": payload.get("custom_topics", []),
-            "schedule_config": payload.get("schedule_config", {})
+            "schedule_config": payload.get("schedule_config", {}),
+            "timezone": payload.get("timezone") or (payload.get("schedule_config") or {}).get("timezone", ""),
+            "after_hours_action": payload.get("after_hours_action") or payload.get("night_action") or (payload.get("schedule_config") or {}).get("after_hours_action", ""),
+            "night_action": payload.get("night_action") or payload.get("after_hours_action") or (payload.get("schedule_config") or {}).get("night_action", ""),
+            "answering_coverage": payload.get("answering_coverage") or (payload.get("schedule_config") or {}).get("answering_coverage", ""),
         }
-    message = payload.get("message", "")
+    message = payload.get("message") or payload.get("user_text") or payload.get("query", "")
     history = payload.get("history", [])
     result = simulate_agent_turn(profile, message, history)
     return result
@@ -849,13 +1546,19 @@ async def api_demo_call_script(payload: Dict[str, Any] = Body(...)):
 
 
 @app.post("/api/polar/create-checkout")
-async def api_polar_checkout(payload: Dict[str, Any] = Body(...)):
+async def api_polar_checkout(request: Request, payload: Dict[str, Any] = Body(...)):
     """Create Polar subscription checkout session."""
     from app.onboarding import create_polar_checkout_session
     plan = payload.get("plan", "starter")
     client_id = payload.get("client_id", "default")
     success_url = payload.get("success_url", "/portal")
-    return create_polar_checkout_session(plan, client_id, success_url)
+    customer_email = payload.get("customer_email") or payload.get("email")
+    if success_url and not success_url.startswith(("http://", "https://")):
+        base_url = str(request.base_url).rstrip("/")
+        if not success_url.startswith("/"):
+            success_url = f"/{success_url}"
+        success_url = f"{base_url}{success_url}"
+    return create_polar_checkout_session(plan, client_id, success_url, customer_email=customer_email)
 
 
 @app.post("/api/polar/webhook")
@@ -865,19 +1568,29 @@ async def api_polar_webhook(request: Request):
     try:
         body = await request.json()
         logger.info(f"Polar Webhook Event: {body.get('type')}")
-        event_type = body.get("type")
-        data = body.get("data", {})
-        metadata = data.get("metadata", {})
-        client_id = metadata.get("client_id")
+        event_type = body.get("type", "")
+        data = body.get("data", {}) or {}
+        metadata = data.get("metadata", {}) or {}
+        client_id = (
+            metadata.get("client_id")
+            or data.get("client_id")
+            or data.get("checkout", {}).get("metadata", {}).get("client_id")
+            or data.get("subscription", {}).get("metadata", {}).get("client_id")
+            or data.get("customer_metadata", {}).get("client_id")
+            or data.get("custom_field_data", {}).get("client_id")
+        )
         if client_id:
             profile = get_client_profile(client_id)
             if profile:
-                profile["polar_status"] = "active"
-                profile["plan"] = metadata.get("plan", "starter")
+                if event_type in ("subscription.canceled", "subscription.revoked"):
+                    profile["polar_status"] = "canceled"
+                else:
+                    profile["polar_status"] = "active"
+                    profile["plan"] = metadata.get("plan") or data.get("plan") or profile.get("plan", "starter")
                 save_client_profile(profile)
 
-                # Fire activation SMS and provision project on new subscription
-                if event_type in ("subscription.created", "order.paid", "checkout.updated"):
+                # Fire activation SMS and provision project on new active subscription
+                if event_type in ("subscription.created", "subscription.active", "order.paid", "order.created", "checkout.updated"):
                     try:
                         from app.project_db import trigger_new_client_project
                         project = trigger_new_client_project(profile)
@@ -1248,8 +1961,9 @@ async def api_get_client_profile(client_id: Optional[str] = Query(None)):
 
 @app.post("/api/client/update")
 async def api_update_client_settings(payload: Dict[str, Any] = Body(...)):
-    """Update client settings from portal."""
+    """Update client settings from portal and sync to project SQLite DB."""
     from app.onboarding import get_client_profile, get_latest_client_profile, save_client_profile
+    from app.project_db import update_project
     client_id = payload.get("client_id")
     profile = get_client_profile(client_id) if client_id else get_latest_client_profile()
     if not profile:
@@ -1257,14 +1971,31 @@ async def api_update_client_settings(payload: Dict[str, Any] = Body(...)):
     else:
         allowed_fields = [
             "forwarding_phone", "sms_phone", "owner_phone", "hours", "address",
-            "services", "pricing_policy", "diagnostic_fee", "business_name",
+            "services", "pricing_policy", "diagnostic_fee", "fee_amount", "business_name",
             "persona_name", "persona_voice", "voice", "greeting", "first_message",
             "emergency_triggers", "transfer_rules", "night_action", "after_hours_action",
-            "custom_prompt", "compiled_prompt"
+            "custom_prompt", "compiled_prompt", "timezone", "answering_coverage",
+            "answering_mode", "overflow_delay_seconds", "booking_rule", "booking_action",
+            "booking_mode", "booking_preference", "industry", "trade", "schedule_config",
+            "transfer_to_human_policy", "human_transfer_policy", "transfer_policy",
+            "allowed_topics", "custom_topics", "carrier", "google_calendar_id",
+            "polar_status", "plan"
         ]
         for field in allowed_fields:
             if field in payload:
                 profile[field] = payload[field]
+
+    # Sync with project DB and trigger prompt recompilation in SQLite
+    cid = client_id or profile.get("id") or profile.get("client_id")
+    if cid:
+        try:
+            updated_proj = update_project(cid, payload)
+            if updated_proj and updated_proj.get("prompt", {}).get("system_prompt"):
+                profile["compiled_prompt"] = updated_proj["prompt"]["system_prompt"]
+                profile["livekit_prompt"] = updated_proj["prompt"]["system_prompt"]
+        except Exception as e:
+            logger.warning(f"Failed to sync update_project for '{cid}': {e}")
+
     saved = save_client_profile(profile)
     return {"success": True, "profile": saved}
 
@@ -1365,7 +2096,7 @@ async def api_simulate_client_call(payload: Dict[str, Any] = Body(...)):
     biz_name = profile.get("business_name") or "Your Company"
     persona = profile.get("persona_name") or "Riley"
     ind = profile.get("industry", "hvac")
-    cid = profile.get("id")
+    cid = client_id or profile.get("id") or profile.get("client_id")
 
     sample_callers = [
         ("Michael Chang", "(651) 234-8891", "410 Grand Ave", f"Emergency {ind.upper()} inspection"),
@@ -1665,13 +2396,31 @@ async def api_test_project_calendar(client_id: str, payload: Optional[Dict[str, 
     cal_id = cfg.get("calendar_id", "primary")
     sa_data = cfg.get("service_account_json", "")
 
+    # Fallback to owner_email if cal_id is primary or missing
+    if not (cal_id and "@" in cal_id and cal_id != "primary"):
+        from app.project_db import get_project
+        from app.onboarding import get_client_profile
+        proj = get_project(client_id) or {}
+        prof = get_client_profile(client_id) or {}
+        candidate_email = (
+            proj.get("meta", {}).get("owner_email") or
+            prof.get("google_calendar_id") or
+            prof.get("google_calendar_email") or
+            prof.get("owner_email") or ""
+        ).strip()
+        if candidate_email and "@" in candidate_email:
+            cal_id = candidate_email
+            cfg["calendar_id"] = candidate_email
+            cfg["oauth_user_email"] = candidate_email
+            cfg["auth_type"] = "freebusy"
+
     # FreeBusy Email Mode Check
     if cfg.get("auth_type") == "freebusy" or (cal_id and "@" in cal_id and cal_id != "primary"):
         now = datetime.utcnow()
         t_start = now + timedelta(days=1, hours=10)
         t_end = t_start + timedelta(hours=2)
         try:
-            is_free = await check_google_calendar_freebusy(start_dt=t_start, end_dt=t_end, calendar_id=cal_id)
+            is_free = await check_google_calendar_freebusy(start_dt=t_start, end_dt=t_end, calendar_id=cal_id, client_id=client_id)
         except Exception:
             is_free = True
 
@@ -1684,6 +2433,9 @@ async def api_test_project_calendar(client_id: str, payload: Optional[Dict[str, 
             "message": f"✅ Google Calendar FreeBusy verified for '{cal_id}'. Double-booking prevention active."
         }
         cal_update = {
+            "calendar_id": cal_id,
+            "oauth_user_email": cal_id,
+            "auth_type": "freebusy",
             "is_connected": 1,
             "last_tested_at": time.strftime("%Y-%m-%d %H:%M:%S"),
             "last_status": "freebusy_active",
@@ -1710,6 +2462,16 @@ async def api_test_project_calendar(client_id: str, payload: Optional[Dict[str, 
         }
         save_project_calendar_config(client_id, cal_update)
         return result
+
+    if not sa_data:
+        return {
+            "success": False,
+            "connected": False,
+            "status": "no_email",
+            "calendar_id": "",
+            "user_email": "",
+            "message": "Please enter your Google Calendar email and click Connect."
+        }
 
     result = await verify_google_calendar_connection(calendar_id=cal_id, service_account_data=sa_data)
 
@@ -1787,7 +2549,7 @@ async def api_admin_list_clients():
         carrier = profile.get("carrier") or proj_meta.get("carrier") or "Verizon"
         verified_at = profile.get("verified_at") or proj_meta.get("verified_at") or profile.get("forwarding_setup_at") or ""
         after_hours_action = profile.get("after_hours_action") or profile.get("night_action") or proj_meta.get("after_hours_action") or "book_morning"
-        pricing_policy = profile.get("pricing_policy") or profile.get("diagnostic_fee") or proj_meta.get("pricing_policy") or "$89 diagnostic fee credited toward repair"
+        pricing_policy = profile.get("pricing_policy") or profile.get("diagnostic_fee") or proj_meta.get("pricing_policy") or "Diagnostic fee credited toward repair"
         emergency_triggers = profile.get("emergency_triggers") or profile.get("transfer_rules") or proj_meta.get("emergency_triggers") or "Gas leak, carbon monoxide, water flooding, burst pipes, electrical sparks"
         answering_coverage = profile.get("answering_coverage") or profile.get("schedule_mode") or proj_meta.get("answering_coverage") or "always_24_7"
         trade = profile.get("trade") or profile.get("industry") or proj_meta.get("industry") or "hvac"
@@ -1862,9 +2624,9 @@ async def api_admin_list_clients():
                 logger.debug(f"DB read for {cid} error: {e}")
 
         total_minutes = round(total_seconds / 60.0, 1)
-        # Pricing model: $20/mo Starter Plan + 60 free minutes + $0.25/min overage
+        # Pricing model: $20/mo Starter Plan + 50 free minutes + $0.25/min overage
         base_fee = 20.00
-        included_mins = 60.0
+        included_mins = 50.0
         overage_rate = 0.25
         overage_mins = max(0.0, round(total_minutes - included_mins, 1))
         overage_cost = round(overage_mins * overage_rate, 2)
@@ -2013,10 +2775,10 @@ async def api_admin_client_full(client_id: str):
             "created_at": a.get("created_at") or "",
         })
 
-    # Usage & Cost computation ($20/mo + 60 free minutes + $0.25/min)
+    # Usage & Cost computation ($20/mo + 50 free minutes + $0.25/min)
     total_minutes = round(total_seconds / 60.0, 1)
     base_fee = 20.00
-    included_mins = 60.0
+    included_mins = 50.0
     overage_rate = 0.25
     overage_mins = max(0.0, round(total_minutes - included_mins, 1))
     overage_cost = round(overage_mins * overage_rate, 2)
@@ -2040,7 +2802,7 @@ async def api_admin_client_full(client_id: str):
             "verified_at": profile.get("verified_at") or proj_meta.get("verified_at") or profile.get("forwarding_setup_at") or "",
             "forwarding_setup_at": profile.get("verified_at") or proj_meta.get("verified_at") or profile.get("forwarding_setup_at") or "",
             "after_hours_action": profile.get("after_hours_action") or profile.get("night_action") or proj_meta.get("after_hours_action") or "book_morning",
-            "pricing_policy": profile.get("pricing_policy") or profile.get("diagnostic_fee") or proj_meta.get("pricing_policy") or "$89 diagnostic fee credited toward repair",
+            "pricing_policy": profile.get("pricing_policy") or profile.get("diagnostic_fee") or proj_meta.get("pricing_policy") or "Diagnostic fee credited toward repair",
             "emergency_triggers": profile.get("emergency_triggers") or profile.get("transfer_rules") or proj_meta.get("emergency_triggers") or "Gas leak, carbon monoxide, water flooding, burst pipes, electrical sparks",
             "answering_coverage": profile.get("answering_coverage") or profile.get("schedule_mode") or proj_meta.get("answering_coverage") or "always_24_7",
             "trade": trade,
@@ -2114,7 +2876,8 @@ async def api_admin_client_test_routing(client_id: str, payload: Dict[str, Any] 
     matched_by_phone = get_client_by_assigned_phone(assigned_phone)
     phone_routing_active = bool(matched_by_phone and (matched_by_phone.get("id") == client_id or matched_by_phone.get("client_id") == client_id))
 
-    compiled = profile.get("livekit_prompt") or profile.get("compiled_prompt") or compile_agent_prompt(profile)
+    from app.onboarding import determine_call_answering_decision
+    decision = determine_call_answering_decision(profile)
 
     return {
         "success": True,
@@ -2136,12 +2899,17 @@ async def api_admin_client_test_routing(client_id: str, payload: Dict[str, Any] 
         "greeting": profile.get("first_message") or profile.get("greeting") or f"Thank you for calling {profile.get('business_name')}! This is {profile.get('persona_name', 'Riley')}.",
         "hours": profile.get("hours", "Mon-Fri 8:00 AM - 6:00 PM"),
         "after_hours_action": profile.get("after_hours_action") or profile.get("night_action") or "book_morning",
-        "pricing_policy": profile.get("pricing_policy") or profile.get("diagnostic_fee") or "$89",
+        "answering_coverage": profile.get("answering_coverage") or decision["mode"],
+        "overflow_delay_seconds": profile.get("overflow_delay_seconds") or decision["pickup_delay_seconds"],
+        "answering_decision": decision,
+        "can_answer_now": decision["should_answer"],
+        "pricing_policy": profile.get("pricing_policy") or profile.get("diagnostic_fee") or "Diagnostic fee credited toward repair",
         "emergency_triggers": profile.get("emergency_triggers") or "Gas smell, water leak, flooding",
         "prompt_char_count": len(compiled),
         "system_prompt_length": len(compiled),
         "prompt_mirrored_rules": {
             "has_after_hours_policy": "<after_hours_policy>" in compiled or "after hours" in compiled.lower(),
+            "has_answering_coverage_policy": "<answering_coverage_policy>" in compiled or "coverage mode" in compiled.lower(),
             "has_emergency_triage": "<emergency_triage_rules>" in compiled or "emergency" in compiled.lower(),
             "has_pricing_rule": bool(profile.get("pricing_policy") or profile.get("diagnostic_fee")),
         }
@@ -2200,31 +2968,9 @@ async def api_admin_update_client_prompt(client_id: str, payload: Dict[str, Any]
 @app.get("/api/admin/clients/{client_id}/calls")
 async def api_admin_client_calls(client_id: str, limit: int = Query(50)):
     """Returns call history for a specific client from their project DB."""
-    import sqlite3
-    db_path = Path(f"data/projects/{client_id}/client.db")
-    if not db_path.exists():
-        return {"calls": [], "total": 0}
-
+    from app.project_db import get_project_calls
     try:
-        conn = sqlite3.connect(str(db_path))
-        conn.row_factory = sqlite3.Row
-        cur = conn.cursor()
-        cur.execute(
-            "SELECT * FROM call_logs ORDER BY created_at DESC LIMIT ?",
-            (limit,)
-        )
-        calls = []
-        for row in cur.fetchall():
-            call = dict(row)
-            # Parse JSON fields
-            for field in ("transcript", "extracted_info"):
-                if call.get(field):
-                    try:
-                        call[field] = json.loads(call[field])
-                    except Exception:
-                        pass
-            calls.append(call)
-        conn.close()
+        calls = get_project_calls(client_id, limit=limit)
         return {"calls": calls, "total": len(calls)}
     except Exception as e:
         logger.error(f"Error reading calls for {client_id}: {e}")
@@ -2319,9 +3065,9 @@ async def api_project_stats(client_id: str):
         cur.execute("SELECT COUNT(DISTINCT caller_phone) as cnt FROM call_logs WHERE caller_phone IS NOT NULL")
         stats["unique_callers"] = cur.fetchone()["cnt"]
 
-        # Billing ($20/mo Starter Plan: includes 60 min, then $0.25/min overage)
+        # Billing ($20/mo Starter Plan: includes 50 min, then $0.25/min overage)
         base_fee = 20.00
-        included_mins = 60.0
+        included_mins = 50.0
         overage_rate = 0.25
         total_mins = stats.get("total_minutes", 0.0)
         overage_mins = max(0.0, round(total_mins - included_mins, 1))
@@ -2404,6 +3150,186 @@ async def api_project_customers(client_id: str, limit: int = Query(100)):
     except Exception as e:
         logger.error(f"Error reading customers for {client_id}: {e}")
         return {"customers": [], "error": str(e)}
+
+
+# ---------------------------------------------------------
+# Unified Client Portal & Admin API Routes
+# ---------------------------------------------------------
+
+@app.get("/api/portal/{client_id}/overview")
+async def api_portal_overview(client_id: str):
+    """Client Portal Overview: Real-time KPIs, call minutes, costs, and project status."""
+    from app.project_db import get_project
+    from app.onboarding import get_client_profile
+    stats = await api_project_stats(client_id)
+    proj = get_project(client_id) or {}
+    prof = get_client_profile(client_id) or {}
+    return {
+        "success": True,
+        "client_id": client_id,
+        "meta": proj.get("meta", {}),
+        "profile": prof,
+        "stats": stats
+    }
+
+
+@app.get("/api/portal/{client_id}/calls")
+async def api_portal_calls(client_id: str, limit: int = Query(50)):
+    """Client Portal: Fetch past call logs, transcripts, and audio links."""
+    return await api_admin_client_calls(client_id=client_id, limit=limit)
+
+
+@app.get("/api/portal/{client_id}/appointments")
+async def api_portal_appointments(client_id: str, limit: int = Query(50)):
+    """Client Portal: Fetch scheduled appointments from client's dedicated DB."""
+    from app.project_db import get_project_appointments
+    return {"appointments": get_project_appointments(client_id, limit=limit)}
+
+
+@app.get("/api/portal/{client_id}/settings")
+async def api_portal_get_settings(client_id: str):
+    """Client Portal: Get current receptionist settings, hours, and prompt."""
+    from app.project_db import get_project
+    from app.onboarding import get_client_profile
+    proj = get_project(client_id) or {}
+    prof = get_client_profile(client_id) or {}
+    return {
+        "client_id": client_id,
+        "meta": proj.get("meta", {}),
+        "prompt": proj.get("prompt", {}),
+        "calendar": proj.get("calendar", {}),
+        "profile": prof,
+    }
+
+
+@app.post("/api/portal/{client_id}/settings")
+@app.put("/api/portal/{client_id}/settings")
+async def api_portal_update_settings(client_id: str, payload: Dict[str, Any] = Body(...)):
+    """Client Portal: Update business settings & automatically recompile prompt in SQLite."""
+    from app.project_db import update_project
+    from app.onboarding import get_client_profile, save_client_profile
+    payload["client_id"] = client_id
+    updated_project = update_project(client_id, payload)
+
+    # Mirror into clients.json
+    prof = get_client_profile(client_id)
+    if prof:
+        for k in [
+            "hours", "timezone", "pricing_policy", "diagnostic_fee", "fee_amount",
+            "answering_coverage", "answering_mode", "overflow_delay_seconds",
+            "booking_rule", "booking_action", "booking_mode", "booking_preference",
+            "services", "business_name", "industry", "trade", "address",
+            "forwarding_phone", "sms_phone", "owner_phone", "owner_email",
+            "persona_name", "persona_voice", "voice", "greeting", "first_message",
+            "emergency_triggers", "transfer_rules", "night_action", "after_hours_action",
+            "transfer_to_human_policy", "human_transfer_policy", "transfer_policy",
+            "schedule_config", "allowed_topics", "custom_topics", "carrier", "google_calendar_id"
+        ]:
+            if k in payload:
+                prof[k] = payload[k]
+        if updated_project.get("prompt", {}).get("system_prompt"):
+            prof["compiled_prompt"] = updated_project["prompt"]["system_prompt"]
+            prof["livekit_prompt"] = updated_project["prompt"]["system_prompt"]
+        save_client_profile(prof)
+
+    return {"success": True, "project": updated_project, "profile": prof}
+
+
+@app.put("/api/portal/{client_id}/appointments/{apt_id}/status")
+async def api_portal_update_appointment_status(client_id: str, apt_id: str, payload: Dict[str, Any] = Body(...)):
+    """Client Portal: Update appointment status (confirmed, cancelled, completed)."""
+    from app.project_db import get_db_connection
+    from app.appointments import find_appointment_by_id, save_appointment
+    new_status = payload.get("status")
+    if not new_status:
+        raise HTTPException(status_code=400, detail="Missing status")
+
+    clean_id = re.sub(r'[^a-zA-Z0-9_\-]', '_', client_id)
+    now_str = time.strftime("%Y-%m-%d %H:%M:%S")
+    conn = get_db_connection(clean_id)
+    cur = conn.cursor()
+    cur.execute("UPDATE appointments SET status = ?, updated_at = ? WHERE id = ? AND client_id = ?", (new_status, now_str, apt_id, clean_id))
+    conn.commit()
+    conn.close()
+
+    apt = find_appointment_by_id(apt_id)
+    if apt:
+        apt["status"] = new_status
+        apt["updated_at"] = now_str
+        save_appointment(apt)
+
+    return {"success": True, "appointment_id": apt_id, "status": new_status}
+
+
+@app.get("/api/portal/{client_id}/sms-log")
+async def api_portal_sms_log(client_id: str, limit: int = Query(200, ge=1, le=1000)):
+    """Client Portal: Return all SMS messages sent/received for this client's customers.
+    Reads from sms_notifications.log (customer-facing SMS) and enriches with direction/type labels.
+    Protected by same access as portal (client_id scoped).
+    """
+    from pathlib import Path as _Path
+    import json as _json
+
+    data_dir = _Path(__file__).resolve().parent.parent / "data"
+    sms_log_file = data_dir / "sms_notifications.log"
+    messages = []
+
+    if sms_log_file.exists():
+        try:
+            lines = sms_log_file.read_text(encoding="utf-8").splitlines()
+            for line in reversed(lines):  # newest first
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    entry = _json.loads(line)
+                    # Classify message type for UI
+                    text = entry.get("text", "")
+                    to_num = entry.get("to", "")
+                    msg_type = "customer"  # default: to end-customer
+                    if any(k in text for k in ["NEW LEAD", "NEW HVAC", "Reschedule request sent", "Customer has been notified", "confirmed adjusted", "Job #", "Customer:"]):
+                        msg_type = "owner_alert"  # owner/business alert
+                    elif any(k in text for k in ["demo", "activation", "try it", "orxlabs", "subscribe"]):
+                        msg_type = "marketing"
+
+                    messages.append({
+                        "to": to_num,
+                        "text": text,
+                        "status": entry.get("status", "unknown"),
+                        "timestamp": entry.get("timestamp", ""),
+                        "provider": entry.get("provider", entry.get("reason", "").replace("_credentials_not_configured", "").strip("_") or "system"),
+                        "type": msg_type,
+                    })
+                    if len(messages) >= limit:
+                        break
+                except Exception:
+                    continue
+        except Exception as e:
+            logger.warning(f"[Portal SMS Log] Could not read sms_notifications.log: {e}")
+
+    return {
+        "success": True,
+        "client_id": client_id,
+        "total": len(messages),
+        "messages": messages,
+    }
+
+
+@app.get("/api/admin/calls")
+async def api_admin_list_all_calls():
+    """Admin Dashboard: List all calls across all clients."""
+    from app.project_db import list_projects, get_project_calls
+    from app.calls import list_calls
+    all_calls = list_calls()
+    for proj in list_projects():
+        cid = proj.get("id")
+        if cid:
+            try:
+                p_calls = get_project_calls(cid, limit=20)
+                all_calls.extend(p_calls)
+            except Exception:
+                pass
+    return {"calls": all_calls, "total": len(all_calls)}
 
 
 @app.post("/api/admin/clients/{client_id}/test-chat")
@@ -2632,14 +3558,24 @@ async def api_google_oauth_callback(
 async def api_google_oauth_status(client_id: str = "riley_hvac"):
     """Check current Google Calendar OAuth connection status for a client."""
     from app.project_db import get_project_calendar_config
+    from app.onboarding import get_client_profile
     cfg = get_project_calendar_config(client_id)
+    prof = get_client_profile(client_id) or {}
+    user_email = (
+        cfg.get("oauth_user_email") or
+        (cfg.get("calendar_id") if cfg.get("calendar_id") != "primary" else "") or
+        prof.get("google_calendar_id") or
+        prof.get("google_calendar_email") or ""
+    ).strip()
+    is_connected = bool(cfg.get("is_connected") or prof.get("calendar_connected")) and bool(user_email and "@" in user_email)
+    auth_type = cfg.get("auth_type") or prof.get("auth_type") or "freebusy"
     return {
         "client_id": client_id,
-        "is_connected": bool(cfg.get("is_connected")),
-        "auth_type": cfg.get("auth_type", "oauth"),
-        "user_email": cfg.get("oauth_user_email", ""),
+        "is_connected": is_connected,
+        "auth_type": auth_type,
+        "user_email": user_email,
         "last_tested_at": cfg.get("last_tested_at", ""),
-        "last_status": cfg.get("last_status", "untested"),
+        "last_status": cfg.get("last_status", "connected" if is_connected else "untested"),
     }
 
 

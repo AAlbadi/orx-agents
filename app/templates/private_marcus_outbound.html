@@ -1,0 +1,3244 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔒 Private Marcus Outbound Dialing Console | Internal Only</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              900: '#1e3a8a',
+            },
+            marcus: {
+              gold: '#f59e0b',
+              amber: '#d97706',
+              emerald: '#10b981',
+              dark: '#080c14',
+              card: '#0f172a',
+              border: '#1e293b',
+              hover: '#1e293b',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Fira Code', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- LiveKit Official Browser Client SDK (LivekitClient UMD) -->
+  <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+  <style>
+    body {
+      background-color: #070b12;
+      color: #e2e8f0;
+    }
+    .glow-amber {
+      box-shadow: 0 0 25px -5px rgba(245, 158, 11, 0.3);
+    }
+    .glow-emerald {
+      box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.3);
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: #0b1120;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 4px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: #334155;
+    }
+    @keyframes soundwave {
+      0%, 100% { height: 6px; }
+      50% { height: 28px; }
+    }
+    .waveform-bar {
+      animation: soundwave 1.2s ease-in-out infinite;
+    }
+    .waveform-bar:nth-child(2) { animation-delay: 0.15s; }
+    .waveform-bar:nth-child(3) { animation-delay: 0.3s; }
+    .waveform-bar:nth-child(4) { animation-delay: 0.45s; }
+    .waveform-bar:nth-child(5) { animation-delay: 0.2s; }
+    .waveform-bar:nth-child(6) { animation-delay: 0.35s; }
+    .waveform-bar:nth-child(7) { animation-delay: 0.5s; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans selection:bg-amber-500/20 selection:text-amber-300">
+
+  <!-- TOP CONFIDENTIAL BANNER -->
+  <div class="bg-amber-950/80 border-b border-amber-600/40 text-amber-300 px-4 py-1.5 text-xs font-mono flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <span class="flex h-2 w-2 relative">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+      </span>
+      <span class="font-bold tracking-wide">CONFIDENTIAL INTERNAL USE ONLY</span>
+      <span class="text-amber-400/60 hidden sm:inline">•</span>
+      <span class="text-amber-200/80 hidden sm:inline">Private Outbound Console for Marcus B2B HVAC Closer</span>
+    </div>
+    <div class="text-[11px] text-amber-400/70 bg-amber-900/40 px-2 py-0.5 rounded border border-amber-700/30">
+      Not for Public Production Deployment
+    </div>
+  </div>
+
+  <!-- NAVIGATION HEADER -->
+  <header class="bg-slate-900/90 backdrop-blur border-b border-slate-800 sticky top-0 z-30 px-4 lg:px-8 py-3.5">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div id="headerAvatar" class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center text-white shadow-lg shadow-amber-900/30 font-bold text-lg">
+          A
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 id="headerAgentTitle" class="text-lg font-bold text-white tracking-tight">Ana Outbound Caller</h1>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30 uppercase tracking-wider">
+              HVAC Sales Specialist
+            </span>
+          </div>
+          <p class="text-xs text-slate-400">Targeted cold outreach to HVAC & home-service shops to sell 24/7 AI Receptionists</p>
+        </div>
+      </div>
+
+      <!-- Agent & Telephony Status Pills -->
+      <div class="flex items-center gap-2 sm:gap-3 text-xs">
+        <!-- Agent Switcher Dropdown -->
+        <div class="flex items-center gap-1.5 bg-slate-800/90 border border-slate-700/80 px-2.5 py-1.5 rounded-lg">
+          <i data-lucide="user-check" class="w-3.5 h-3.5 text-amber-400"></i>
+          <span class="text-slate-400 text-xs hidden sm:inline">Active Agent:</span>
+          <select id="headerAgentSelector" onchange="switchActiveAgent(this.value)" class="bg-slate-900 border border-slate-700 text-amber-300 text-xs font-semibold rounded px-2 py-0.5 focus:outline-none focus:border-amber-500 cursor-pointer">
+            <option value="ana-sales" selected>Ana (Default • Heather Voice)</option>
+            <option value="marcus-sales">Marcus (Secondary • Bruce Voice)</option>
+          </select>
+        </div>
+
+        <div class="hidden lg:flex items-center gap-2 bg-gradient-to-r from-amber-500/10 to-amber-600/10 border border-amber-500/30 px-3 py-1.5 rounded-lg">
+          <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-400"></i>
+          <span class="text-slate-400">Host:</span>
+          <span class="text-amber-300 font-semibold">Oracle Cloud (Phoenix, AZ)</span>
+        </div>
+        <div class="hidden md:flex items-center gap-2 bg-slate-800/80 border border-slate-700/60 px-3 py-1.5 rounded-lg">
+          <i data-lucide="bot" class="w-3.5 h-3.5 text-amber-400"></i>
+          <span class="text-slate-400">Voice:</span>
+          <span id="navActiveVoiceLabel" class="text-slate-200 font-medium">{{ marcus.voice_name or 'Heather (Deepgram Flux)' }}</span>
+        </div>
+        <div class="flex items-center gap-2 bg-slate-800/80 border border-slate-700/60 px-3 py-1.5 rounded-lg">
+          <i data-lucide="phone-call" class="w-3.5 h-3.5 text-emerald-400"></i>
+          <span class="text-slate-400 hidden sm:inline">Carrier:</span>
+          <span class="text-emerald-300 font-medium">Telnyx Active</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 3 DEDICATED TABS BAR -->
+  <div class="bg-slate-900/80 border-b border-slate-800 sticky top-[65px] z-20 backdrop-blur">
+    <div class="max-w-7xl mx-auto px-4 lg:px-8 flex items-center justify-between">
+      <div class="flex items-center gap-2 py-2.5 overflow-x-auto custom-scroll">
+        <!-- Tab 1: Dialing -->
+        <button id="tabBtnDialer" onclick="switchTab('dialer')" class="px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all bg-amber-500 text-slate-950 shadow-md whitespace-nowrap">
+          <i data-lucide="phone" class="w-4 h-4"></i>
+          <span>Outbound Dialing & Leads Queue</span>
+          <span id="tabLeadCountBadge" class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-950/20 text-slate-950">0</span>
+        </button>
+
+        <!-- Tab 2: Agent Settings & Voices -->
+        <button id="tabBtnSettings" onclick="switchTab('settings')" class="px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all bg-slate-800/60 text-slate-300 hover:text-white hover:bg-slate-800 whitespace-nowrap">
+          <i data-lucide="sliders" class="w-4 h-4 text-amber-400"></i>
+          <span>Agent Settings & 34 Voices</span>
+          <span class="ml-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-500/10 text-amber-300 border border-amber-500/30">Flux Models</span>
+        </button>
+
+        <!-- Tab 3: Live Voice Tester -->
+        <button id="tabBtnTester" onclick="switchTab('tester')" class="px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all bg-slate-800/60 text-slate-300 hover:text-white hover:bg-slate-800 whitespace-nowrap">
+          <i data-lucide="mic" class="w-4 h-4 text-emerald-400"></i>
+          <span>Live Voice Tester (WebRTC)</span>
+          <span class="ml-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">Zero Cost</span>
+        </button>
+
+        <!-- Tab 4: SMS Follow-ups & Live Chat -->
+        <button id="tabBtnSms" onclick="switchTab('sms')" class="px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all bg-slate-800/60 text-slate-300 hover:text-white hover:bg-slate-800 whitespace-nowrap">
+          <i data-lucide="message-square" class="w-4 h-4 text-blue-400"></i>
+          <span>SMS Follow-Ups & Live Chat</span>
+          <span id="tabSmsBadge" class="hidden ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-slate-950">0</span>
+        </button>
+
+        <!-- Tab 5: Captured Clients & Responses (CRM) -->
+        <button id="tabBtnCaptured" onclick="switchTab('captured')" class="px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all bg-slate-800/60 text-slate-300 hover:text-white hover:bg-slate-800 whitespace-nowrap">
+          <i data-lucide="users" class="w-4 h-4 text-emerald-400"></i>
+          <span>Captured Clients & Responses</span>
+          <span id="tabCapturedCountBadge" class="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">0</span>
+        </button>
+      </div>
+
+      <div class="hidden sm:flex items-center gap-3 text-xs text-slate-400">
+        <span class="flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span>OrxLabs Phoenix Node (MST)</span>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- TAB 1: OUTBOUND DIALING & LEADS QUEUE                               -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <div id="viewDialer" class="space-y-6">
+
+      <!-- HERO / CAMPAIGN SUMMARY CARD -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
+          <div>
+            <div class="text-xs text-slate-400 font-medium uppercase tracking-wider">Leads in Queue</div>
+            <div class="text-xl font-bold text-white mt-1" id="statQueuedCount">0</div>
+            <div class="text-[11px] text-slate-400 mt-0.5">Parsed from CSV / Queue</div>
+          </div>
+          <div class="w-9 h-9 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+            <i data-lucide="users" class="w-5 h-5"></i>
+          </div>
+        </div>
+
+        <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
+          <div>
+            <div class="text-xs text-slate-400 font-medium uppercase tracking-wider">Completed Calls</div>
+            <div class="text-xl font-bold text-emerald-400 mt-1" id="statCompletedCount">0</div>
+            <div class="text-[11px] text-slate-400 mt-0.5" id="statCompletedSub">With transcripts & audio</div>
+          </div>
+          <div class="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+            <i data-lucide="phone-forwarded" class="w-5 h-5"></i>
+          </div>
+        </div>
+
+        <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
+          <div>
+            <div class="text-xs text-slate-400 font-medium uppercase tracking-wider">Positive Interest</div>
+            <div class="text-xl font-bold text-amber-400 mt-1" id="statInterestedCount">0</div>
+            <div class="text-[11px] text-amber-400/80 mt-0.5" id="statInterestRate">0% conversion rate</div>
+          </div>
+          <div class="w-9 h-9 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+            <i data-lucide="flame" class="w-5 h-5"></i>
+          </div>
+        </div>
+
+        <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 flex items-center justify-between">
+          <div>
+            <div class="text-xs text-slate-400 font-medium uppercase tracking-wider">Demo SMS Sent</div>
+            <div class="text-xl font-bold text-blue-400 mt-1" id="statSmsSentCount">0</div>
+            <div class="text-[11px] text-blue-400/80 mt-0.5">2-min demo link delivered</div>
+          </div>
+          <div class="w-9 h-9 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+            <i data-lucide="message-square" class="w-5 h-5"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTIVE LIVE CALL MONITOR (Shown when call is active) -->
+      <div id="activeCallBanner" class="hidden bg-gradient-to-r from-amber-950/40 via-slate-900 to-slate-900 border-2 border-amber-500/50 rounded-2xl p-5 glow-amber">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+          <div class="flex items-center gap-3.5">
+            <div class="relative flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-xl bg-amber-400 opacity-30"></span>
+              <i data-lucide="phone-call" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-500 text-slate-950 uppercase tracking-wider" id="activeCallStatusBadge">
+                  LIVE CALL IN PROGRESS
+                </span>
+                <span class="text-sm font-bold text-white" id="activeCallBizName">Target Business Name</span>
+              </div>
+              <div class="text-xs text-slate-400 mt-1 flex items-center gap-3">
+                <span><strong class="text-slate-300">Phone:</strong> <span id="activeCallPhone">-</span></span>
+                <span>•</span>
+                <span><strong class="text-slate-300">Hours:</strong> <span id="activeCallHours">-</span></span>
+                <span>•</span>
+                <span><strong class="text-slate-300">Address:</strong> <span id="activeCallAddress">-</span></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <!-- Live Duration Timer -->
+            <div class="bg-slate-950/80 border border-slate-800 px-4 py-2 rounded-xl text-center">
+              <div class="text-[10px] text-slate-500 uppercase tracking-wider font-mono">Call Duration</div>
+              <div class="text-lg font-mono font-bold text-amber-400" id="activeCallDuration">00:00</div>
+            </div>
+
+            <!-- Hang Up Button -->
+            <button id="btnEndCall" onclick="endCurrentCall()" class="bg-red-600 hover:bg-red-500 text-white font-semibold text-xs px-4 py-3 rounded-xl flex items-center gap-2 shadow-lg shadow-red-900/30 transition-all">
+              <i data-lucide="phone-off" class="w-4 h-4"></i>
+              <span>End Call</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Streaming Transcript Turns -->
+        <div class="mt-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+              <i data-lucide="message-square" class="w-3.5 h-3.5 text-amber-400"></i>
+              Live Real-Time Audio Transcript
+            </span>
+            <span class="text-[11px] text-slate-400 font-mono" id="activeCallRoomId">Room: -</span>
+          </div>
+          <div id="liveTranscriptFeed" class="bg-slate-950/90 border border-slate-800 rounded-xl p-3.5 max-h-48 overflow-y-auto custom-scroll space-y-2 text-xs font-sans">
+            <div class="text-slate-400 italic">Connecting to Marcus voice agent...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CSV UPLOAD & QUEUE CONTROLS -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- LEFT: CSV INGESTION & CONTROLS -->
+        <div class="lg:col-span-1 space-y-5">
+          <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+            <div class="flex items-center justify-between mb-3">
+              <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4 text-amber-400"></i>
+                Import HVAC Leads CSV
+              </h2>
+              <button onclick="loadSampleLeads()" class="text-xs text-amber-400 hover:text-amber-300 font-medium flex items-center gap-1 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 px-2.5 py-1 rounded-lg transition-all">
+                <i data-lucide="sparkles" class="w-3 h-3"></i>
+                Load Sample Leads
+              </button>
+            </div>
+            <p class="text-xs text-slate-400 mb-4">
+              Upload or paste CSV containing: <span class="text-slate-300 font-medium">Business Name, Phone Number, Address, Operating Hours</span>.
+            </p>
+
+            <!-- Drag and drop zone -->
+            <div id="dropZone" class="border-2 border-dashed border-slate-700 hover:border-amber-500/60 rounded-xl p-5 text-center cursor-pointer transition-all bg-slate-950/40 hover:bg-amber-500/5">
+              <input type="file" id="csvFileInput" accept=".csv,text/csv" class="hidden" onchange="handleFileSelect(event)">
+              <i data-lucide="upload-cloud" class="w-8 h-8 text-slate-400 mx-auto mb-2"></i>
+              <div class="text-xs font-medium text-slate-300">
+                Drag & drop CSV file or <span class="text-amber-400 underline">browse</span>
+              </div>
+              <div class="text-[11px] text-slate-400 mt-1">Supports UTF-8 CSV with headers</div>
+            </div>
+
+            <!-- Direct CSV text paste box toggle -->
+            <div class="mt-3">
+              <button onclick="togglePasteBox()" class="text-xs text-slate-400 hover:text-slate-300 flex items-center gap-1">
+                <i data-lucide="chevron-right" id="pasteToggleIcon" class="w-3.5 h-3.5 transition-transform"></i>
+                <span>Or paste raw CSV text</span>
+              </button>
+              <div id="pasteContainer" class="hidden mt-2 space-y-2">
+                <textarea id="rawCsvText" rows="4" placeholder="Business Name,Phone Number,Address,Operating Hours&#10;Dallas Comfort HVAC,+12145550192,4500 Elm St Dallas TX,Mon-Fri 7am-6pm&#10;Lone Star AC Repair,+14695550183,1200 Commerce St Dallas TX,24/7 Service" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-xs text-slate-200 font-mono focus:outline-none focus:border-amber-500"></textarea>
+                <button onclick="parsePastedCsv()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold py-2 rounded-lg transition-all">
+                  Parse & Add to Queue
+                </button>
+              </div>
+            </div>
+
+            <!-- DIALING CONFIGURATION -->
+            <div class="mt-5 pt-4 border-t border-slate-800 space-y-3">
+              <div class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                <i data-lucide="settings" class="w-3.5 h-3.5 text-slate-400"></i>
+                Outbound Settings
+              </div>
+
+              <!-- Provider Selection -->
+              <div>
+                <label class="text-[11px] text-slate-400 block mb-1">Telephony Provider</label>
+                <select id="telephonyProvider" onchange="updateProviderLabel()" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2.5 py-2 focus:outline-none focus:border-amber-500">
+                  <option value="telnyx" selected>Telnyx (PSTN Outbound Call - Recommended)</option>
+                  <option value="browser">Browser Mic Live Test (WebRTC - No Carrier Costs)</option>
+                  <option value="twilio">Twilio (SIP/PSTN Outbound)</option>
+                  <option value="livekit">LiveKit SIP Trunk</option>
+                </select>
+              </div>
+
+              <!-- Outbound Caller ID (Arizona) -->
+              <div>
+                <label class="text-[11px] text-slate-400 block mb-1">Outbound Caller ID (Arizona Presence)</label>
+                <div class="space-y-1.5">
+                  <select id="callerIdPreset" onchange="handleCallerIdPreset(this.value)" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2.5 py-2 focus:outline-none focus:border-amber-500">
+                    <option value="default" selected>Telnyx Line (+15309771395)</option>
+                    <option value="custom_az">Custom Arizona Number (480 / 602 / 623 / 520)</option>
+                  </select>
+                  <input type="text" id="customCallerId" placeholder="+14805550199" class="hidden w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2.5 py-2 focus:outline-none focus:border-amber-500 font-mono">
+                </div>
+                <p class="text-[10px] text-slate-500 mt-1">Area codes: 480 (Scottsdale/Mesa), 602 (Phoenix), 623 (West Valley), 520 (Tucson)</p>
+              </div>
+
+              <!-- Delay between calls in auto-dial mode -->
+              <div>
+                <label class="text-[11px] text-slate-400 block mb-1">Delay Between Calls (Auto-Dial)</label>
+                <select id="campaignDelay" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2.5 py-2 focus:outline-none focus:border-amber-500">
+                  <option value="5">5 seconds</option>
+                  <option value="10" selected>10 seconds</option>
+                  <option value="20">20 seconds</option>
+                  <option value="30">30 seconds</option>
+                </select>
+              </div>
+
+              <!-- Arizona presence notice -->
+              <div class="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800/80 text-[11px] text-slate-400">
+                <div class="font-medium text-amber-400/90 mb-0.5">Arizona Presence & Context:</div>
+                Marcus calls from OrxLabs' Phoenix operations center (America/Phoenix MST) for low-latency voice, dynamically referencing the business name, address, and operating hours.
+              </div>
+
+              <!-- Background Persistence Indicator -->
+              <div class="p-2.5 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-[11px] text-emerald-300">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="font-bold flex items-center gap-1.5 text-emerald-400">
+                    <i data-lucide="shield-check" class="w-4 h-4"></i>
+                    Server Background Calling
+                  </span>
+                  <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono border border-emerald-500/30">24/7 Cloud</span>
+                </div>
+                Campaign executes directly on the cloud server. Calling continues automatically through your CSV list even if you close your Mac laptop lid, close your browser, or disconnect.
+              </div>
+            </div>
+
+            <!-- CAMPAIGN BUTTONS -->
+            <div class="mt-5 space-y-2">
+              <button id="btnStartCampaign" onclick="startCampaign()" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-xs py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-amber-900/20 transition-all disabled:opacity-50">
+                <i data-lucide="play" class="w-4 h-4"></i>
+                <span>Start Auto-Dial Campaign</span>
+              </button>
+              <div class="flex gap-2">
+                <button id="btnPauseCampaign" onclick="pauseCampaign()" disabled class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs py-2 rounded-xl flex items-center justify-center gap-1.5 transition-all disabled:opacity-40">
+                  <i data-lucide="pause" class="w-3.5 h-3.5"></i>
+                  <span>Pause</span>
+                </button>
+                <button onclick="clearQueue()" class="flex-1 bg-slate-800/60 hover:bg-slate-800 text-red-400 hover:text-red-300 font-medium text-xs py-2 rounded-xl flex items-center justify-center gap-1.5 transition-all">
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                  <span>Clear Queue</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- RIGHT: LEADS QUEUE TABLE -->
+        <div class="lg:col-span-2 space-y-5">
+          <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+              <div>
+                <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                  <i data-lucide="list-ordered" class="w-4 h-4 text-amber-400"></i>
+                  Leads Queue
+                  <span id="queueBadge" class="ml-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-800 text-slate-300 border border-slate-700">
+                    0 leads
+                  </span>
+                </h2>
+                <p class="text-xs text-slate-400 mt-0.5">Businesses ready to be called by Marcus</p>
+              </div>
+
+              <!-- Quick Add Lead Button -->
+              <button onclick="toggleQuickAddLead()" class="text-xs text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all self-start sm:self-auto">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                <span>Add Single Lead</span>
+              </button>
+            </div>
+
+            <!-- Quick Add Lead Form (Hidden by default) -->
+            <div id="quickAddForm" class="hidden mb-4 p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+              <div class="text-xs font-semibold text-amber-400">Add Lead Manually</div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div>
+                  <label class="text-[11px] text-slate-400 block mb-1">Business Name *</label>
+                  <input type="text" id="manualBizName" placeholder="Apex Heating & Air" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white">
+                </div>
+                <div>
+                  <label class="text-[11px] text-slate-400 block mb-1">Phone Number *</label>
+                  <input type="text" id="manualPhone" placeholder="+12145550199" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white">
+                </div>
+                <div>
+                  <label class="text-[11px] text-slate-400 block mb-1">Address / City</label>
+                  <input type="text" id="manualAddress" placeholder="Dallas, TX" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white">
+                </div>
+                <div>
+                  <label class="text-[11px] text-slate-400 block mb-1">Operating Hours</label>
+                  <input type="text" id="manualHours" placeholder="Mon-Fri 8am-5pm" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white">
+                </div>
+              </div>
+              <div class="flex justify-end gap-2 pt-1">
+                <button onclick="toggleQuickAddLead()" class="px-3 py-1.5 text-xs text-slate-400 hover:text-slate-200">Cancel</button>
+                <button onclick="addManualLead()" class="px-4 py-1.5 text-xs bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg transition-all">Add to Queue</button>
+              </div>
+            </div>
+
+            <!-- LEADS TABLE -->
+            <div class="overflow-x-auto custom-scroll border border-slate-800 rounded-xl max-h-[380px]">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-950 text-slate-400 font-mono text-[11px] uppercase tracking-wider sticky top-0 border-b border-slate-800">
+                  <tr>
+                    <th class="py-2.5 px-3">#</th>
+                    <th class="py-2.5 px-3">Business Name</th>
+                    <th class="py-2.5 px-3">Phone</th>
+                    <th class="py-2.5 px-3">Address</th>
+                    <th class="py-2.5 px-3">Hours</th>
+                    <th class="py-2.5 px-3">Status</th>
+                    <th class="py-2.5 px-3 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="leadsTableBody" class="divide-y divide-slate-800/60 text-slate-300">
+                  <tr>
+                    <td colspan="7" class="py-8 text-center text-slate-400 italic">
+                      No leads in queue. Click <button onclick="loadSampleLeads()" class="text-amber-400 underline font-medium hover:text-amber-300">"Load Sample Leads"</button> or upload a CSV to get started.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIVE CALL LOGS & TRANSCRIPTS SECTION -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div>
+            <h2 class="text-sm font-bold text-white flex items-center gap-2">
+              <i data-lucide="history" class="w-4 h-4 text-emerald-400"></i>
+              Marcus Call Logs & Transcripts
+              <span class="flex h-2 w-2 relative ml-1">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span class="text-[10px] text-emerald-400/80 font-mono font-normal">Live Auto-Refresh (3s)</span>
+            </h2>
+            <p class="text-xs text-slate-400 mt-0.5">Turn-by-turn conversation logs, outcomes, and audio recordings for Marcus outreach</p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button onclick="fetchCallLogs()" class="text-xs text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+              <span>Refresh Logs</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- CALL LOGS TABLE -->
+        <div class="overflow-x-auto custom-scroll border border-slate-800 rounded-xl max-h-[460px]">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-950 text-slate-400 font-mono text-[11px] uppercase tracking-wider sticky top-0 border-b border-slate-800">
+              <tr>
+                <th class="py-2.5 px-3">Date & Time</th>
+                <th class="py-2.5 px-3">Target Business</th>
+                <th class="py-2.5 px-3">Phone</th>
+                <th class="py-2.5 px-3">Duration</th>
+                <th class="py-2.5 px-3">Turns</th>
+                <th class="py-2.5 px-3">Outcome / Interest</th>
+                <th class="py-2.5 px-3">Audio</th>
+                <th class="py-2.5 px-3">Summary</th>
+                <th class="py-2.5 px-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="callLogsTableBody" class="divide-y divide-slate-800/60 text-slate-300">
+              <tr>
+                <td colspan="9" class="py-8 text-center text-slate-400 italic">
+                  Loading call logs...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- TAB 2: AGENT SETTINGS & 34 FLUX VOICES                              -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <div id="viewSettings" class="space-y-6 hidden">
+
+      <!-- SECTION 2.1: OUTBOUND AGENT SETTINGS & PROMPT STUDIO -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800 mb-5">
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 id="settingsStudioTitle" class="text-base font-bold text-white flex items-center gap-2">
+                <i data-lucide="sliders" class="w-4 h-4 text-amber-400"></i>
+                Agent Configuration & Voice Studio
+              </h2>
+              <span id="settingsStudioBadge" class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                Outbound B2B HVAC Closer
+              </span>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5">Customize models, speech pace, temperature, opening hook, and sales script</p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span id="saveStatusAlert" class="text-xs text-emerald-400 hidden font-medium flex items-center gap-1">
+              <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+              Saved successfully!
+            </span>
+            <button onclick="switchTab('tester')" class="bg-slate-800 hover:bg-slate-700 text-amber-300 font-semibold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 border border-amber-500/30 transition-all">
+              <i data-lucide="mic" class="w-3.5 h-3.5 text-amber-400"></i>
+              <span>Test Voice in Browser</span>
+            </button>
+            <button onclick="saveMarcusSettings()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs px-4 py-2 rounded-xl flex items-center gap-2 shadow-lg shadow-amber-900/20 transition-all">
+              <i data-lucide="save" class="w-3.5 h-3.5"></i>
+              <span id="btnSaveAgentSettingsText">Save Agent Settings</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ACTIVE AGENT SWITCHER PILLS -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-950/70 border border-slate-800/80 rounded-xl p-3 mb-5">
+          <div class="flex items-center gap-3">
+            <span class="text-xs font-semibold text-slate-300">Selected Agent:</span>
+            <div class="inline-flex rounded-lg bg-slate-900 p-1 border border-slate-800">
+              <button type="button" id="btnSelectAna" onclick="switchActiveAgent('ana-sales')" class="px-3 py-1 rounded-md text-xs font-bold transition-all bg-amber-500 text-slate-950 flex items-center gap-1.5">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                <span>Ana (Default • Heather Voice)</span>
+              </button>
+              <button type="button" id="btnSelectMarcus" onclick="switchActiveAgent('marcus-sales')" class="px-3 py-1 rounded-md text-xs font-medium transition-all text-slate-400 hover:text-white flex items-center gap-1.5">
+                <i data-lucide="user" class="w-3.5 h-3.5"></i>
+                <span>Marcus (Secondary • Bruce Voice)</span>
+              </button>
+            </div>
+          </div>
+          <div class="text-[11px] text-amber-400/90 font-mono flex items-center gap-1.5">
+            <i data-lucide="info" class="w-3.5 h-3.5"></i>
+            <span>Switching agents instantly syncs prompt, voices & settings</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+          <!-- COLUMN 1: SPEECH & MODEL PARAMETERS -->
+          <div class="lg:col-span-1 space-y-4 text-xs">
+            <div class="font-semibold text-slate-200 flex items-center gap-1.5">
+              <i data-lucide="cpu" class="w-3.5 h-3.5 text-amber-400"></i>
+              Model & Voice Engine
+            </div>
+
+            <!-- LLM Selector -->
+            <div>
+              <label class="text-[11px] text-slate-400 block mb-1">LLM Model (Brain)</label>
+              <select id="agentLlmModel" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2.5 py-2 focus:outline-none focus:border-amber-500">
+                <option value="gemini-3.1-flash-lite" {% if (marcus.llm_model or 'gemini-3.1-flash-lite') == 'gemini-3.1-flash-lite' %}selected{% endif %}>Google Gemini 3.1 Flash Lite (Voice SOTA)</option>
+                <option value="gemini-2.5-flash" {% if marcus.llm_model == 'gemini-2.5-flash' %}selected{% endif %}>Google Gemini 2.5 Flash</option>
+                <option value="gemini-2.5-pro" {% if marcus.llm_model == 'gemini-2.5-pro' %}selected{% endif %}>Google Gemini 2.5 Pro (Deep Reasoning)</option>
+                <option value="qwen/qwen3.8-27b" {% if marcus.llm_model == 'qwen/qwen3.8-27b' %}selected{% endif %}>Groq LPU Qwen 3.8 27B (Sub-150ms)</option>
+                <option value="llama-3.3-70b-versatile" {% if marcus.llm_model == 'llama-3.3-70b-versatile' %}selected{% endif %}>Groq LPU Llama 3.3 70B</option>
+                <option value="llama-3.1-8b-instant" {% if marcus.llm_model == 'llama-3.1-8b-instant' %}selected{% endif %}>Groq LPU Llama 3.1 8B Instant</option>
+              </select>
+            </div>
+
+            <!-- STT Selector -->
+            <div>
+              <label class="text-[11px] text-slate-400 block mb-1">STT Model (Ears)</label>
+              <select id="agentSttModel" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded-lg px-2.5 py-2 focus:outline-none focus:border-amber-500">
+                <option value="deepgram-nova-3" {% if (marcus.stt_model or 'deepgram-nova-3') == 'deepgram-nova-3' %}selected{% endif %}>Deepgram Nova-3 (Flagship Streaming)</option>
+                <option value="groq-whisper-large-v3-turbo" {% if marcus.stt_model == 'groq-whisper-large-v3-turbo' %}selected{% endif %}>Groq Whisper Large-v3 Turbo</option>
+                <option value="groq-whisper-large-v3" {% if marcus.stt_model == 'groq-whisper-large-v3' %}selected{% endif %}>Groq Whisper Large-v3</option>
+              </select>
+            </div>
+
+            <!-- Voice Speed Slider -->
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="text-[11px] text-slate-400">Voice Speed</label>
+                <span id="speedValLabel" class="text-amber-400 font-mono font-medium text-xs">{{ marcus.voice_speed or 1.05 }}x</span>
+              </div>
+              <input type="range" id="agentVoiceSpeed" min="0.8" max="1.3" step="0.05" value="{{ marcus.voice_speed or 1.05 }}" oninput="document.getElementById('speedValLabel').innerText = this.value + 'x'" class="w-full accent-amber-500 cursor-pointer">
+              <div class="flex justify-between text-[10px] text-slate-500 mt-0.5">
+                <span>0.8x (Slower)</span>
+                <span>1.0x (Standard)</span>
+                <span>1.3x (Faster)</span>
+              </div>
+            </div>
+
+            <!-- Temperature Slider -->
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="text-[11px] text-slate-400">Temperature (Creativity / Strictness)</label>
+                <span id="tempValLabel" class="text-amber-400 font-mono font-medium text-xs">{{ marcus.temperature or 0.35 }}</span>
+              </div>
+              <input type="range" id="agentTemperature" min="0.1" max="0.8" step="0.05" value="{{ marcus.temperature or 0.35 }}" oninput="document.getElementById('tempValLabel').innerText = this.value" class="w-full accent-amber-500 cursor-pointer">
+              <div class="flex justify-between text-[10px] text-slate-500 mt-0.5">
+                <span>0.1 (Strict script)</span>
+                <span>0.35 (Balanced)</span>
+                <span>0.8 (Creative)</span>
+              </div>
+            </div>
+
+            <!-- End of Turn Wait Slider -->
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="text-[11px] text-slate-400">End-of-Turn Wait (Interruption Margin)</label>
+                <span id="turnWaitValLabel" class="text-amber-400 font-mono font-medium text-xs">{{ marcus.end_of_turn_wait or 0.8 }}s</span>
+              </div>
+              <input type="range" id="agentTurnWait" min="0.4" max="1.5" step="0.1" value="{{ marcus.end_of_turn_wait or 0.8 }}" oninput="document.getElementById('turnWaitValLabel').innerText = this.value + 's'" class="w-full accent-amber-500 cursor-pointer">
+              <div class="flex justify-between text-[10px] text-slate-500 mt-0.5">
+                <span>0.4s (Rapid reply)</span>
+                <span>0.8s (Natural)</span>
+                <span>1.5s (Patient)</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- COLUMN 2: GREETING HOOK & SYSTEM SCRIPT -->
+          <div class="lg:col-span-2 space-y-4 text-xs">
+            <div class="font-semibold text-slate-200 flex items-center gap-1.5">
+              <i data-lucide="file-text" class="w-3.5 h-3.5 text-amber-400"></i>
+              Opening Message Hook & System Prompt
+            </div>
+
+            <!-- First Message -->
+            <div>
+              <label class="text-[11px] text-slate-400 block mb-1">First Message (Spoken instantly upon connection)</label>
+              <textarea id="agentFirstMessage" rows="2" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-slate-200 font-sans focus:outline-none focus:border-amber-500 text-xs">{{ marcus.first_message or "Hey, this is Ana, an AI agent calling from OrxLabs. We’re an AI voice company that builds AI phone agents for businesses — do you have a couple minutes to chat?" }}</textarea>
+            </div>
+
+            <!-- System Prompt -->
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="text-[11px] text-slate-400">System Instructions & HVAC Pitch Script</label>
+                <button onclick="restoreDefaultPrompt()" class="text-[10px] text-amber-400 hover:underline">Reset to Default Script</button>
+              </div>
+              <textarea id="agentSystemPrompt" rows="12" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-slate-300 font-mono text-[11px] leading-relaxed focus:outline-none focus:border-amber-500 custom-scroll">{{ marcus.system_prompt or "" }}</textarea>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- SECTION 2.2: ALL 34 DEEPGRAM FLUX VOICES SELECTOR -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800 mb-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="text-base font-bold text-white flex items-center gap-2">
+                <i data-lucide="waveform" class="w-4 h-4 text-amber-400"></i>
+                Deepgram Flux Voice Catalog (34 Voices)
+              </h2>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                All Flux Models
+              </span>
+            </div>
+            <p class="text-xs text-slate-400 mt-0.5">Click "Listen" on any card to hear the voice sample live before selecting it.</p>
+          </div>
+
+          <!-- Currently Selected Voice Pill & Preview -->
+          <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+            <div class="flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-xl">
+              <span class="text-xs text-slate-400">Selected Voice:</span>
+              <span id="selectedVoicePill" class="text-xs font-bold text-amber-300 font-mono">{{ marcus.voice_name or 'Bruce' }} ({{ marcus.tts_voice or 'flux-bruce-en' }})</span>
+            </div>
+            <button type="button" id="btnPreviewActiveVoice" onclick="previewActiveVoice()" class="bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all">
+              <i data-lucide="volume-2" id="iconPreviewActive" class="w-3.5 h-3.5 text-amber-400"></i>
+              <span id="labelPreviewActive">Listen to Selected Voice</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter and Search Bar -->
+        <div class="flex flex-col sm:flex-row gap-3 items-center justify-between mb-4">
+          <!-- Filter Chips -->
+          <div class="flex items-center gap-1.5 flex-wrap w-full sm:w-auto">
+            <button onclick="filterVoices('all')" id="voiceFilterAll" class="px-3 py-1 rounded-lg text-xs font-medium bg-amber-500 text-slate-950 transition-all">All</button>
+            <button onclick="filterVoices('male')" id="voiceFilterMale" class="px-3 py-1 rounded-lg text-xs font-medium bg-slate-800 text-slate-300 hover:text-white transition-all">Male</button>
+            <button onclick="filterVoices('female')" id="voiceFilterFemale" class="px-3 py-1 rounded-lg text-xs font-medium bg-slate-800 text-slate-300 hover:text-white transition-all">Female</button>
+            <button onclick="filterVoices('american')" id="voiceFilterAmerican" class="px-3 py-1 rounded-lg text-xs font-medium bg-slate-800 text-slate-300 hover:text-white transition-all">American</button>
+            <button onclick="filterVoices('british')" id="voiceFilterBritish" class="px-3 py-1 rounded-lg text-xs font-medium bg-slate-800 text-slate-300 hover:text-white transition-all">British</button>
+          </div>
+
+          <!-- Search Input -->
+          <div class="w-full sm:w-64 relative">
+            <input type="text" id="voiceSearchInput" oninput="searchVoices(this.value)" placeholder="Search voices (e.g. Bruce, Cliff...)" class="w-full bg-slate-950 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500">
+            <i data-lucide="search" class="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5"></i>
+          </div>
+        </div>
+
+        <!-- Voice Grid (Pre-rendered via Jinja2 + dynamic filter) -->
+        <div id="voiceCardsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 max-h-[540px] overflow-y-auto custom-scroll p-1">
+          {% for v in flux_voices %}
+          {% set is_selected = (v.id == (marcus.tts_voice or 'flux-heather-en')) %}
+          <div onclick="selectVoice('{{ v.id }}')" id="voiceCard_{{ v.id }}" class="voice-card cursor-pointer border rounded-xl p-3.5 transition-all flex flex-col justify-between {% if is_selected %}border-amber-500 bg-amber-500/10 glow-amber{% else %}border-slate-800 bg-slate-950/60 hover:border-slate-700{% endif %}" data-id="{{ v.id }}" data-name="{{ (v.name or '')|lower }}" data-gender="{{ (v.gender or '')|lower }}" data-accent="{{ (v.accent or '')|lower }}" data-style="{{ (v.style or '')|lower }}" data-tag="{{ (v.tag or '')|lower }}">
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <div class="flex items-center gap-1.5">
+                  <span class="font-bold text-xs text-white">{{ v.name }}</span>
+                  {% if v.tag %}
+                  <span class="px-1.5 py-0.2 rounded text-[9px] font-medium bg-slate-800 text-amber-300 border border-slate-700">{{ v.tag }}</span>
+                  {% endif %}
+                </div>
+                <i data-lucide="{% if is_selected %}check-circle-2{% else %}circle{% endif %}" class="w-4 h-4 voice-radio-icon {% if is_selected %}text-amber-400{% else %}text-slate-600{% endif %}"></i>
+              </div>
+
+              <div class="flex items-center gap-2 text-[10px] text-slate-400 font-mono mb-2">
+                <span>{{ v.accent or 'American' }}</span>
+                <span>•</span>
+                <span>{{ v.gender or 'Voice' }}</span>
+                <span>•</span>
+                <span class="text-emerald-400">{{ v.mos ~ ' MOS' if v.mos else '98% Human' }}</span>
+              </div>
+
+              <div class="text-[11px] text-slate-300 leading-snug line-clamp-2 mb-2">
+                {{ v.style or '' }}
+              </div>
+            </div>
+
+            <!-- Voice Card Actions: Listen Preview & Select -->
+            <div class="pt-2.5 border-t border-slate-800/60 flex items-center justify-between gap-2 text-[11px]">
+              <!-- Listen / Audio Preview Button -->
+              <button type="button" id="preview_btn_{{ v.id }}" onclick="previewVoice(event, '{{ v.id }}', '{{ (v.sample_phrase or '')|replace("'", "\\'")|replace('"', '&quot;') }}')" class="voice-preview-btn px-2.5 py-1 rounded-lg bg-slate-800/90 hover:bg-amber-500/20 text-slate-300 hover:text-amber-300 border border-slate-700 hover:border-amber-500/40 font-medium flex items-center gap-1.5 transition-all text-[11px]">
+                <i data-lucide="volume-2" class="w-3.5 h-3.5 text-amber-400"></i>
+                <span>Listen</span>
+              </button>
+
+              <!-- Select Voice Button -->
+              <button type="button" onclick="event.stopPropagation(); selectVoice('{{ v.id }}')" class="voice-select-btn px-3 py-1 rounded-lg {% if is_selected %}bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-900/30{% else %}bg-slate-800 text-slate-300 hover:text-white font-medium{% endif %} transition-all text-[11px]">
+                {% if is_selected %}✓ Selected{% else %}Select{% endif %}
+              </button>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- TAB 3: LIVE VOICE TESTER (WEBRTC BROWSER PRACTICE)                  -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <div id="viewTester" class="space-y-6 hidden">
+
+      <div class="bg-gradient-to-r from-amber-950/40 via-slate-900 to-slate-900 border border-amber-500/40 rounded-2xl p-6 glow-amber">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+          <div>
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30 shadow-md">
+                <i data-lucide="mic" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h2 class="text-base font-bold text-white tracking-tight">Live Browser Voice Rehearsal & Tester</h2>
+                  <span id="testStatusBadge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700 uppercase tracking-wider">
+                    IDLE • READY TO TEST
+                  </span>
+                </div>
+                <p class="text-xs text-slate-400 mt-0.5">
+                  Test Ana or Marcus live through your microphone and speakers over WebRTC before launching outbound campaigns. Zero carrier cost.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Test Actions Bar -->
+          <div class="flex items-center gap-2">
+            <button id="btnStartVoiceTest" onclick="startVoiceTest()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-2 shadow-lg shadow-amber-900/30 transition-all">
+              <i data-lucide="radio" class="w-4 h-4"></i>
+              <span>Start Live Practice Call</span>
+            </button>
+            <button id="btnToggleTestMic" onclick="toggleTestMic()" disabled class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs px-3.5 py-2.5 rounded-xl flex items-center gap-1.5 transition-all disabled:opacity-40">
+              <i data-lucide="mic-off" id="testMicIcon" class="w-4 h-4"></i>
+              <span id="testMicLabel">Mute</span>
+            </button>
+            <button id="btnEndVoiceTest" onclick="endVoiceTest()" disabled class="bg-red-600 hover:bg-red-500 text-white font-semibold text-xs px-3.5 py-2.5 rounded-xl flex items-center gap-1.5 transition-all disabled:opacity-40">
+              <i data-lucide="square" class="w-3.5 h-3.5"></i>
+              <span>End Test</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Practice Call Parameters & Streaming Transcripts -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 mt-5">
+          <!-- Practice Parameters & Quick Switcher -->
+          <div class="lg:col-span-1 space-y-3.5 text-xs bg-slate-950/60 p-4 rounded-xl border border-slate-800/80">
+            <div class="font-semibold text-slate-300 flex items-center justify-between text-xs">
+              <span class="flex items-center gap-1.5">
+                <i data-lucide="briefcase" class="w-3.5 h-3.5 text-amber-400"></i>
+                Simulated Prospect Business
+              </span>
+              <button onclick="switchTab('settings')" class="text-[10px] text-amber-400 hover:underline">Edit Full Settings &rarr;</button>
+            </div>
+
+            <!-- Quick Voice Switcher in Tester with Sample Player -->
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="text-[11px] text-slate-400">Active Voice for Test</label>
+                <button type="button" onclick="previewTesterVoice()" class="text-[11px] text-amber-400 hover:text-amber-300 flex items-center gap-1">
+                  <i data-lucide="volume-2" class="w-3 h-3"></i>
+                  <span>Listen to Sample</span>
+                </button>
+              </div>
+              <select id="testerVoiceSelect" onchange="selectVoice(this.value)" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-amber-500">
+                {% for v in flux_voices %}
+                <option value="{{ v.id }}" {% if v.id == (marcus.tts_voice or 'flux-heather-en') %}selected{% endif %}>{{ v.name }} ({{ v.accent or 'American' }})</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div>
+              <label class="text-[11px] text-slate-400 block mb-1">Business Name</label>
+              <input type="text" id="testBizName" value="Desert Peak Heating & Air (Arizona)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white">
+            </div>
+            <div>
+              <label class="text-[11px] text-slate-400 block mb-1">Operating Hours</label>
+              <input type="text" id="testHours" value="Mon-Fri 7:30 AM - 5:30 PM (Closed Weekends)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white">
+            </div>
+            <div>
+              <label class="text-[11px] text-slate-400 block mb-1">Address / Location</label>
+              <input type="text" id="testAddress" value="4520 N Scottsdale Rd, Scottsdale, AZ" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-white">
+            </div>
+
+            <!-- Waveform Animation Box (Active when connected) -->
+            <div id="testWaveformBox" class="mt-2 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
+              <span>Audio Activity:</span>
+              <div class="flex items-center gap-1 h-7 px-2">
+                <span class="w-1 bg-amber-500 rounded-full waveform-bar opacity-30" id="wave1"></span>
+                <span class="w-1 bg-amber-500 rounded-full waveform-bar opacity-30" id="wave2"></span>
+                <span class="w-1 bg-amber-500 rounded-full waveform-bar opacity-30" id="wave3"></span>
+                <span class="w-1 bg-amber-500 rounded-full waveform-bar opacity-30" id="wave4"></span>
+                <span class="w-1 bg-amber-500 rounded-full waveform-bar opacity-30" id="wave5"></span>
+                <span class="w-1 bg-amber-500 rounded-full waveform-bar opacity-30" id="wave6"></span>
+                <span class="w-1 bg-amber-500 rounded-full waveform-bar opacity-30" id="wave7"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Live Streaming Test Transcript -->
+          <div class="lg:col-span-2 flex flex-col bg-slate-950/80 border border-slate-800 rounded-xl p-4">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                <i data-lucide="message-square" class="w-3.5 h-3.5 text-amber-400"></i>
+                Real-Time Test Transcript
+              </span>
+              <span class="text-[11px] text-slate-400 font-mono" id="testCallTimer">00:00</span>
+            </div>
+            <div id="testTranscriptFeed" class="flex-1 max-h-56 min-h-[190px] overflow-y-auto custom-scroll space-y-2.5 text-xs font-sans p-1">
+              <div class="text-slate-400 italic py-10 text-center">
+                Click <strong class="text-amber-400">"Start Live Practice Call"</strong> to speak with Marcus directly using your microphone.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- TAB 4: SMS FOLLOW-UPS & LIVE TWO-WAY CHAT               -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <div id="viewSms" class="space-y-6 hidden">
+      <!-- Section Header -->
+      <div class="bg-gradient-to-r from-blue-950/40 via-slate-900 to-slate-900 border border-blue-500/30 rounded-2xl p-5 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-blue-500 text-slate-950 uppercase tracking-wider">
+              Telnyx Two-Way SMS
+            </span>
+            <span class="text-xs text-slate-400">Live Contractor Conversations</span>
+          </div>
+          <h2 class="text-lg font-bold text-white mt-1">SMS Follow-Ups & Prospect Questions</h2>
+          <p class="text-xs text-slate-400 mt-0.5">
+            View all contractors who received the 2-minute demo link SMS. Read their replies and answer questions directly from this window.
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="fetchSmsConversations(true)" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition-all">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+            <span>Refresh SMS</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Split Layout: Conversation List (Left) + Active Chat (Right) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[600px]">
+        <!-- LEFT COLUMN: Conversation Threads (4 Cols) -->
+        <div class="lg:col-span-4 bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex flex-col">
+          <div class="relative mb-3">
+            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+            <input
+              type="text"
+              id="smsSearchInput"
+              oninput="filterSmsConversations()"
+              placeholder="Search business or phone..."
+              class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+            />
+          </div>
+
+          <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider px-1 mb-2 flex items-center justify-between">
+            <span>Contacted Businesses</span>
+            <span id="smsTotalCountBadge" class="text-blue-400 font-bold">0 threads</span>
+          </div>
+
+          <!-- List Container -->
+          <div id="smsConversationList" class="flex-1 overflow-y-auto custom-scroll space-y-2 max-h-[520px] pr-1">
+            <div class="text-center py-12 text-slate-500 text-xs">
+              <i data-lucide="message-square" class="w-8 h-8 mx-auto mb-2 text-slate-600"></i>
+              No SMS conversations yet.<br>Outbound demo links sent after calls will appear here.
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Active Chat Thread (8 Cols) -->
+        <div class="lg:col-span-8 bg-slate-900/80 border border-slate-800 rounded-2xl flex flex-col overflow-hidden">
+          <!-- Active Thread Header -->
+          <div id="smsThreadHeader" class="p-4 bg-slate-950/60 border-b border-slate-800 flex items-center justify-between">
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="text-sm font-bold text-white" id="smsActiveBizName">Select a business on the left</h3>
+                <span id="smsActivePhone" class="text-xs text-slate-400 font-mono"></span>
+              </div>
+              <p class="text-[11px] text-slate-400 mt-0.5" id="smsActiveCallSummary">Click any conversation on the left to review messages and reply</p>
+            </div>
+            <div id="smsActiveActions" class="hidden flex items-center gap-2">
+              <button id="smsListenCallBtn" onclick="listenActiveThreadCall()" class="px-2.5 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-semibold flex items-center gap-1 transition-all">
+                <i data-lucide="play" class="w-3 h-3"></i>
+                <span>Hear Call</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Chat Messages Area -->
+          <div id="smsMessagesFeed" class="flex-1 p-4 overflow-y-auto custom-scroll space-y-3 min-h-[380px] max-h-[420px] bg-slate-950/30">
+            <div class="h-full flex items-center justify-center text-slate-500 text-xs">
+              No conversation selected. Click on a business from the list.
+            </div>
+          </div>
+
+          <!-- Quick Reply Snippets Bar -->
+          <div class="px-4 py-2 bg-slate-950/50 border-t border-slate-800 flex items-center gap-2 overflow-x-auto custom-scroll text-xs">
+            <span class="text-[11px] text-slate-400 whitespace-nowrap font-medium">Quick Snippets:</span>
+            <button onclick="insertSmsSnippet('demo')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white whitespace-nowrap text-[11px] transition-all">
+              🎧 Demo Link
+            </button>
+            <button onclick="insertSmsSnippet('pricing')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white whitespace-nowrap text-[11px] transition-all">
+              💲 Pricing ($20/mo)
+            </button>
+            <button onclick="insertSmsSnippet('how_it_works')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white whitespace-nowrap text-[11px] transition-all">
+              ⚙️ How Call Forwarding Works
+            </button>
+            <button onclick="insertSmsSnippet('walkthrough')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white whitespace-nowrap text-[11px] transition-all">
+              📅 Book 5-Min Walkthrough
+            </button>
+          </div>
+
+          <!-- Message Reply Box -->
+          <div class="p-4 bg-slate-950/80 border-t border-slate-800">
+            <div class="flex gap-2">
+              <textarea
+                id="smsReplyInput"
+                rows="2"
+                placeholder="Type SMS reply to contractor (will send via Telnyx)..."
+                class="flex-1 bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 resize-none"
+              ></textarea>
+              <button
+                id="btnSendSmsReply"
+                onclick="sendSmsReply()"
+                class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-lg hover:shadow-blue-500/20 whitespace-nowrap disabled:opacity-50"
+              >
+                <i data-lucide="send" class="w-4 h-4"></i>
+                <span>Send SMS</span>
+              </button>
+            </div>
+            <div class="flex items-center justify-between text-[10px] text-slate-500 mt-1.5">
+              <span>Carrier: Telnyx Outbound (+1 530-977-1395)</span>
+              <span id="smsCharCounter">0 chars</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!-- TAB 5: CAPTURED CLIENTS & LEAD RESPONSES (CRM)             -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <div id="viewCaptured" class="space-y-6 hidden">
+      <!-- Section Header with Stats -->
+      <div class="bg-gradient-to-r from-emerald-950/40 via-slate-900 to-slate-900 border border-emerald-500/30 rounded-2xl p-5 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-500 text-slate-950 uppercase tracking-wider">
+              Live Pipeline CRM
+            </span>
+            <span class="text-xs text-slate-400">Campaign Conversions & Captured Accounts</span>
+          </div>
+          <h2 class="text-lg font-bold text-white mt-1">Captured Clients & Lead Responses</h2>
+          <p class="text-xs text-slate-400 mt-0.5">
+            Monitor all businesses captured through onboarding links, campaign calls, and two-way SMS. Inspect who answered, view custom prompts, and access their live client portals.
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="fetchCapturedClients(true)" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 transition-all">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+            <span>Refresh Pipeline</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick KPI Metric Cards -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
+          <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Captured Clients</div>
+          <div class="text-2xl font-bold text-white mt-1" id="crmTotalCaptured">0</div>
+          <div class="text-[10px] text-emerald-400 mt-1 flex items-center gap-1"><i data-lucide="check-circle" class="w-3 h-3"></i> Dedicated SQLite DBs</div>
+        </div>
+        <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
+          <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Responded Leads</div>
+          <div class="text-2xl font-bold text-amber-400 mt-1" id="crmTotalResponded">0</div>
+          <div class="text-[10px] text-slate-400 mt-1">Answered Call or Sent SMS</div>
+        </div>
+        <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
+          <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Active Phone Lines</div>
+          <div class="text-2xl font-bold text-sky-400 mt-1" id="crmActiveLines">0</div>
+          <div class="text-[10px] text-slate-400 mt-1">LiveKit SIP & Carrier Assigned</div>
+        </div>
+        <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4">
+          <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Handled Calls</div>
+          <div class="text-2xl font-bold text-purple-400 mt-1" id="crmHandledCalls">0</div>
+          <div class="text-[10px] text-slate-400 mt-1" id="crmTotalMinutes">0.0 min tracked</div>
+        </div>
+      </div>
+
+      <!-- Filter Controls & Search -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="flex items-center gap-2 w-full sm:w-auto">
+          <button id="crmFilterAll" onclick="setCapturedFilter('all')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500 text-slate-950 transition-all">All Captured (<span id="crmCountFilterAll">0</span>)</button>
+          <button id="crmFilterResponded" onclick="setCapturedFilter('responded')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:text-white transition-all">Responded (<span id="crmCountFilterResponded">0</span>)</button>
+          <button id="crmFilterActive" onclick="setCapturedFilter('active')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:text-white transition-all">Active (<span id="crmCountFilterActive">0</span>)</button>
+        </div>
+        <div class="relative w-full sm:w-72">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+          <input
+            type="text"
+            id="capturedSearchInput"
+            oninput="renderCapturedClientsTable()"
+            placeholder="Search company, phone, trade..."
+            class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+          />
+        </div>
+      </div>
+
+      <!-- Clients List / Cards Table -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-slate-950/80 border-b border-slate-800 text-[11px] uppercase tracking-wider text-slate-400">
+              <tr>
+                <th class="py-3.5 px-4 font-semibold">Business / Trade</th>
+                <th class="py-3.5 px-4 font-semibold">Contact & Forwarding</th>
+                <th class="py-3.5 px-4 font-semibold">Voice Line & Persona</th>
+                <th class="py-3.5 px-4 font-semibold">Responses & Usage</th>
+                <th class="py-3.5 px-4 font-semibold">Status / Plan</th>
+                <th class="py-3.5 px-4 font-semibold text-right">Quick Links & Actions</th>
+              </tr>
+            </thead>
+            <tbody id="capturedClientsTableBody" class="divide-y divide-slate-800/60">
+              <tr>
+                <td colspan="6" class="text-center py-12 text-slate-500">
+                  <i data-lucide="loader-2" class="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-400"></i>
+                  Loading captured clients and lead responses...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- TRANSCRIPT MODAL / DRAWER -->
+  <div id="transcriptModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl">
+      <!-- Modal Header -->
+      <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+        <div>
+          <div class="flex items-center gap-2">
+            <h3 class="text-base font-bold text-white" id="modalBizName">Prospect Business</h3>
+            <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30" id="modalStatusBadge">Completed</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-0.5" id="modalSubInfo">Phone • Duration • Date</p>
+        </div>
+        <button onclick="closeTranscriptModal()" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition-all">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Modal Audio Player (if exists) -->
+      <div id="modalAudioSection" class="p-4 bg-slate-950/60 border-b border-slate-800 hidden">
+        <div class="text-[11px] text-slate-400 font-mono mb-1.5 flex items-center gap-1.5">
+          <i data-lucide="volume-2" class="w-3.5 h-3.5 text-amber-400"></i>
+          Call Audio Recording
+        </div>
+        <audio id="modalAudioPlayer" controls class="w-full h-9 rounded-lg"></audio>
+      </div>
+
+      <!-- Modal Body (Turn-by-turn transcript) -->
+      <div id="modalTranscriptContent" class="p-5 overflow-y-auto custom-scroll flex-1 space-y-3 text-xs">
+        <!-- Injected dynamically -->
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-4 border-t border-slate-800 flex items-center justify-between bg-slate-950/40">
+        <span class="text-[11px] text-slate-400 font-mono" id="modalCallId">Call ID: -</span>
+        <button onclick="closeTranscriptModal()" class="px-4 py-2 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-lg transition-all">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT APP LOGIC -->
+  <script>
+    // ── HELPER: GET LIVEKIT UMD CLIENT SAFELY ────────────────────
+    function getLiveKit() {
+      return window.LivekitClient || window.LiveKitClient || window.Livekit || window.LiveKit;
+    }
+
+    // ── STATE VARIABLES ──────────────────────────────────────────
+    let currentTab = 'dialer';
+    let leadsQueue = [];
+    let isCampaignRunning = false;
+    let activeCall = null;
+    let callTimerInterval = null;
+    let callDurationSeconds = 0;
+    let currentCallLogs = [];
+    let livekitRoom = null;
+
+    // Studio & Voice Tester state
+    let testLivekitRoom = null;
+    let testTimerInterval = null;
+    let testDurationSeconds = 0;
+    let isTestMicMuted = false;
+    let activeTestRoomName = null;
+    let allFluxVoices = [];
+    let currentAgentId = 'ana-sales';
+    let selectedVoiceId = "{{ marcus.tts_voice or 'flux-heather-en' }}";
+    let currentVoiceFilter = 'all';
+    let currentVoiceQuery = '';
+    let marcusAgentConfig = {};
+
+    // Voice Audio Preview State
+    let currentPreviewAudio = null;
+    let currentPreviewingVoiceId = null;
+
+    // Two-Way SMS State
+    let smsConversations = [];
+    let activeSmsPhone = null;
+    let activeSmsBizName = '';
+    let activeSmsCallId = null;
+
+    // ── INITIALIZATION ───────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      setupDragDrop();
+      fetchCallLogs();
+      fetchMarcusSettings('ana-sales');
+
+      // Start auto-refresh interval for logs, active call, and SMS
+      setInterval(() => {
+        fetchCallLogs(true);
+        pollServerCampaign(true);
+        if (activeCall) {
+          pollActiveCall();
+        }
+        if (testLivekitRoom && activeTestRoomName) {
+          pollTestCall();
+        }
+        fetchSmsConversations(true);
+      }, 2500);
+
+      // Initial server campaign status check
+      pollServerCampaign();
+
+      // Initial SMS and Captured Clients fetch
+      fetchSmsConversations();
+      fetchCapturedClients();
+    });
+
+    // ── 5-TAB SWITCHING ──────────────────────────────────────────
+    function switchTab(tab) {
+      stopVoicePreview();
+      currentTab = tab;
+      const btnDialer = document.getElementById('tabBtnDialer');
+      const btnSettings = document.getElementById('tabBtnSettings');
+      const btnTester = document.getElementById('tabBtnTester');
+      const btnSms = document.getElementById('tabBtnSms');
+      const btnCaptured = document.getElementById('tabBtnCaptured');
+
+      const viewDialer = document.getElementById('viewDialer');
+      const viewSettings = document.getElementById('viewSettings');
+      const viewTester = document.getElementById('viewTester');
+      const viewSms = document.getElementById('viewSms');
+      const viewCaptured = document.getElementById('viewCaptured');
+
+      const activeClass = 'px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all bg-amber-500 text-slate-950 shadow-md whitespace-nowrap';
+      const inactiveClass = 'px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all bg-slate-800/60 text-slate-300 hover:text-white hover:bg-slate-800 whitespace-nowrap';
+
+      btnDialer.className = tab === 'dialer' ? activeClass : inactiveClass;
+      btnSettings.className = tab === 'settings' ? activeClass : inactiveClass;
+      btnTester.className = tab === 'tester' ? activeClass : inactiveClass;
+      if (btnSms) btnSms.className = tab === 'sms' ? activeClass : inactiveClass;
+      if (btnCaptured) btnCaptured.className = tab === 'captured' ? activeClass : inactiveClass;
+
+      viewDialer.classList.toggle('hidden', tab !== 'dialer');
+      viewSettings.classList.toggle('hidden', tab !== 'settings');
+      viewTester.classList.toggle('hidden', tab !== 'tester');
+      if (viewSms) viewSms.classList.toggle('hidden', tab !== 'sms');
+      if (viewCaptured) viewCaptured.classList.toggle('hidden', tab !== 'captured');
+
+      if (tab === 'sms') {
+        fetchSmsConversations();
+      } else if (tab === 'captured') {
+        fetchCapturedClients();
+      }
+
+      lucide.createIcons();
+    }
+
+    // ── VOICE AUDIO PREVIEW (LISTEN BEFORE SELECTING) ─────────────
+    function previewVoice(event, voiceId, sampleText) {
+      if (event) event.stopPropagation();
+
+      // If currently playing this exact voice, toggle off
+      if (currentPreviewAudio && currentPreviewingVoiceId === voiceId) {
+        stopVoicePreview();
+        return;
+      }
+
+      stopVoicePreview();
+
+      const textToSpeak = sampleText || "Hey, this is Ana, an AI agent calling from OrxLabs. We’re an AI voice company that builds AI phone agents for businesses — do you have a couple minutes to chat?";
+      const url = `/api/test-speech?voice=${encodeURIComponent(voiceId)}&text=${encodeURIComponent(textToSpeak)}`;
+
+      const btn = document.getElementById(`preview_btn_${voiceId}`);
+      if (btn) {
+        btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin text-amber-400"></i><span>Loading...</span>`;
+        btn.classList.add('border-amber-500/50', 'bg-amber-500/20');
+        lucide.createIcons();
+      }
+
+      currentPreviewingVoiceId = voiceId;
+      currentPreviewAudio = new Audio(url);
+
+      currentPreviewAudio.onplaying = () => {
+        if (btn) {
+          btn.innerHTML = `<i data-lucide="square" class="w-3 h-3 text-red-400"></i><span class="text-red-300">Stop</span>`;
+          btn.classList.remove('border-amber-500/50', 'bg-amber-500/20');
+          btn.classList.add('border-red-500/50', 'bg-red-500/20');
+          lucide.createIcons();
+        }
+      };
+
+      currentPreviewAudio.onended = () => {
+        stopVoicePreview();
+      };
+
+      currentPreviewAudio.onerror = (e) => {
+        console.error('Audio preview error:', e);
+        stopVoicePreview();
+      };
+
+      currentPreviewAudio.play().catch(err => {
+        console.error('Audio playback failed:', err);
+        stopVoicePreview();
+      });
+    }
+
+    function stopVoicePreview() {
+      if (currentPreviewAudio) {
+        try {
+          currentPreviewAudio.pause();
+        } catch (e) {}
+        currentPreviewAudio = null;
+      }
+      if (currentPreviewingVoiceId) {
+        const btn = document.getElementById(`preview_btn_${currentPreviewingVoiceId}`);
+        if (btn) {
+          btn.innerHTML = `<i data-lucide="volume-2" class="w-3.5 h-3.5 text-amber-400"></i><span>Listen</span>`;
+          btn.classList.remove('border-red-500/50', 'bg-red-500/20', 'border-amber-500/50', 'bg-amber-500/20');
+          lucide.createIcons();
+        }
+        currentPreviewingVoiceId = null;
+      }
+    }
+
+    function previewActiveVoice() {
+      const v = allFluxVoices.find(x => x.id === selectedVoiceId);
+      const sample = v?.sample_phrase || document.getElementById('agentFirstMessage')?.value || "Hey, this is Ana, an AI agent calling from OrxLabs.";
+      previewVoice(null, selectedVoiceId, sample);
+    }
+
+    function previewTesterVoice() {
+      const sel = document.getElementById('testerVoiceSelect');
+      const voiceId = sel ? sel.value : selectedVoiceId;
+      const v = allFluxVoices.find(x => x.id === voiceId);
+      const sample = v?.sample_phrase || "Hey, this is Ana, an AI agent calling from OrxLabs.";
+      previewVoice(null, voiceId, sample);
+    }
+
+    // ── OUTBOUND AGENT SETTINGS & VOICE CATALOG ──────────────────
+    async function fetchMarcusSettings(agentId) {
+      const targetAgent = agentId || currentAgentId || 'ana-sales';
+      try {
+        const res = await fetch('/api/marcus/settings?agent_id=' + encodeURIComponent(targetAgent));
+        if (!res.ok) return;
+        const data = await res.json();
+        marcusAgentConfig = data.agent || {};
+        allFluxVoices = data.flux_voices || [];
+        currentAgentId = data.agent_id || targetAgent;
+
+        // Prepopulate models & sliders if present in response
+        if (marcusAgentConfig.llm_model) {
+          const llmEl = document.getElementById('agentLlmModel');
+          if (llmEl) llmEl.value = marcusAgentConfig.llm_model;
+        }
+        if (marcusAgentConfig.stt_model) {
+          const sttEl = document.getElementById('agentSttModel');
+          if (sttEl) sttEl.value = marcusAgentConfig.stt_model;
+        }
+        if (marcusAgentConfig.voice_speed) {
+          document.getElementById('agentVoiceSpeed').value = marcusAgentConfig.voice_speed;
+          document.getElementById('speedValLabel').innerText = marcusAgentConfig.voice_speed + 'x';
+        }
+        if (marcusAgentConfig.temperature) {
+          document.getElementById('agentTemperature').value = marcusAgentConfig.temperature;
+          document.getElementById('tempValLabel').innerText = marcusAgentConfig.temperature;
+        }
+        if (marcusAgentConfig.end_of_turn_wait) {
+          document.getElementById('agentTurnWait').value = marcusAgentConfig.end_of_turn_wait;
+          document.getElementById('turnWaitValLabel').innerText = marcusAgentConfig.end_of_turn_wait + 's';
+        }
+        if (marcusAgentConfig.first_message) {
+          document.getElementById('agentFirstMessage').value = marcusAgentConfig.first_message;
+        }
+        if (marcusAgentConfig.system_prompt) {
+          document.getElementById('agentSystemPrompt').value = marcusAgentConfig.system_prompt;
+        }
+        if (marcusAgentConfig.tts_voice) {
+          selectVoice(marcusAgentConfig.tts_voice);
+        }
+      } catch (e) {
+        console.error('Error fetching agent settings:', e);
+      }
+    }
+
+    async function switchActiveAgent(agentId) {
+      currentAgentId = agentId;
+      const isAna = (agentId === 'ana-sales');
+
+      // Update Header Avatar & Titles
+      const avatarEl = document.getElementById('headerAvatar');
+      if (avatarEl) avatarEl.innerText = isAna ? 'A' : 'M';
+
+      const titleEl = document.getElementById('headerAgentTitle');
+      if (titleEl) titleEl.innerText = isAna ? 'Ana Outbound Caller' : 'Marcus Outbound Caller';
+
+      // Update dropdown selectors
+      const headerSel = document.getElementById('headerAgentSelector');
+      if (headerSel && headerSel.value !== agentId) headerSel.value = agentId;
+
+      // Update Tab 2 Pill buttons
+      const btnAna = document.getElementById('btnSelectAna');
+      const btnMarcus = document.getElementById('btnSelectMarcus');
+      if (btnAna && btnMarcus) {
+        if (isAna) {
+          btnAna.className = 'px-3 py-1 rounded-md text-xs font-bold transition-all bg-amber-500 text-slate-950 flex items-center gap-1.5';
+          btnMarcus.className = 'px-3 py-1 rounded-md text-xs font-medium transition-all text-slate-400 hover:text-white flex items-center gap-1.5';
+        } else {
+          btnAna.className = 'px-3 py-1 rounded-md text-xs font-medium transition-all text-slate-400 hover:text-white flex items-center gap-1.5';
+          btnMarcus.className = 'px-3 py-1 rounded-md text-xs font-bold transition-all bg-amber-500 text-slate-950 flex items-center gap-1.5';
+        }
+      }
+
+      await fetchMarcusSettings(agentId);
+      lucide.createIcons();
+    }
+
+    function selectVoice(voiceId) {
+      selectedVoiceId = voiceId;
+      updateSelectedVoiceUI(voiceId);
+
+      // Update cards selection state
+      document.querySelectorAll('.voice-card').forEach(card => {
+        const cardId = card.getAttribute('data-id');
+        const isSelected = (cardId === voiceId);
+        const icon = card.querySelector('.voice-radio-icon');
+        const selectBtn = card.querySelector('.voice-select-btn');
+
+        if (isSelected) {
+          card.classList.remove('border-slate-800', 'bg-slate-950/60');
+          card.classList.add('border-amber-500', 'bg-amber-500/10', 'glow-amber');
+          if (icon) {
+            icon.setAttribute('data-lucide', 'check-circle-2');
+            icon.classList.remove('text-slate-600');
+            icon.classList.add('text-amber-400');
+          }
+          if (selectBtn) {
+            selectBtn.innerText = '✓ Selected';
+            selectBtn.className = 'voice-select-btn px-3 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-900/30 transition-all text-[11px]';
+          }
+        } else {
+          card.classList.remove('border-amber-500', 'bg-amber-500/10', 'glow-amber');
+          card.classList.add('border-slate-800', 'bg-slate-950/60');
+          if (icon) {
+            icon.setAttribute('data-lucide', 'circle');
+            icon.classList.remove('text-amber-400');
+            icon.classList.add('text-slate-600');
+          }
+          if (selectBtn) {
+            selectBtn.innerText = 'Select';
+            selectBtn.className = 'voice-select-btn px-3 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white font-medium transition-all text-[11px]';
+          }
+        }
+      });
+
+      // Update tester quick select
+      const testerSel = document.getElementById('testerVoiceSelect');
+      if (testerSel && testerSel.value !== voiceId) {
+        testerSel.value = voiceId;
+      }
+
+      lucide.createIcons();
+    }
+
+    function updateSelectedVoiceUI(voiceId) {
+      const v = allFluxVoices.find(x => x.id === voiceId);
+      const name = v ? v.name : voiceId;
+      const pill = document.getElementById('selectedVoicePill');
+      if (pill) pill.innerText = `${name} (${voiceId})`;
+
+      const navLabel = document.getElementById('navActiveVoiceLabel');
+      if (navLabel) navLabel.innerText = name;
+    }
+
+    function filterVoices(filter) {
+      currentVoiceFilter = filter;
+      ['All', 'Male', 'Female', 'American', 'British'].forEach(f => {
+        const btn = document.getElementById('voiceFilter' + f);
+        if (!btn) return;
+        if (f.toLowerCase() === filter) {
+          btn.className = 'px-3 py-1 rounded-lg text-xs font-medium bg-amber-500 text-slate-950 transition-all';
+        } else {
+          btn.className = 'px-3 py-1 rounded-lg text-xs font-medium bg-slate-800 text-slate-300 hover:text-white transition-all';
+        }
+      });
+      applyVoiceFilters();
+    }
+
+    function searchVoices(query) {
+      currentVoiceQuery = query.toLowerCase().trim();
+      applyVoiceFilters();
+    }
+
+    function applyVoiceFilters() {
+      document.querySelectorAll('.voice-card').forEach(card => {
+        const id = card.getAttribute('data-id') || '';
+        const name = card.getAttribute('data-name') || '';
+        const gender = card.getAttribute('data-gender') || '';
+        const accent = card.getAttribute('data-accent') || '';
+        const style = card.getAttribute('data-style') || '';
+        const tag = card.getAttribute('data-tag') || '';
+
+        const matchQuery = !currentVoiceQuery ||
+          id.includes(currentVoiceQuery) ||
+          name.includes(currentVoiceQuery) ||
+          gender.includes(currentVoiceQuery) ||
+          accent.includes(currentVoiceQuery) ||
+          style.includes(currentVoiceQuery) ||
+          tag.includes(currentVoiceQuery);
+
+        let matchFilter = true;
+        if (currentVoiceFilter === 'male') matchFilter = gender === 'male';
+        if (currentVoiceFilter === 'female') matchFilter = gender === 'female';
+        if (currentVoiceFilter === 'american') matchFilter = accent.includes('american');
+        if (currentVoiceFilter === 'british') matchFilter = accent.includes('british');
+
+        card.classList.toggle('hidden', !(matchQuery && matchFilter));
+      });
+    }
+
+    async function saveMarcusSettings() {
+      const isAna = (currentAgentId === 'ana-sales');
+      const fallbackVoice = isAna ? 'Heather' : 'Bruce';
+      const payload = {
+        agent_id: currentAgentId || 'ana-sales',
+        tts_voice: selectedVoiceId,
+        voice_name: (allFluxVoices.find(v => v.id === selectedVoiceId)?.name || fallbackVoice).replace(' (Deepgram Flux) ★', '').replace(' (Deepgram Flux)', ''),
+        llm_model: document.getElementById('agentLlmModel').value,
+        stt_model: document.getElementById('agentSttModel').value,
+        voice_speed: parseFloat(document.getElementById('agentVoiceSpeed').value),
+        temperature: parseFloat(document.getElementById('agentTemperature').value),
+        end_of_turn_wait: parseFloat(document.getElementById('agentTurnWait').value),
+        first_message: document.getElementById('agentFirstMessage').value.trim(),
+        system_prompt: document.getElementById('agentSystemPrompt').value.trim(),
+      };
+
+      try {
+        const res = await fetch('/api/marcus/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok) {
+          const alert = document.getElementById('saveStatusAlert');
+          alert.classList.remove('hidden');
+          setTimeout(() => alert.classList.add('hidden'), 3500);
+        } else {
+          alert('Error saving settings: ' + (data.detail || 'Unknown'));
+        }
+      } catch (err) {
+        console.error('Save error:', err);
+        alert('Could not save settings: ' + err.message);
+      }
+    }
+
+    function restoreDefaultPrompt() {
+      if (marcusAgentConfig.system_prompt) {
+        document.getElementById('agentSystemPrompt').value = marcusAgentConfig.system_prompt;
+      }
+    }
+
+    // ── LIVE BROWSER VOICE TESTER (WEBRTC) ───────────────────────
+    async function startVoiceTest() {
+      stopVoicePreview(); // Stop any voice samples playing
+
+      const btnStart = document.getElementById('btnStartVoiceTest');
+      const btnEnd = document.getElementById('btnEndVoiceTest');
+      const btnMic = document.getElementById('btnToggleTestMic');
+      const badge = document.getElementById('testStatusBadge');
+      const feed = document.getElementById('testTranscriptFeed');
+
+      // 1. Verify LiveKit client library
+      const LiveKit = getLiveKit();
+      if (!LiveKit) {
+        alert('LiveKit WebRTC client library is still loading. Please wait a moment and try again.');
+        return;
+      }
+
+      btnStart.disabled = true;
+      btnStart.classList.add('opacity-50');
+      badge.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500 text-slate-950 uppercase tracking-wider animate-pulse';
+      badge.innerText = 'CONNECTING MIC & WEBRTC...';
+
+      const agentDisplayName = (currentAgentId === 'ana-sales') ? 'Ana' : 'Marcus';
+      feed.innerHTML = `
+        <div class="text-amber-400 font-medium">Connecting browser microphone to ${agentDisplayName} via LiveKit WebRTC...</div>
+        <div class="text-slate-400 italic">Waiting for ${agentDisplayName} to speak opening hook...</div>
+      `;
+
+      try {
+        const payload = {
+          agent_id: currentAgentId || 'ana-sales',
+          tts_voice: selectedVoiceId,
+          llm_model: document.getElementById('agentLlmModel').value,
+          stt_model: document.getElementById('agentSttModel').value,
+          voice_speed: parseFloat(document.getElementById('agentVoiceSpeed').value),
+          temperature: parseFloat(document.getElementById('agentTemperature').value),
+          first_message: document.getElementById('agentFirstMessage').value.trim(),
+          system_prompt: document.getElementById('agentSystemPrompt').value.trim(),
+          test_business_name: document.getElementById('testBizName').value.trim(),
+          test_operating_hours: document.getElementById('testHours').value.trim(),
+          test_address: document.getElementById('testAddress').value.trim(),
+        };
+
+        const res = await fetch('/api/marcus/test-call', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Could not start test session');
+
+        activeTestRoomName = data.room;
+
+        testLivekitRoom = new LiveKit.Room({
+          adaptiveStream: true,
+          dynacast: true,
+        });
+
+        function attachAudioTrack(track) {
+          if (!track) return;
+          if (track.kind === 'audio' || (LiveKit.TrackKind && track.kind === LiveKit.TrackKind.KindAudio)) {
+            const el = track.attach();
+            el.id = 'livekitAudio_' + Math.random().toString(36).substring(2, 7);
+            el.autoplay = true;
+            document.body.appendChild(el);
+            el.play().catch(e => console.warn('Audio auto-play note:', e));
+          }
+        }
+
+        testLivekitRoom.on(LiveKit.RoomEvent.TrackSubscribed, (track, pub, participant) => {
+          attachAudioTrack(track);
+        });
+
+        testLivekitRoom.on(LiveKit.RoomEvent.Disconnected, () => {
+          endVoiceTest();
+        });
+
+        await testLivekitRoom.connect(data.url, data.token);
+        await testLivekitRoom.localParticipant.setMicrophoneEnabled(true, {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        });
+
+        if (testLivekitRoom.remoteParticipants) {
+          testLivekitRoom.remoteParticipants.forEach(participant => {
+            if (participant.trackPublications) {
+              participant.trackPublications.forEach(pub => {
+                if (pub.track) attachAudioTrack(pub.track);
+              });
+            }
+          });
+        }
+
+        badge.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500 text-slate-950 uppercase tracking-wider';
+        badge.innerText = 'LIVE MIC CONNECTED';
+
+        btnEnd.disabled = false;
+        btnMic.disabled = false;
+        isTestMicMuted = false;
+        document.getElementById('testMicLabel').innerText = 'Mute';
+        document.getElementById('testMicIcon').setAttribute('data-lucide', 'mic-off');
+
+        // Start waveform animation
+        for (let i = 1; i <= 7; i++) {
+          const el = document.getElementById('wave' + i);
+          if (el) el.classList.remove('opacity-30');
+        }
+
+        // Start duration timer
+        testDurationSeconds = 0;
+        if (testTimerInterval) clearInterval(testTimerInterval);
+        testTimerInterval = setInterval(() => {
+          testDurationSeconds++;
+          const mins = Math.floor(testDurationSeconds / 60).toString().padStart(2, '0');
+          const secs = (testDurationSeconds % 60).toString().padStart(2, '0');
+          document.getElementById('testCallTimer').innerText = `${mins}:${secs}`;
+        }, 1000);
+
+        lucide.createIcons();
+
+      } catch (err) {
+        console.error('Voice test error:', err);
+        alert('Could not start live voice test: ' + err.message);
+        endVoiceTest();
+      }
+    }
+
+    async function pollTestCall() {
+      if (!activeTestRoomName) return;
+      try {
+        const res = await fetch(`/api/marcus/active-call/${encodeURIComponent(activeTestRoomName)}`);
+        if (!res.ok) return;
+        const data = await res.json();
+
+        // Auto-end UI when server reports call has ended
+        if (!data.active || data.status === 'completed') {
+          console.log('[VoiceTest] Server ended call — auto-closing UI');
+          await endVoiceTest();
+          return;
+        }
+
+        if (data.transcript && data.transcript.length > 0) {
+          const feed = document.getElementById('testTranscriptFeed');
+          feed.innerHTML = data.transcript.map(turn => {
+            const isAi = turn.speaker === 'assistant' || turn.speaker === 'agent' || turn.role === 'assistant' || turn.role === 'agent';
+            const personaName = (document.getElementById('agentPersonaTitle')?.innerText || 'Ana (AI Closer)').replace('Persona:', '').trim();
+            const name = isAi ? (personaName.includes('Ana') ? 'Ana (AI Closer)' : 'Marcus (AI Closer)') : 'You (Prospect)';
+            const color = isAi ? 'text-amber-400' : 'text-blue-400';
+            const bg = isAi ? 'bg-amber-950/20 border-amber-800/40' : 'bg-slate-900 border-slate-800';
+
+            return `
+              <div class="p-2.5 rounded-lg border ${bg}">
+                <div class="font-bold ${color} text-[11px] mb-0.5">${escapeHtml(name)}:</div>
+                <div class="text-slate-200 text-xs leading-relaxed">${escapeHtml(turn.content || turn.text || '')}</div>
+              </div>
+            `;
+          }).join('');
+          feed.scrollTop = feed.scrollHeight;
+        }
+      } catch (e) {
+        console.debug('Test poll error:', e);
+      }
+    }
+
+    async function toggleTestMic() {
+      if (!testLivekitRoom || !testLivekitRoom.localParticipant) return;
+      isTestMicMuted = !isTestMicMuted;
+      await testLivekitRoom.localParticipant.setMicrophoneEnabled(!isTestMicMuted);
+
+      const label = document.getElementById('testMicLabel');
+      const icon = document.getElementById('testMicIcon');
+      if (isTestMicMuted) {
+        label.innerText = 'Unmute';
+        icon.setAttribute('data-lucide', 'mic');
+      } else {
+        label.innerText = 'Mute';
+        icon.setAttribute('data-lucide', 'mic-off');
+      }
+      lucide.createIcons();
+    }
+
+    async function endVoiceTest() {
+      if (testLivekitRoom) {
+        try {
+          testLivekitRoom.disconnect();
+        } catch (e) {}
+        testLivekitRoom = null;
+      }
+
+      // Clean up attached audio elements
+      document.querySelectorAll("[id^='livekitAudio_']").forEach(el => {
+        try { el.pause(); el.remove(); } catch(e) {}
+      });
+
+      if (activeTestRoomName) {
+        try {
+          await fetch('/api/marcus/stop-call', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ room_name: activeTestRoomName })
+          });
+        } catch (e) {}
+        activeTestRoomName = null;
+      }
+
+      if (testTimerInterval) {
+        clearInterval(testTimerInterval);
+        testTimerInterval = null;
+      }
+
+      const btnStart = document.getElementById('btnStartVoiceTest');
+      const btnEnd = document.getElementById('btnEndVoiceTest');
+      const btnMic = document.getElementById('btnToggleTestMic');
+      const badge = document.getElementById('testStatusBadge');
+
+      btnStart.disabled = false;
+      btnStart.classList.remove('opacity-50');
+      btnEnd.disabled = true;
+      btnMic.disabled = true;
+
+      badge.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300 border border-slate-700 uppercase tracking-wider';
+      badge.innerText = 'IDLE • READY TO TEST';
+
+      // Dim waveform
+      for (let i = 1; i <= 7; i++) {
+        const el = document.getElementById('wave' + i);
+        if (el) el.classList.add('opacity-30');
+      }
+    }
+
+    // ── DRAG & DROP & FILE HANDLING ──────────────────────────────
+    function setupDragDrop() {
+      const dropZone = document.getElementById('dropZone');
+      const fileInput = document.getElementById('csvFileInput');
+
+      dropZone.addEventListener('click', () => fileInput.click());
+
+      ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          dropZone.classList.add('border-amber-500', 'bg-amber-500/10');
+        });
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          dropZone.classList.remove('border-amber-500', 'bg-amber-500/10');
+        });
+      });
+
+      dropZone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files && files.length > 0) {
+          processCsvFile(files[0]);
+        }
+      });
+    }
+
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (file) {
+        processCsvFile(file);
+      }
+    }
+
+    function processCsvFile(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = e.target.result;
+        parseCsvText(text);
+      };
+      reader.readAsText(file);
+    }
+
+    function togglePasteBox() {
+      const container = document.getElementById('pasteContainer');
+      const icon = document.getElementById('pasteToggleIcon');
+      const isHidden = container.classList.contains('hidden');
+      if (isHidden) {
+        container.classList.remove('hidden');
+        icon.classList.add('rotate-90');
+      } else {
+        container.classList.add('hidden');
+        icon.classList.remove('rotate-90');
+      }
+    }
+
+    function parsePastedCsv() {
+      const text = document.getElementById('rawCsvText').value.trim();
+      if (!text) {
+        alert('Please paste CSV text first.');
+        return;
+      }
+      parseCsvText(text);
+      document.getElementById('rawCsvText').value = '';
+      togglePasteBox();
+    }
+
+    // ── CSV PARSING WITH SMART COLUMN MATCHING ───────────────────
+    function parseCsvText(csvText) {
+      const lines = csvText.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+      if (lines.length < 2) {
+        alert('CSV must contain a header row and at least one data row.');
+        return;
+      }
+
+      function parseRow(rowStr) {
+        const result = [];
+        let insideQuote = false;
+        let entry = '';
+        for (let i = 0; i < rowStr.length; i++) {
+          const char = rowStr[i];
+          if (char === '"') {
+            insideQuote = !insideQuote;
+          } else if (char === ',' && !insideQuote) {
+            result.push(entry.trim().replace(/^"|"$/g, ''));
+            entry = '';
+          } else {
+            entry += char;
+          }
+        }
+        result.push(entry.trim().replace(/^"|"$/g, ''));
+        return result;
+      }
+
+      const headers = parseRow(lines[0]).map(h => h.toLowerCase());
+
+      const nameIdx = headers.findIndex(h => h.includes('business') || h.includes('company') || h.includes('name') || h.includes('prospect'));
+      const phoneIdx = headers.findIndex(h => h.includes('phone') || h.includes('mobile') || h.includes('cell') || h.includes('number') || h.includes('tel'));
+      const addrIdx = headers.findIndex(h => h.includes('address') || h.includes('location') || h.includes('street') || h.includes('city'));
+      const hoursIdx = headers.findIndex(h => h.includes('hour') || h.includes('operating') || h.includes('schedule') || h.includes('time'));
+
+      let addedCount = 0;
+      for (let i = 1; i < lines.length; i++) {
+        const cols = parseRow(lines[i]);
+        if (cols.length === 0 || cols.every(c => c === '')) continue;
+
+        const bizName = nameIdx >= 0 && cols[nameIdx] ? cols[nameIdx] : `HVAC Shop #${leadsQueue.length + 1}`;
+        const phone = phoneIdx >= 0 && cols[phoneIdx] ? cols[phoneIdx] : '';
+        const address = addrIdx >= 0 && cols[addrIdx] ? cols[addrIdx] : 'Local Service Area';
+        const hours = hoursIdx >= 0 && cols[hoursIdx] ? cols[hoursIdx] : 'Mon-Fri 8am-5pm';
+
+        if (phone || bizName) {
+          leadsQueue.push({
+            id: 'lead_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+            business_name: bizName,
+            phone_number: phone,
+            address: address,
+            operating_hours: hours,
+            status: 'Ready',
+          });
+          addedCount++;
+        }
+      }
+
+      renderLeadsTable();
+      updateQueueStats();
+    }
+
+    // ── SAMPLE LEADS GENERATOR ──────────────────────────────────
+    function loadSampleLeads() {
+      const sample = [
+        {
+          id: 'lead_s1',
+          business_name: 'Dallas Comfort Heating & Air',
+          phone_number: '+12145550192',
+          address: '4520 Elm Street, Dallas, TX 75201',
+          operating_hours: 'Mon-Fri 7:30 AM - 5:30 PM (Closed Weekends)',
+          status: 'Ready'
+        },
+        {
+          id: 'lead_s2',
+          business_name: 'Lone Star Climate Systems',
+          phone_number: '+14695550183',
+          address: '1802 Commerce St, Fort Worth, TX 76102',
+          operating_hours: 'Mon-Fri 8:00 AM - 5:00 PM',
+          status: 'Ready'
+        },
+        {
+          id: 'lead_s3',
+          business_name: 'Austin Premier Air & Heating',
+          phone_number: '+15125550144',
+          address: '920 Congress Ave, Austin, TX 78701',
+          operating_hours: 'Mon-Sat 8:00 AM - 6:00 PM',
+          status: 'Ready'
+        }
+      ];
+
+      leadsQueue = [...sample];
+      renderLeadsTable();
+      updateQueueStats();
+    }
+
+    // ── QUICK ADD SINGLE LEAD ─────────────────────────────────
+    function toggleQuickAddLead() {
+      const form = document.getElementById('quickAddForm');
+      form.classList.toggle('hidden');
+    }
+
+    function addManualLead() {
+      const bizName = document.getElementById('manualBizName').value.trim();
+      const phone = document.getElementById('manualPhone').value.trim();
+      const addr = document.getElementById('manualAddress').value.trim() || 'Local Area';
+      const hours = document.getElementById('manualHours').value.trim() || 'Mon-Fri 8am-5pm';
+
+      if (!bizName || !phone) {
+        alert('Please provide at least a Business Name and Phone Number.');
+        return;
+      }
+
+      leadsQueue.push({
+        id: 'lead_' + Date.now(),
+        business_name: bizName,
+        phone_number: phone,
+        address: addr,
+        operating_hours: hours,
+        status: 'Ready'
+      });
+
+      document.getElementById('manualBizName').value = '';
+      document.getElementById('manualPhone').value = '';
+      document.getElementById('manualAddress').value = '';
+      document.getElementById('manualHours').value = '';
+      toggleQuickAddLead();
+
+      renderLeadsTable();
+      updateQueueStats();
+    }
+
+    function clearQueue() {
+      if (leadsQueue.length === 0) return;
+      if (confirm('Clear all leads from the current queue?')) {
+        leadsQueue = [];
+        renderLeadsTable();
+        updateQueueStats();
+      }
+    }
+
+    function removeLead(leadId) {
+      leadsQueue = leadsQueue.filter(l => l.id !== leadId);
+      renderLeadsTable();
+      updateQueueStats();
+    }
+
+    // ── RENDER LEADS TABLE ────────────────────────────────────
+    function renderLeadsTable() {
+      const tbody = document.getElementById('leadsTableBody');
+      if (leadsQueue.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" class="py-8 text-center text-slate-400 italic">
+              No leads in queue. Click <button onclick="loadSampleLeads()" class="text-amber-400 underline font-medium hover:text-amber-300">"Load Sample Leads"</button> or upload a CSV to get started.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = leadsQueue.map((lead, idx) => {
+        let badgeClass = 'bg-slate-800 text-slate-300 border-slate-700';
+        if (lead.status === 'Calling' || lead.status === 'In Progress') {
+          badgeClass = 'bg-amber-500/20 text-amber-300 border-amber-500/40 animate-pulse';
+        } else if (lead.status === 'Completed') {
+          badgeClass = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
+        } else if (lead.status === 'Failed') {
+          badgeClass = 'bg-red-500/20 text-red-300 border-red-500/40';
+        }
+
+        return `
+          <tr class="hover:bg-slate-850/40 transition-colors">
+            <td class="py-2.5 px-3 font-mono text-slate-500">${idx + 1}</td>
+            <td class="py-2.5 px-3 font-medium text-white">${escapeHtml(lead.business_name)}</td>
+            <td class="py-2.5 px-3 font-mono text-amber-300">${escapeHtml(lead.phone_number)}</td>
+            <td class="py-2.5 px-3 text-slate-400 text-[11px] max-w-[150px] truncate" title="${escapeHtml(lead.address)}">${escapeHtml(lead.address)}</td>
+            <td class="py-2.5 px-3 text-slate-400 text-[11px] max-w-[140px] truncate" title="${escapeHtml(lead.operating_hours)}">${escapeHtml(lead.operating_hours)}</td>
+            <td class="py-2.5 px-3">
+              <span class="px-2 py-0.5 rounded text-[10px] font-semibold border ${badgeClass}">
+                ${lead.status}
+              </span>
+            </td>
+            <td class="py-2.5 px-3 text-right">
+              <div class="flex items-center justify-end gap-1.5">
+                <button onclick="callSingleLead('${lead.id}')" ${lead.status === 'Calling' || activeCall ? 'disabled' : ''} class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-2.5 py-1 rounded-lg text-[11px] flex items-center gap-1 transition-all disabled:opacity-30">
+                  <i data-lucide="phone-call" class="w-3 h-3"></i>
+                  <span>Call</span>
+                </button>
+                <button onclick="removeLead('${lead.id}')" class="text-slate-500 hover:text-red-400 p-1 rounded transition-colors">
+                  <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      lucide.createIcons();
+    }
+
+    function updateQueueStats() {
+      const count = leadsQueue.length;
+      document.getElementById('statQueuedCount').innerText = count;
+      document.getElementById('queueBadge').innerText = `${count} lead${count === 1 ? '' : 's'}`;
+      document.getElementById('tabLeadCountBadge').innerText = count;
+    }
+
+    function updateProviderLabel() {
+      const sel = document.getElementById('telephonyProvider').value;
+      const label = document.getElementById('currentProviderLabel');
+      const sub = document.getElementById('statProviderSub');
+
+      if (sel === 'telnyx') {
+        label.innerText = 'Telnyx PSTN';
+        sub.innerText = 'Direct Carrier Outbound';
+      } else if (sel === 'browser') {
+        label.innerText = 'Browser Mic Test';
+        sub.innerText = 'WebRTC Direct Audio';
+      } else if (sel === 'twilio') {
+        label.innerText = 'Twilio Outbound';
+        sub.innerText = 'Carrier Outbound Call';
+      } else {
+        label.innerText = 'LiveKit SIP';
+        sub.innerText = 'SIP Trunk Routing';
+      }
+    }
+
+    function handleCallerIdPreset(val) {
+      const input = document.getElementById('customCallerId');
+      if (val === 'custom_az') {
+        input.classList.remove('hidden');
+        input.focus();
+      } else {
+        input.classList.add('hidden');
+      }
+    }
+
+    // ── OUTBOUND CALL EXECUTION ─────────────────────────────────
+    async function callSingleLead(leadId) {
+      stopVoicePreview();
+      const lead = leadsQueue.find(l => l.id === leadId);
+      if (!lead) return;
+
+      const provider = document.getElementById('telephonyProvider').value;
+      const callerIdPreset = document.getElementById('callerIdPreset').value;
+      let fromNumber = null;
+      if (callerIdPreset === 'custom_az') {
+        fromNumber = document.getElementById('customCallerId').value.trim() || null;
+      }
+
+      lead.status = 'Calling';
+      renderLeadsTable();
+
+      try {
+        const payload = {
+          agent_id: currentAgentId || 'ana-sales',
+          phone_number: lead.phone_number || '+18005550199',
+          business_name: lead.business_name,
+          address: lead.address,
+          operating_hours: lead.operating_hours,
+          provider: provider,
+          from_number: fromNumber,
+          timezone: 'America/Phoenix',
+        };
+
+        const res = await fetch('/api/marcus/outbound-call', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.detail || 'Call initiation failed');
+        }
+
+        lead.status = 'In Progress';
+        renderLeadsTable();
+
+        startActiveCallMonitor({
+          leadId: lead.id,
+          business_name: lead.business_name,
+          phone_number: lead.phone_number,
+          address: lead.address,
+          operating_hours: lead.operating_hours,
+          room_name: data.room_name,
+          call_id: data.call_id,
+          provider: provider,
+          room_token: data.room_token,
+          livekit_url: data.livekit_url,
+        });
+
+        if (provider === 'browser' && data.room_token && data.livekit_url) {
+          connectBrowserWebRTC(data.livekit_url, data.room_token);
+        }
+
+      } catch (err) {
+        console.error('Call error:', err);
+        lead.status = 'Failed';
+        renderLeadsTable();
+        alert('Could not start call: ' + err.message);
+      }
+    }
+
+    // ── BROWSER WEBRTC AUDIO FOR DIALER ──────────────────────────
+    async function connectBrowserWebRTC(url, token) {
+      try {
+        const LiveKit = getLiveKit();
+        if (!LiveKit) return;
+        livekitRoom = new LiveKit.Room({
+          adaptiveStream: true,
+          dynacast: true,
+        });
+
+        livekitRoom.on(LiveKit.RoomEvent.TrackSubscribed, (track) => {
+          if (track.kind === 'audio' || (LiveKit.TrackKind && track.kind === LiveKit.TrackKind.KindAudio)) {
+            const audioElement = track.attach();
+            document.body.appendChild(audioElement);
+          }
+        });
+
+        await livekitRoom.connect(url, token);
+        await livekitRoom.localParticipant.setMicrophoneEnabled(true);
+      } catch (e) {
+        console.error('Error connecting browser WebRTC mic:', e);
+      }
+    }
+
+    // ── ACTIVE CALL MONITORING ──────────────────────────────────
+    function startActiveCallMonitor(callInfo) {
+      activeCall = callInfo;
+      callDurationSeconds = 0;
+
+      document.getElementById('activeCallBanner').classList.remove('hidden');
+      document.getElementById('activeCallBizName').innerText = callInfo.business_name;
+      document.getElementById('activeCallPhone').innerText = callInfo.phone_number;
+      document.getElementById('activeCallAddress').innerText = callInfo.address;
+      document.getElementById('activeCallHours').innerText = callInfo.operating_hours;
+      document.getElementById('activeCallRoomId').innerText = 'Room: ' + callInfo.room_name;
+      document.getElementById('liveTranscriptFeed').innerHTML = `
+        <div class="text-amber-400 font-medium">Connecting call via ${callInfo.provider.toUpperCase()}...</div>
+        <div class="text-slate-400 italic">Waiting for voice agent to speak opening hook...</div>
+      `;
+
+      if (callTimerInterval) clearInterval(callTimerInterval);
+      callTimerInterval = setInterval(() => {
+        callDurationSeconds++;
+        const mins = Math.floor(callDurationSeconds / 60).toString().padStart(2, '0');
+        const secs = (callDurationSeconds % 60).toString().padStart(2, '0');
+        document.getElementById('activeCallDuration').innerText = `${mins}:${secs}`;
+      }, 1000);
+    }
+
+    async function pollActiveCall() {
+      if (!activeCall) return;
+
+      try {
+        const res = await fetch(`/api/marcus/active-call/${encodeURIComponent(activeCall.room_name)}`);
+        if (!res.ok) return;
+        const data = await res.json();
+
+        if (data.active) {
+          if (data.transcript && data.transcript.length > 0) {
+            const feed = document.getElementById('liveTranscriptFeed');
+            feed.innerHTML = data.transcript.map(turn => {
+              const isAi = turn.speaker === 'assistant' || turn.speaker === 'agent' || turn.role === 'assistant' || turn.role === 'agent';
+              const name = isAi ? 'Ana (AI Closer)' : (activeCall.business_name || 'Prospect');
+              const color = isAi ? 'text-amber-400' : 'text-blue-400';
+              const bg = isAi ? 'bg-amber-950/20 border-amber-800/40' : 'bg-slate-900 border-slate-800';
+
+              return `
+                <div class="p-2 rounded-lg border ${bg}">
+                  <div class="font-bold ${color} text-[11px] mb-0.5">${escapeHtml(name)}:</div>
+                  <div class="text-slate-200 text-xs leading-relaxed">${escapeHtml(turn.content || turn.text || '')}</div>
+                </div>
+              `;
+            }).join('');
+            feed.scrollTop = feed.scrollHeight;
+          }
+        } else if (data.status === 'completed' || !data.active) {
+          finishActiveCall();
+        }
+      } catch (e) {
+        console.debug('Active call poll notice:', e);
+      }
+    }
+
+    async function endCurrentCall() {
+      if (!activeCall) return;
+      try {
+        await fetch('/api/marcus/stop-call', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ room_name: activeCall.room_name })
+        });
+      } catch (e) {
+        console.error('Error stopping call:', e);
+      }
+      finishActiveCall();
+    }
+
+    function finishActiveCall() {
+      if (livekitRoom) {
+        try {
+          livekitRoom.disconnect();
+        } catch (e) {}
+        livekitRoom = null;
+      }
+
+      if (callTimerInterval) {
+        clearInterval(callTimerInterval);
+        callTimerInterval = null;
+      }
+
+      if (activeCall) {
+        const lead = leadsQueue.find(l => l.id === activeCall.leadId);
+        if (lead) {
+          lead.status = 'Completed';
+          renderLeadsTable();
+        }
+      }
+
+      activeCall = null;
+      document.getElementById('activeCallBanner').classList.add('hidden');
+      fetchCallLogs();
+
+      if (isCampaignRunning) {
+        const delaySecs = parseInt(document.getElementById('campaignDelay').value, 10) || 10;
+        setTimeout(() => {
+          if (isCampaignRunning) {
+            callNextInCampaign();
+          }
+        }, delaySecs * 1000);
+      }
+    }
+
+    // ── BATCH CAMPAIGN CONTROLLER (SERVER-SIDE & CLIENT HYBRID) ──
+    async function startCampaign() {
+      stopVoicePreview();
+      const readyLeads = leadsQueue.filter(l => l.status === 'Ready');
+      if (readyLeads.length === 0) {
+        alert('No "Ready" leads in the queue. Please add leads or load sample leads.');
+        return;
+      }
+
+      const provider = document.getElementById('telephonyProvider').value;
+      const delaySecs = parseInt(document.getElementById('campaignDelay').value, 10) || 10;
+      const callerIdPreset = document.getElementById('callerIdPreset').value;
+      let fromNumber = null;
+      if (callerIdPreset === 'custom_az') {
+        fromNumber = document.getElementById('customCallerId').value.trim() || null;
+      }
+
+      isCampaignRunning = true;
+      document.getElementById('btnStartCampaign').disabled = true;
+      document.getElementById('btnPauseCampaign').disabled = false;
+      document.getElementById('btnStartCampaign').classList.add('opacity-50');
+
+      if (provider === 'browser') {
+        // Browser mode uses local WebRTC microphone
+        callNextInCampaign();
+      } else {
+        // Server mode: runs 24/7 in background on the server even if Mac is closed
+        try {
+          const res = await fetch('/api/marcus/start-server-campaign', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              leads: leadsQueue,
+              delay_seconds: delaySecs,
+              provider: provider,
+              agent_id: currentAgentId || 'ana-sales',
+              from_number: fromNumber,
+            })
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.detail || 'Could not start server campaign');
+          console.log('[Campaign] Server campaign started successfully:', data);
+          pollServerCampaign();
+        } catch (err) {
+          console.error('[Campaign] Server campaign start error:', err);
+          alert('Could not start server campaign: ' + err.message);
+          pauseCampaign();
+        }
+      }
+    }
+
+    async function pauseCampaign() {
+      isCampaignRunning = false;
+      document.getElementById('btnStartCampaign').disabled = false;
+      document.getElementById('btnPauseCampaign').disabled = true;
+      document.getElementById('btnStartCampaign').classList.remove('opacity-50');
+
+      try {
+        await fetch('/api/marcus/stop-server-campaign', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ stop_active_call: true })
+        });
+      } catch (e) {
+        console.debug('Pause server campaign note:', e);
+      }
+    }
+
+    function callNextInCampaign() {
+      if (!isCampaignRunning || activeCall) return;
+
+      const nextLead = leadsQueue.find(l => l.status === 'Ready');
+      if (!nextLead) {
+        pauseCampaign();
+        alert('🎉 Campaign complete! All leads have been contacted.');
+        return;
+      }
+
+      callSingleLead(nextLead.id);
+    }
+
+    // ── SERVER CAMPAIGN POLLING (REAL-TIME UPDATES & MAC SLEEP RESILIENCE) ──
+    async function pollServerCampaign(isBackground = false) {
+      try {
+        const res = await fetch('/api/marcus/campaign-status');
+        if (!res.ok) return;
+        const data = await res.json();
+
+        // Update queue count
+        if (data.total_leads !== undefined && data.total_leads > 0) {
+          document.getElementById('statQueuedCount').innerText = data.total_leads;
+        }
+
+        // Sync leadsQueue if server has newer lead statuses
+        if (data.leads && data.leads.length > 0) {
+          let updated = false;
+          if (leadsQueue.length === 0) {
+            leadsQueue = data.leads;
+            updated = true;
+          } else {
+            data.leads.forEach(sLead => {
+              const localLead = leadsQueue.find(l => l.id === sLead.id);
+              if (localLead && localLead.status !== sLead.status) {
+                localLead.status = sLead.status;
+                if (sLead.summary) localLead.summary = sLead.summary;
+                if (sLead.recording_url) localLead.recording_url = sLead.recording_url;
+                updated = true;
+              }
+            });
+          }
+          if (updated) renderLeadsTable();
+        }
+
+        // Handle active call from server
+        if (data.active_call && data.active_call.active) {
+          const ac = data.active_call;
+          if (!activeCall || activeCall.room_name !== ac.room_name) {
+            startActiveCallMonitor({
+              leadId: ac.lead_id,
+              business_name: ac.business_name,
+              phone_number: ac.phone_number,
+              address: ac.address,
+              operating_hours: ac.operating_hours,
+              room_name: ac.room_name,
+              call_id: ac.call_id,
+              provider: ac.provider || 'telnyx',
+            });
+          }
+          if (ac.transcript && ac.transcript.length > 0) {
+            const feed = document.getElementById('liveTranscriptFeed');
+            feed.innerHTML = ac.transcript.map(turn => {
+              const isAi = turn.speaker === 'assistant' || turn.speaker === 'agent' || turn.role === 'assistant' || turn.role === 'agent';
+              const name = isAi ? 'Ana (AI Closer)' : (ac.business_name || 'Prospect');
+              const color = isAi ? 'text-amber-400' : 'text-blue-400';
+              const bg = isAi ? 'bg-amber-950/20 border-amber-800/40' : 'bg-slate-900 border-slate-800';
+
+              return `
+                <div class="p-2 rounded-lg border ${bg}">
+                  <div class="font-bold ${color} text-[11px] mb-0.5">${escapeHtml(name)}:</div>
+                  <div class="text-slate-200 text-xs leading-relaxed">${escapeHtml(turn.content || turn.text || '')}</div>
+                </div>
+              `;
+            }).join('');
+            feed.scrollTop = feed.scrollHeight;
+          }
+        } else if (activeCall && !data.active_call) {
+          finishActiveCall();
+        }
+
+        // Sync campaign button states
+        if (data.is_running && !isCampaignRunning) {
+          isCampaignRunning = true;
+          document.getElementById('btnStartCampaign').disabled = true;
+          document.getElementById('btnPauseCampaign').disabled = false;
+          document.getElementById('btnStartCampaign').classList.add('opacity-50');
+        } else if (!data.is_running && isCampaignRunning) {
+          isCampaignRunning = false;
+          document.getElementById('btnStartCampaign').disabled = false;
+          document.getElementById('btnPauseCampaign').disabled = true;
+          document.getElementById('btnStartCampaign').classList.remove('opacity-50');
+        }
+
+      } catch (err) {
+        if (!isBackground) console.error('Error polling server campaign:', err);
+      }
+    }
+
+    // ── INLINE AUDIO PLAYER ──────────────────────────────────────
+    let inlineAudioObj = null;
+    let inlinePlayingBtn = null;
+    function playInlineAudio(url, btn) {
+      if (inlineAudioObj) {
+        inlineAudioObj.pause();
+        if (inlinePlayingBtn) {
+          inlinePlayingBtn.innerHTML = '<i data-lucide="play" class="w-3 h-3"></i><span>Audio</span>';
+          inlinePlayingBtn.classList.remove('bg-emerald-500/20', 'text-emerald-300', 'border-emerald-500/40');
+          inlinePlayingBtn.classList.add('bg-amber-500/10', 'text-amber-400', 'border-amber-500/30');
+        }
+        if (inlinePlayingBtn === btn) {
+          inlineAudioObj = null;
+          inlinePlayingBtn = null;
+          lucide.createIcons();
+          return;
+        }
+      }
+      inlineAudioObj = new Audio(url);
+      inlinePlayingBtn = btn;
+      btn.innerHTML = '<i data-lucide="square" class="w-3 h-3"></i><span>Stop</span>';
+      btn.classList.remove('bg-amber-500/10', 'text-amber-400', 'border-amber-500/30');
+      btn.classList.add('bg-emerald-500/20', 'text-emerald-300', 'border-emerald-500/40');
+      lucide.createIcons();
+      inlineAudioObj.onended = () => {
+        btn.innerHTML = '<i data-lucide="play" class="w-3 h-3"></i><span>Audio</span>';
+        btn.classList.remove('bg-emerald-500/20', 'text-emerald-300', 'border-emerald-500/40');
+        btn.classList.add('bg-amber-500/10', 'text-amber-400', 'border-amber-500/30');
+        inlineAudioObj = null;
+        inlinePlayingBtn = null;
+        lucide.createIcons();
+      };
+      inlineAudioObj.play().catch(e => console.error('Audio play error:', e));
+    }
+
+    // ── CALL LOGS & TRANSCRIPTS ─────────────────────────────────
+    async function fetchCallLogs(isBackground = false) {
+      try {
+        const res = await fetch('/api/marcus/logs');
+        if (!res.ok) return;
+        const data = await res.json();
+        currentCallLogs = data.logs || [];
+
+        renderCallLogsTable(currentCallLogs);
+
+        const completedCount = currentCallLogs.length;
+        document.getElementById('statCompletedCount').innerText = completedCount;
+
+        // Calculate Positive Interest & SMS Sent
+        const interestedCount = currentCallLogs.filter(c => c.positive_interest || c.call_outcome === 'interested' || c.call_outcome === 'demo_sent').length;
+        document.getElementById('statInterestedCount').innerText = interestedCount;
+        const rate = completedCount > 0 ? Math.round((interestedCount / completedCount) * 100) : 0;
+        document.getElementById('statInterestRate').innerText = `${rate}% conversion rate`;
+
+        const smsSentCount = currentCallLogs.filter(c => c.demo_link_sent || c.call_outcome === 'demo_sent').length;
+        document.getElementById('statSmsSentCount').innerText = smsSentCount;
+
+      } catch (err) {
+        if (!isBackground) console.error('Error fetching logs:', err);
+      }
+    }
+
+    function renderCallLogsTable(logs) {
+      const tbody = document.getElementById('callLogsTableBody');
+      if (!logs || logs.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" class="py-8 text-center text-slate-400 italic">
+              No outbound calls logged yet. Launch a call or start an auto-dial campaign above to see live transcripts and recordings.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = logs.map(call => {
+        const dateStr = call.started_at || call.created_at || '-';
+        const bizName = call.business_name || call.extra_metadata?.business_name || 'HVAC Prospect';
+        const phone = call.called || call.phone_number || '-';
+        const duration = call.duration_seconds ? `${call.duration_seconds}s` : (call.status === 'in-progress' ? 'Live' : '-');
+        const turns = call.turn_count || (call.transcript ? call.transcript.length : 0);
+        const summary = call.sales_summary || call.summary || call.call_analysis?.summary || (turns > 0 ? 'Conversation completed' : 'No response / brief connection');
+
+        // Outcome / Interest Badge
+        let outcomeBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-800 text-slate-400 border border-slate-700">${call.status || 'completed'}</span>`;
+        if (call.status === 'in-progress') {
+          outcomeBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse">In Call...</span>`;
+        } else if (call.demo_link_sent || call.call_outcome === 'demo_sent') {
+          outcomeBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/40 inline-flex items-center gap-1">📲 Demo Sent</span>`;
+        } else if (call.positive_interest || call.call_outcome === 'interested') {
+          outcomeBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 inline-flex items-center gap-1">🔥 Interested</span>`;
+        } else if (call.call_outcome === 'callback') {
+          outcomeBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-medium bg-amber-500/20 text-amber-300 border border-amber-500/40 inline-flex items-center gap-1">📞 Callback</span>`;
+        } else if (call.call_outcome === 'not_interested') {
+          outcomeBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-800 text-slate-400 border border-slate-700">Declined</span>`;
+        } else if (call.call_outcome === 'dnc') {
+          outcomeBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-medium bg-red-500/20 text-red-300 border border-red-500/40">⛔ DNC</span>`;
+        } else if (call.call_outcome === 'voicemail_or_no_answer') {
+          outcomeBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-800/80 text-slate-400 border border-slate-700">No Answer</span>`;
+        }
+
+        // Audio Button
+        let audioHtml = `<span class="text-slate-500 text-[11px]">-</span>`;
+        if (call.recording_url) {
+          audioHtml = `
+            <button onclick="playInlineAudio('${escapeHtml(call.recording_url)}', this)" class="px-2 py-1 rounded bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[11px] font-mono inline-flex items-center gap-1 transition-all">
+              <i data-lucide="play" class="w-3 h-3"></i>
+              <span>Audio</span>
+            </button>
+          `;
+        }
+
+        return `
+          <tr class="hover:bg-slate-850/40 transition-colors">
+            <td class="py-2.5 px-3 font-mono text-[11px] text-slate-400 whitespace-nowrap">${escapeHtml(dateStr)}</td>
+            <td class="py-2.5 px-3 font-medium text-white">${escapeHtml(bizName)}</td>
+            <td class="py-2.5 px-3 font-mono text-amber-300 text-[11px]">${escapeHtml(phone)}</td>
+            <td class="py-2.5 px-3 font-mono text-slate-300">${duration}</td>
+            <td class="py-2.5 px-3 font-mono text-slate-400">${turns}</td>
+            <td class="py-2.5 px-3 whitespace-nowrap">${outcomeBadge}</td>
+            <td class="py-2.5 px-3 whitespace-nowrap">${audioHtml}</td>
+            <td class="py-2.5 px-3 text-slate-400 text-[11px] max-w-[220px] truncate" title="${escapeHtml(summary)}">
+              ${escapeHtml(summary)}
+            </td>
+            <td class="py-2.5 px-3 text-right">
+              <button onclick="viewCallTranscript('${call.call_id}')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all inline-flex items-center gap-1">
+                <i data-lucide="file-text" class="w-3 h-3"></i>
+                <span>Transcript</span>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      lucide.createIcons();
+    }
+
+    // ── TRANSCRIPT MODAL DRAWER ──────────────────────────────────
+    function viewCallTranscript(callId) {
+      const call = currentCallLogs.find(c => c.call_id === callId);
+      if (!call) return;
+
+      const bizName = call.business_name || call.extra_metadata?.business_name || 'HVAC Prospect';
+      document.getElementById('modalBizName').innerText = bizName;
+      document.getElementById('modalStatusBadge').innerText = call.status || 'completed';
+      document.getElementById('modalSubInfo').innerText = `Phone: ${call.called || '-'} • Duration: ${call.duration_seconds || 0}s • Started: ${call.started_at || '-'}`;
+      document.getElementById('modalCallId').innerText = `Call ID: ${call.call_id}`;
+
+      const audioSec = document.getElementById('modalAudioSection');
+      const audioPlayer = document.getElementById('modalAudioPlayer');
+      if (call.recording_url) {
+        audioPlayer.src = call.recording_url;
+        audioSec.classList.remove('hidden');
+      } else {
+        audioPlayer.src = '';
+        audioSec.classList.add('hidden');
+      }
+
+      const content = document.getElementById('modalTranscriptContent');
+      const transcript = call.transcript || [];
+
+      if (transcript.length === 0) {
+        content.innerHTML = `
+          <div class="py-8 text-center text-slate-400 italic">
+            No turn-by-turn transcript recorded for this call.
+          </div>
+        `;
+      } else {
+        content.innerHTML = transcript.map(turn => {
+          const isAi = turn.speaker === 'assistant' || turn.speaker === 'agent' || turn.role === 'assistant' || turn.role === 'agent';
+          const name = isAi ? 'Ana (AI Closer)' : bizName;
+          const roleColor = isAi ? 'text-amber-400' : 'text-blue-400';
+          const cardBg = isAi ? 'bg-amber-950/20 border-amber-800/40' : 'bg-slate-950 border-slate-800';
+
+          return `
+            <div class="p-3 rounded-xl border ${cardBg}">
+              <div class="flex items-center justify-between mb-1">
+                <span class="font-bold text-xs ${roleColor}">${escapeHtml(name)}</span>
+                <span class="text-[10px] text-slate-400 font-mono">${turn.time || ''}</span>
+              </div>
+              <div class="text-xs text-slate-200 leading-relaxed">${escapeHtml(turn.content || turn.text || '')}</div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      document.getElementById('transcriptModal').classList.remove('hidden');
+    }
+
+    function closeTranscriptModal() {
+      const audioPlayer = document.getElementById('modalAudioPlayer');
+      if (audioPlayer) {
+        audioPlayer.pause();
+        audioPlayer.src = '';
+      }
+      document.getElementById('transcriptModal').classList.add('hidden');
+    }
+
+    // ── TWO-WAY SMS FOLLOW-UPS & CHAT ───────────────────────────
+    async function fetchSmsConversations(isBackground = false) {
+      try {
+        const res = await fetch('/api/marcus/sms/conversations');
+        if (!res.ok) return;
+        const data = await res.json();
+        smsConversations = data.conversations || [];
+
+        // Update badge
+        let totalUnread = 0;
+        smsConversations.forEach(c => totalUnread += (c.unread_count || 0));
+        const badge = document.getElementById('tabSmsBadge');
+        if (badge) {
+          if (totalUnread > 0) {
+            badge.innerText = totalUnread;
+            badge.classList.remove('hidden');
+          } else {
+            badge.classList.add('hidden');
+          }
+        }
+        const totBadge = document.getElementById('smsTotalCountBadge');
+        if (totBadge) totBadge.innerText = `${smsConversations.length} threads`;
+
+        renderSmsConversationList();
+
+        // If thread is active, poll thread messages in background
+        if (activeSmsPhone && currentTab === 'sms') {
+          pollActiveSmsThread();
+        }
+      } catch (err) {
+        console.debug('SMS fetch error:', err);
+      }
+    }
+
+    function renderSmsConversationList() {
+      const listEl = document.getElementById('smsConversationList');
+      if (!listEl) return;
+      const query = (document.getElementById('smsSearchInput')?.value || '').toLowerCase().trim();
+
+      const filtered = smsConversations.filter(c => {
+        if (!query) return true;
+        return (c.business_name || '').toLowerCase().includes(query) ||
+               (c.phone_number || '').toLowerCase().includes(query) ||
+               (c.last_message || '').toLowerCase().includes(query);
+      });
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = `
+          <div class="text-center py-10 text-slate-500 text-xs">
+            No matching conversations found.
+          </div>
+        `;
+        return;
+      }
+
+      listEl.innerHTML = filtered.map(c => {
+        const isActive = c.phone_number === activeSmsPhone;
+        const activeStyles = isActive ? 'border-blue-500 bg-blue-950/20' : 'border-slate-800 bg-slate-950/60 hover:bg-slate-800/40';
+        const hasUnread = c.unread_count > 0;
+        const isOutbound = c.last_direction === 'outbound';
+        const lastPrefix = isOutbound ? 'You: ' : '';
+
+        return `
+          <div onclick="selectSmsConversation('${escapeHtml(c.phone_number)}')" class="p-3 rounded-xl border ${activeStyles} cursor-pointer transition-all">
+            <div class="flex items-center justify-between mb-1">
+              <span class="font-bold text-xs text-white truncate max-w-[180px]">${escapeHtml(c.business_name || 'HVAC Business')}</span>
+              <span class="text-[10px] text-slate-400 font-mono">${escapeHtml(c.last_timestamp ? c.last_timestamp.substring(11, 16) : '')}</span>
+            </div>
+            <div class="text-[11px] text-slate-400 font-mono mb-1">${escapeHtml(c.phone_number)}</div>
+            <div class="flex items-center justify-between gap-2">
+              <p class="text-xs text-slate-300 truncate max-w-[210px]">${escapeHtml(lastPrefix + (c.last_message || ''))}</p>
+              ${hasUnread ? `<span class="px-1.5 py-0.5 rounded-full bg-blue-500 text-slate-950 text-[10px] font-bold shrink-0">${c.unread_count} new</span>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function filterSmsConversations() {
+      renderSmsConversationList();
+    }
+
+    async function selectSmsConversation(phone) {
+      activeSmsPhone = phone;
+      renderSmsConversationList();
+
+      const headerBiz = document.getElementById('smsActiveBizName');
+      const headerPhone = document.getElementById('smsActivePhone');
+      const headerSummary = document.getElementById('smsActiveCallSummary');
+      const feed = document.getElementById('smsMessagesFeed');
+      const actionBox = document.getElementById('smsActiveActions');
+
+      feed.innerHTML = `
+        <div class="h-full flex items-center justify-center text-slate-400 text-xs gap-2">
+          <i data-lucide="loader-2" class="w-4 h-4 animate-spin text-blue-400"></i>
+          Loading conversation thread...
+        </div>
+      `;
+      lucide.createIcons();
+
+      try {
+        const res = await fetch(`/api/marcus/sms/thread/${encodeURIComponent(phone)}`);
+        if (!res.ok) throw new Error('Could not load messages');
+        const data = await res.json();
+
+        activeSmsBizName = data.business_name || 'HVAC Business';
+        activeSmsCallId = data.call_id;
+
+        headerBiz.innerText = activeSmsBizName;
+        headerPhone.innerText = data.phone_number;
+        headerSummary.innerText = data.call_summary || 'Outbound campaign prospect';
+
+        if (actionBox) {
+          if (data.call_id) {
+            actionBox.classList.remove('hidden');
+          } else {
+            actionBox.classList.add('hidden');
+          }
+        }
+
+        renderThreadMessages(data.messages || []);
+
+        // Refresh conversation list to clear unread badge
+        fetchSmsConversations();
+      } catch (err) {
+        feed.innerHTML = `<div class="p-4 text-center text-red-400 text-xs">Error loading thread: ${err.message}</div>`;
+      }
+    }
+
+    async function pollActiveSmsThread() {
+      if (!activeSmsPhone) return;
+      try {
+        const res = await fetch(`/api/marcus/sms/thread/${encodeURIComponent(activeSmsPhone)}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        renderThreadMessages(data.messages || []);
+      } catch (e) {}
+    }
+
+    function renderThreadMessages(messages) {
+      const feed = document.getElementById('smsMessagesFeed');
+      if (!feed) return;
+
+      if (messages.length === 0) {
+        feed.innerHTML = `
+          <div class="h-full flex flex-col items-center justify-center text-slate-500 text-xs">
+            <i data-lucide="message-square" class="w-6 h-6 mb-2 opacity-50"></i>
+            No messages exchanged yet with this business.
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      feed.innerHTML = messages.map(m => {
+        const isOutbound = m.direction === 'outbound';
+        const align = isOutbound ? 'justify-end' : 'justify-start';
+        const bubble = isOutbound
+          ? 'bg-gradient-to-r from-amber-600 to-amber-500 text-slate-950 font-medium rounded-2xl rounded-tr-sm shadow-md'
+          : 'bg-slate-800 text-slate-100 rounded-2xl rounded-tl-sm border border-slate-700/80';
+        const senderLabel = isOutbound ? 'Ana / OrxLabs' : (activeSmsBizName || 'Contractor');
+        const labelColor = isOutbound ? 'text-amber-950 font-bold' : 'text-blue-400 font-semibold';
+        const timeStr = m.created_at ? m.created_at.substring(11, 16) : '';
+
+        return `
+          <div class="flex ${align}">
+            <div class="max-w-[78%] ${bubble} p-3 text-xs leading-relaxed">
+              <div class="flex items-center justify-between gap-3 text-[10px] mb-1 opacity-90">
+                <span class="${labelColor}">${escapeHtml(senderLabel)}</span>
+                <span class="font-mono text-[9px] opacity-75">${escapeHtml(timeStr)}</span>
+              </div>
+              <div class="whitespace-pre-wrap">${escapeHtml(m.text || '')}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    async function sendSmsReply() {
+      if (!activeSmsPhone) {
+        alert('Please select a business from the list to reply.');
+        return;
+      }
+      const input = document.getElementById('smsReplyInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const btn = document.getElementById('btnSendSmsReply');
+      btn.disabled = true;
+      btn.innerText = 'Sending...';
+
+      try {
+        const res = await fetch('/api/marcus/sms/reply', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone_number: activeSmsPhone,
+            business_name: activeSmsBizName,
+            text: text
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Could not send SMS');
+
+        input.value = '';
+        document.getElementById('smsCharCounter').innerText = '0 chars';
+
+        // Refresh thread immediately
+        await pollActiveSmsThread();
+        await fetchSmsConversations();
+      } catch (err) {
+        alert('Failed to send SMS reply: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i data-lucide="send" class="w-4 h-4"></i><span>Send SMS</span>';
+        lucide.createIcons();
+      }
+    }
+
+    function insertSmsSnippet(type) {
+      const input = document.getElementById('smsReplyInput');
+      if (!input) return;
+
+      let snippet = '';
+      const refAgent = (currentAgentId === 'ana-sales') ? 'ana' : 'marcus';
+      if (type === 'demo') {
+        snippet = `Hey there! Here is your 2-minute demo link: https://agents.orxlabs.com/subscribe?ref=${refAgent} — Just fill in a little info about your shop (takes under 2 mins) to hear your custom sample call! If you like it, it costs next to nothing — just $20/mo with 50 mins included (~20 calls), then $0.25/min extra and zero contracts (saving just 1 missed job pays for the entire year!). Reply directly here if you have any questions!`;
+      } else if (type === 'pricing') {
+        snippet = "Honestly it costs next to nothing: just $20/month with 50 minutes of answered calls included (~20 calls), then only $0.25/min extra. Zero setup fees, no contracts, cancel anytime. Most contractors find that saving just one missed job covers the whole year!";
+      } else if (type === 'how_it_works') {
+        snippet = "It takes only 3 minutes to set up: we give you a dedicated AI phone line, and you simply forward your office calls when you're busy on jobs or after-hours. It answers on ring one and books directly into your calendar.";
+      } else if (type === 'walkthrough') {
+        snippet = "I'd be glad to hop on a quick 5-minute phone walkthrough with you whenever you have a breather between jobs. What day and time works best for you?";
+      }
+
+      input.value = snippet;
+      input.focus();
+      const counter = document.getElementById('smsCharCounter');
+      if (counter) counter.innerText = `${snippet.length} chars`;
+    }
+
+    // ── CAPTURED CLIENTS & LEAD RESPONSES (CRM) ──────────────────
+    let capturedClientsList = [];
+    let currentCapturedFilter = 'all';
+
+    async function fetchCapturedClients(forceRefresh = false) {
+      try {
+        const res = await fetch('/api/admin/clients');
+        if (!res.ok) return;
+        const data = await res.json();
+        capturedClientsList = data.clients || [];
+
+        // Also fetch SMS to know who replied
+        if (!smsConversations || smsConversations.length === 0) {
+          try {
+            const smsRes = await fetch('/api/marcus/sms/conversations');
+            if (smsRes.ok) {
+              const smsData = await smsRes.json();
+              smsConversations = smsData.conversations || [];
+            }
+          } catch (_) {}
+        }
+
+        updateCapturedStats();
+        renderCapturedClientsTable();
+      } catch (err) {
+        console.debug('Error fetching captured clients:', err);
+      }
+    }
+
+    function updateCapturedStats() {
+      const total = capturedClientsList.length;
+      const elTot = document.getElementById('crmTotalCaptured');
+      if (elTot) elTot.innerText = total;
+      const tabBadge = document.getElementById('tabCapturedCountBadge');
+      if (tabBadge) tabBadge.innerText = total;
+
+      // Check who responded (call count > 0 or has SMS thread)
+      const respondedList = capturedClientsList.filter(c => {
+        const hasCalls = (c.total_calls || 0) > 0;
+        const hasSms = smsConversations.some(s => 
+          (c.owner_phone && s.phone_number && s.phone_number.includes(c.owner_phone.slice(-7))) ||
+          (c.forwarding_phone && s.phone_number && s.phone_number.includes(c.forwarding_phone.slice(-7)))
+        );
+        return hasCalls || hasSms;
+      });
+
+      const activeList = capturedClientsList.filter(c => c.status === 'active' || c.polar_status === 'active');
+      const activeLines = capturedClientsList.filter(c => c.assigned_phone && c.assigned_phone !== '');
+      let totalCalls = 0;
+      let totalMins = 0;
+      capturedClientsList.forEach(c => {
+        totalCalls += (c.total_calls || 0);
+        totalMins += (c.total_minutes || 0);
+      });
+
+      const elResp = document.getElementById('crmTotalResponded');
+      if (elResp) elResp.innerText = respondedList.length;
+      const elLines = document.getElementById('crmActiveLines');
+      if (elLines) elLines.innerText = activeLines.length;
+      const elCalls = document.getElementById('crmHandledCalls');
+      if (elCalls) elCalls.innerText = totalCalls;
+      const elMins = document.getElementById('crmTotalMinutes');
+      if (elMins) elMins.innerText = `${totalMins.toFixed(1)} min tracked`;
+
+      const elFilterAll = document.getElementById('crmCountFilterAll');
+      if (elFilterAll) elFilterAll.innerText = total;
+      const elFilterResp = document.getElementById('crmCountFilterResponded');
+      if (elFilterResp) elFilterResp.innerText = respondedList.length;
+      const elFilterAct = document.getElementById('crmCountFilterActive');
+      if (elFilterAct) elFilterAct.innerText = activeList.length;
+    }
+
+    function setCapturedFilter(filter) {
+      currentCapturedFilter = filter;
+      const btnAll = document.getElementById('crmFilterAll');
+      const btnResp = document.getElementById('crmFilterResponded');
+      const btnAct = document.getElementById('crmFilterActive');
+
+      const activeClass = 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500 text-slate-950 transition-all';
+      const inactiveClass = 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:text-white transition-all';
+
+      if (btnAll) btnAll.className = filter === 'all' ? activeClass : inactiveClass;
+      if (btnResp) btnResp.className = filter === 'responded' ? activeClass : inactiveClass;
+      if (btnAct) btnAct.className = filter === 'active' ? activeClass : inactiveClass;
+
+      renderCapturedClientsTable();
+    }
+
+    function renderCapturedClientsTable() {
+      const tbody = document.getElementById('capturedClientsTableBody');
+      if (!tbody) return;
+      const query = (document.getElementById('capturedSearchInput')?.value || '').toLowerCase().trim();
+
+      let filtered = capturedClientsList.filter(c => {
+        // Text filter
+        if (query) {
+          const matchText = `${c.business_name || ''} ${c.owner_name || ''} ${c.owner_phone || ''} ${c.trade || ''} ${c.industry || ''} ${c.assigned_phone || ''}`.toLowerCase();
+          if (!matchText.includes(query)) return false;
+        }
+
+        // Tab filter
+        if (currentCapturedFilter === 'responded') {
+          const hasCalls = (c.total_calls || 0) > 0;
+          const hasSms = smsConversations.some(s => 
+            (c.owner_phone && s.phone_number && s.phone_number.includes(c.owner_phone.slice(-7))) ||
+            (c.forwarding_phone && s.phone_number && s.phone_number.includes(c.forwarding_phone.slice(-7)))
+          );
+          return hasCalls || hasSms;
+        } else if (currentCapturedFilter === 'active') {
+          return c.status === 'active' || c.polar_status === 'active';
+        }
+
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="text-center py-12 text-slate-500">
+              <i data-lucide="users" class="w-8 h-8 mx-auto mb-2 text-slate-600"></i>
+              No captured clients match your filter.
+            </td>
+          </tr>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(c => {
+        const trade = (c.trade || c.industry || 'HVAC').toUpperCase();
+        const bizName = escapeHtml(c.business_name || 'Unnamed Shop');
+        const ownerName = escapeHtml(c.owner_name || 'Owner');
+        const phone = escapeHtml(c.owner_phone || c.forwarding_phone || 'No phone');
+        const assignedPhone = escapeHtml(c.assigned_phone || '+1 (833) 420-5227');
+        const calls = c.total_calls || 0;
+        const mins = (c.total_minutes || 0).toFixed(1);
+        const cost = (c.estimated_cost || 20.0).toFixed(2);
+        const persona = escapeHtml(c.persona_name || 'Riley');
+        const plan = escapeHtml(c.plan || 'Starter ($20/mo)');
+        const status = c.status || c.polar_status || 'active';
+        const isActive = status === 'active';
+
+        // Check if lead responded
+        const hasSmsReply = smsConversations.some(s => 
+          (c.owner_phone && s.phone_number && s.phone_number.includes(c.owner_phone.slice(-7))) ||
+          (c.forwarding_phone && s.phone_number && s.phone_number.includes(c.forwarding_phone.slice(-7)))
+        );
+
+        let responseBadge = '';
+        if (hasSmsReply) {
+          responseBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">💬 SMS Replied</span>`;
+        } else if (calls > 0) {
+          responseBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">📞 ${calls} Calls Handled</span>`;
+        } else {
+          responseBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-800 text-slate-400">Captured / Pending</span>`;
+        }
+
+        const subscribeUrl = `/subscribe?client_id=${encodeURIComponent(c.id)}`;
+        const portalUrl = `/portal?client_id=${encodeURIComponent(c.id)}`;
+
+        return `
+          <tr class="hover:bg-slate-800/40 transition-colors">
+            <td class="py-3.5 px-4">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-white">${bizName}</span>
+                <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-800 text-amber-400 border border-slate-700">${trade}</span>
+              </div>
+              <div class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1">
+                <i data-lucide="map-pin" class="w-3 h-3 text-slate-500"></i>
+                <span>${escapeHtml(c.address || 'Service Territory')}</span>
+              </div>
+            </td>
+            <td class="py-3.5 px-4">
+              <div class="text-white font-medium">${ownerName}</div>
+              <div class="text-[11px] text-slate-400 font-mono mt-0.5">${phone}</div>
+              <div class="text-[10px] text-slate-500">${escapeHtml(c.carrier || 'Verizon')} • ${c.connection_status === 'verified' ? '<span class="text-emerald-400">● Forwarding Live</span>' : '<span class="text-amber-400">○ Pending Forwarding</span>'}</div>
+            </td>
+            <td class="py-3.5 px-4">
+              <div class="text-emerald-400 font-mono font-semibold">${assignedPhone}</div>
+              <div class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1">
+                <span>Agent: <strong class="text-slate-200">${persona}</strong></span>
+                <span class="text-slate-600">•</span>
+                <span class="text-slate-400 font-mono text-[10px]">${escapeHtml(c.persona_voice || 'flux-heather-en')}</span>
+              </div>
+            </td>
+            <td class="py-3.5 px-4">
+              <div>${responseBadge}</div>
+              <div class="text-[11px] text-slate-400 mt-1">${calls} calls • ${mins} min • $${cost} billed</div>
+            </td>
+            <td class="py-3.5 px-4">
+              <div>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${isActive ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'}">
+                  ${isActive ? 'Active' : 'Setup / Trial'}
+                </span>
+              </div>
+              <div class="text-[10px] text-slate-400 mt-1 capitalize">${plan}</div>
+            </td>
+            <td class="py-3.5 px-4 text-right">
+              <div class="flex items-center justify-end gap-1.5">
+                <a href="${portalUrl}" target="_blank" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-semibold text-[11px] flex items-center gap-1 transition-all" title="Open Client Portal">
+                  <i data-lucide="layout-dashboard" class="w-3.5 h-3.5 text-blue-400"></i>
+                  <span>Portal</span>
+                </a>
+                <button onclick="copyLinkToClipboard('${subscribeUrl}')" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-semibold text-[11px] flex items-center gap-1 transition-all" title="Copy Shareable Link">
+                  <i data-lucide="link" class="w-3.5 h-3.5 text-amber-400"></i>
+                  <span>Link</span>
+                </button>
+                <button onclick="quickTestClientChat('${c.id}', '${bizName}')" class="px-2.5 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 font-semibold text-[11px] flex items-center gap-1 transition-all" title="Test Voice Agent Turn">
+                  <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+                  <span>Test Turn</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      lucide.createIcons();
+    }
+
+    function copyLinkToClipboard(path) {
+      const fullUrl = window.location.origin + path;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(fullUrl).then(() => {
+          alert('Copied link to clipboard:\n' + fullUrl);
+        }).catch(() => {
+          prompt('Copy this link:', fullUrl);
+        });
+      } else {
+        prompt('Copy this link:', fullUrl);
+      }
+    }
+
+    async function quickTestClientChat(clientId, bizName) {
+      const userPrompt = prompt(`Simulate customer inquiry call to ${bizName}:\n(e.g. "My AC stopped cooling this afternoon, what is your diagnostic fee?")`, 'My AC stopped cooling this afternoon, what is your diagnostic fee?');
+      if (!userPrompt) return;
+
+      try {
+        const res = await fetch('/api/onboarding/chat-test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            client_id: clientId,
+            message: userPrompt
+          })
+        });
+        const data = await res.json();
+        if (data.response) {
+          alert(`🎙️ [${bizName} AI Receptionist Reply]:\n\n"${data.response}"\n\n(Latency: ${data.latency_ms ? data.latency_ms.toFixed(0) + 'ms' : 'snappy'})`);
+        } else {
+          alert('No response received: ' + JSON.stringify(data));
+        }
+      } catch (err) {
+        alert('Test turn error: ' + err.message);
+      }
+    function listenActiveThreadCall() {
+      if (!activeSmsCallId) return;
+      const call = currentCallLogs.find(c => c.call_id === activeSmsCallId);
+      if (call) {
+        openTranscriptModal(activeSmsCallId);
+      } else {
+        fetchCallLogs().then(() => openTranscriptModal(activeSmsCallId));
+      }
+    }
+
+    // ── UTILS ────────────────────────────────────────────────────
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+  </script>
+</body>
+</html>

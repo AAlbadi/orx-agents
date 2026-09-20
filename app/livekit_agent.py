@@ -211,9 +211,21 @@ def generate_room_token(
 
 def _build_llm_service(provider: str, model: str, max_tokens: int = 256):
     """Factory for LiveKit LLM service matching the evaluation matrix."""
-    provider = provider.lower()
+    model_str = (model or "").lower().strip()
+    provider_str = (provider or "").lower().strip()
+
+    # Smart auto-detection of provider based on model family to prevent 404 mismatches
+    if "gemini" in model_str:
+        provider_str = "gemini"
+    elif any(k in model_str for k in ["qwen", "llama", "groq", "mixtral", "deepseek"]):
+        provider_str = "groq"
+    elif "gemma" in model_str or "openrouter" in provider_str:
+        provider_str = "openrouter"
+    elif not provider_str or provider_str in ("auto", "default"):
+        provider_str = "gemini" if settings.GEMINI_API_KEY else "groq"
+
     effective_max_tokens = max(max_tokens, 512) if max_tokens and max_tokens > 0 else 512
-    if provider == "groq":
+    if provider_str == "groq":
         target_model = model or settings.GROQ_MODEL or "qwen/qwen3.8-27b"
         return openai.LLM(
             base_url="https://api.groq.com/openai/v1",
@@ -223,7 +235,7 @@ def _build_llm_service(provider: str, model: str, max_tokens: int = 256):
             max_completion_tokens=effective_max_tokens,
             max_retries=2,
         )
-    elif provider == "gemini":
+    elif provider_str == "gemini":
         target_model = model or settings.GEMINI_MODEL or "gemini-3.1-flash-lite"
         return openai.LLM(
             base_url=settings.GEMINI_BASE_URL,
@@ -233,7 +245,7 @@ def _build_llm_service(provider: str, model: str, max_tokens: int = 256):
             max_completion_tokens=effective_max_tokens,
             max_retries=2,
         )
-    elif provider == "openrouter":
+    elif provider_str == "openrouter":
         target_model = model or settings.OPENROUTER_MODEL or "google/gemma-4-31b-it:free"
         return openai.LLM(
             base_url="https://openrouter.ai/api/v1",
@@ -653,7 +665,7 @@ async def get_vad_instance():
         _SILERO_VAD_INSTANCE = await loop.run_in_executor(
             None,
             lambda: silero.VAD.load(
-                min_silence_duration=0.6,
+                min_silence_duration=0.35,
                 activation_threshold=0.6,
                 deactivation_threshold=0.35,
             ),
@@ -686,6 +698,16 @@ async def _finalize_session(room_name: str, status: str = "completed") -> Option
     called = config.get("called") or "Aria Voice Line"
 
     from app.calls import save_call_session
+    extra_meta = {
+        "business_name": config.get("business_name"),
+        "address": config.get("address"),
+        "operating_hours": config.get("operating_hours"),
+        "lead_id": config.get("lead_id"),
+        "direction": config.get("direction", "outbound"),
+        "provider": config.get("provider", "telnyx"),
+    }
+    extra_meta = {k: v for k, v in extra_meta.items() if v is not None}
+
     try:
         call_entry = save_call_session(
             call_id=call_id,
@@ -699,6 +721,7 @@ async def _finalize_session(room_name: str, status: str = "completed") -> Option
             audio_pcm_bytes=pcm_bytes,
             status=status,
             sample_rate=16000,
+            extra_metadata=extra_meta,
         )
     except Exception as ex:
         logger.error(f"[LiveKit Agent] Failed to save call session via app.calls: {ex}")
@@ -712,6 +735,7 @@ async def _finalize_session(room_name: str, status: str = "completed") -> Option
             "duration_seconds": round(duration_seconds, 1),
             "transcript": transcript,
             "status": status,
+            **extra_meta,
         }
 
     # Trigger client information extraction and Google Calendar link creation via app.integrations
@@ -865,6 +889,94 @@ async def _finalize_session(room_name: str, status: str = "completed") -> Option
         except Exception as proj_db_ex:
             logger.warning(f"[LiveKit Agent] Notice saving to client project DB: {proj_db_ex}")
 
+        # ── MARCUS / ANA OUTBOUND SALES AUTO-SMS DEMO LINK DISPATCH ─────────
+        is_marcus_sales = (
+            assistant_id in ("marcus-sales", "ana-sales")
+            or config.get("source") in ("marcus_private_console", "ana_private_console", "server_campaign", "marcus_test_session")
+            or config.get("direction") == "outbound"
+            or "marcus" in room_name
+            or "ana" in room_name
+        )
+        if is_marcus_sales:
+            try:
+                from app.marcus_sms import record_sms_message
+                from app.integrations import send_sms, extract_outbound_sales_info
+
+                prospect_phone = (
+                    config.get("called")
+                    or config.get("phone_number")
+                    or extracted.get("client_phone")
+                    or extracted.get("phone")
+                    or caller
+                )
+                target_biz = config.get("business_name") or extracted.get("business_name") or "HVAC Contractor"
+                if extracted.get("client_phone") and extracted.get("client_phone") != caller:
+                    prospect_phone = extracted.get("client_phone")
+                clean_target = re.sub(r"[^\d+]", "", str(prospect_phone or ""))
+
+                sales_info = await extract_outbound_sales_info(
+                    transcript=transcript,
+                    business_name=target_biz,
+                    called=clean_target or called,
+                    caller=caller,
+                )
+
+                transcript_full_text = " ".join([t.get("text", "") for t in transcript]).lower()
+                demo_triggers = [
+                    "demo link", "text that", "send that", "send the link", "text the link",
+                    "text me", "send it", "demo", "sounds good", "yeah definitely", "sure",
+                    "send that demo link right over", "what's the best mobile number"
+                ]
+                demo_requested = any(phrase in transcript_full_text for phrase in demo_triggers) or sales_info.get("demo_link_requested", False) or sales_info.get("positive_interest", False)
+
+                sms_status = "none"
+                if clean_target and len(clean_target) >= 10 and demo_requested:
+                    caller_agent_name = "Ana" if assistant_id == "ana-sales" or "ana" in str(assistant_id).lower() else "Marcus"
+                    ref_param = caller_agent_name.lower()
+                    sms_text = (
+                        f"Hey there! This is {caller_agent_name} from OrxLabs. Here is your 2-minute demo link: "
+                        f"https://agents.orxlabs.com/subscribe?ref={ref_param} — Just fill in a little info about your shop (takes under 2 mins) to hear your custom sample call! "
+                        f"If you like it, it costs next to nothing — just $20/mo with 50 mins included (~20 calls), then $0.25/min extra and zero contracts (saving just 1 missed job pays for the entire year!). "
+                        f"Reply directly to this text if you have any questions!"
+                    )
+                    logger.info(f"[Marcus Outbound] Dispatching automated demo link SMS to {clean_target} ({target_biz})...")
+                    sms_res = await send_sms(to_phone=clean_target, message=sms_text, provider="telnyx")
+                    sms_status = "sent" if sms_res.get("status") in ("sent", "simulated_success") else "failed"
+
+                    record_sms_message(
+                        phone_number=clean_target,
+                        text=sms_text,
+                        direction="outbound",
+                        business_name=target_biz,
+                        call_id=call_id,
+                        status=sms_status,
+                        provider="telnyx",
+                        message_id=sms_res.get("message_id"),
+                    )
+                    logger.success(f"[Marcus Outbound] Recorded outbound demo link SMS for {target_biz} ({clean_target}): {sms_status}")
+
+                # Update call entry in storage with sales intelligence & positive interest
+                storage = _ensure_storage()
+                calls = storage.get("calls", [])
+                for idx, c in enumerate(calls):
+                    if c.get("call_id") == call_id:
+                        is_pos = sales_info.get("positive_interest", False) or (sms_status == "sent")
+                        outcome = "demo_sent" if sms_status == "sent" else sales_info.get("call_outcome", "not_interested")
+                        c["positive_interest"] = is_pos
+                        c["call_outcome"] = outcome
+                        c["sales_summary"] = sales_info.get("summary", "")
+                        if sales_info.get("summary"):
+                            c["summary"] = sales_info["summary"]
+                        c["demo_link_sent"] = (sms_status == "sent")
+                        c["sales_analysis"] = sales_info
+                        calls[idx] = c
+                        call_entry = c
+                        CALLS_FILE.write_text(json.dumps(storage, indent=2))
+                        break
+
+            except Exception as sms_disp_err:
+                logger.warning(f"[Marcus Outbound] Automated sales intelligence & SMS demo link dispatch note: {sms_disp_err}")
+
     except Exception as ex:
         logger.error(f"[LiveKit Agent] Post-call integrations extraction notice: {ex}")
 
@@ -938,24 +1050,41 @@ async def _agent_room_worker(
                     )
 
                 # Auto-load voice
-                if not config.get("tts_voice") and (resolved_client.get("tts_voice") or resolved_client.get("voice")):
-                    config["tts_voice"] = resolved_client.get("tts_voice") or resolved_client.get("voice")
+                if not config.get("tts_voice") and (resolved_client.get("tts_voice") or resolved_client.get("persona_voice") or resolved_client.get("voice")):
+                    config["tts_voice"] = resolved_client.get("tts_voice") or resolved_client.get("persona_voice") or resolved_client.get("voice")
 
                 # Auto-load timezone
                 if not config.get("timezone") and (resolved_client.get("timezone") or (resolved_client.get("schedule_config") or {}).get("timezone")):
                     config["timezone"] = resolved_client.get("timezone") or (resolved_client.get("schedule_config") or {}).get("timezone")
 
-                logger.info(f"[LiveKit Agent] Room '{room_name}' automatically bound to client '{cid}' ({biz_name}) - Voice: {config.get('tts_voice', 'default')}")
+                # Auto-load answering coverage rule & decision
+                try:
+                    from app.onboarding import determine_call_answering_decision
+                    answering_decision = determine_call_answering_decision(resolved_client)
+                    config["answering_coverage"] = answering_decision["mode"]
+                    config["overflow_delay_seconds"] = answering_decision["pickup_delay_seconds"]
+                    config["answering_decision"] = answering_decision
+                except Exception as _ans_err:
+                    logger.debug(f"[LiveKit Agent] Answering decision resolution note: {_ans_err}")
+
+                logger.info(f"[LiveKit Agent] Room '{room_name}' automatically bound to client '{cid}' ({biz_name}) - Voice: {config.get('tts_voice', 'default')} - Coverage: {config.get('answering_coverage', 'always_24_7')}")
             # ─────────────────────────────────────────────────────────────────
 
             logger.info(f"[LiveKit Agent] Connecting agent to room: {room_name} at {ws_url}")
             await room.connect(ws_url, agent_token)
             logger.info(f"[LiveKit Agent] Agent connected to {room_name}. Initializing models...")
 
-            llm_provider = config.get("llm_provider") or settings.LLM_PROVIDER or "gemini"
             llm_model = config.get("llm_model") or settings.GEMINI_MODEL or "gemini-3.1-flash-lite"
+            llm_provider = config.get("llm_provider")
+            if not llm_provider:
+                if "gemini" in llm_model.lower():
+                    llm_provider = "gemini"
+                elif any(k in llm_model.lower() for k in ["qwen", "llama", "groq"]):
+                    llm_provider = "groq"
+                else:
+                    llm_provider = settings.LLM_PROVIDER or "gemini"
             stt_model = config.get("stt_model", "nova-3")
-            tts_voice = config.get("tts_voice", "aura-asteria-en")
+            tts_voice = config.get("tts_voice", "flux-heather-en")
 
             max_tokens = int(config.get("max_tokens") or 256)
             logger.info(f"[LiveKit Agent] Building LLM: {llm_provider}/{llm_model} (max_tokens={max_tokens})")
@@ -1003,13 +1132,13 @@ async def _agent_room_worker(
             # ───────────────────────────────────────────────────────────────
 
             turn_handling = TurnHandlingOptions(
-                endpointing=EndpointingOptions(mode="fixed", min_delay=0.8, max_delay=2.5),
+                endpointing=EndpointingOptions(mode="fixed", min_delay=0.45, max_delay=1.8),
                 interruption=InterruptionOptions(
                     enabled=True,
-                    min_duration=0.6,
-                    min_words=1,
-                    resume_false_interruption=False,
-                    false_interruption_timeout=0.0,
+                    min_duration=0.85,
+                    min_words=2,
+                    resume_false_interruption=True,
+                    false_interruption_timeout=1.5,
                 ),
                 preemptive_generation=PreemptiveGenerationOptions(
                     enabled=True,
@@ -1125,6 +1254,20 @@ async def _agent_room_worker(
                         logger.warning(f"[LiveKit Call Termination] Error disconnecting room '{room_name}': {err}")
                 disconnect_task = asyncio.create_task(_delayed_disconnect())
 
+            # 15-minute hard safety cap watchdog
+            MAX_CALL_DURATION_SECS = 900.0
+            async def _call_duration_watchdog():
+                try:
+                    await asyncio.sleep(MAX_CALL_DURATION_SECS)
+                    if room.isconnected():
+                        logger.warning(f"[LiveKit Call Termination] 15-minute hard limit reached for room '{room_name}'. Ending call cleanly.")
+                        schedule_call_termination(delay_seconds=1.0, reason="15_minute_watchdog_cap")
+                except asyncio.CancelledError:
+                    pass
+                except Exception as ex:
+                    logger.debug(f"[LiveKit Agent] Watchdog note: {ex}")
+            watchdog_task = asyncio.create_task(_call_duration_watchdog())
+
             @session.on("user_input_transcribed")
             def _on_user_input(ev):
                 transcript = getattr(ev, "transcript", "")
@@ -1132,9 +1275,13 @@ async def _agent_room_worker(
                 created_at = getattr(ev, "created_at", None) or time.time()
                 if transcript and str(transcript).strip() and is_final:
                     text_clean = str(transcript).strip()
+                    text_lower = text_clean.lower()
+                    text_norm = re.sub(r'[^a-z0-9\s]', ' ', text_lower)
+                    text_norm = re.sub(r'\s+', ' ', text_norm).strip()
                     logger.info(f"[LiveKit Transcript] Customer: {text_clean}")
                     transcript_turns.append({
                         "speaker": "customer",
+                        "role": "user",
                         "text": text_clean,
                         "timestamp": time.strftime("%H:%M:%S", time.localtime(created_at)),
                         "timestamp_epoch": created_at,
@@ -1142,6 +1289,59 @@ async def _agent_room_worker(
                     })
                     agent.record_turn("customer", text_clean)
                     asyncio.create_task(_broadcast_transcript("User", text_clean, is_final))
+
+                    # Smart Case 1: AI-to-AI Bot / Voicemail Loop Detection
+                    robocall_ai_phrases = [
+                        "leave a message after the tone", "at the tone", "record your message",
+                        "you have reached the voicemail", "is not available to take your call",
+                        "mailbox is full", "automated voice", "virtual assistant",
+                        "i am an ai", "i'm an ai", "i am an artificial intelligence",
+                        "i am a language model", "press 1 to speak with an agent",
+                        "all of our agents are currently busy", "please hold for the next available representative",
+                        "your call is important to us", "press 1 to accept", "this is an automated call"
+                    ]
+                    if any(phrase in text_lower or phrase in text_norm for phrase in robocall_ai_phrases):
+                        logger.warning(
+                            f"[LiveKit Agent] Automated system / AI bot loop detected for room '{room_name}' "
+                            f"(phrase match in '{text_clean}'). Ending call."
+                        )
+                        schedule_call_termination(delay_seconds=2.0, reason="ai_bot_loop_detected")
+                        return
+
+                    # Smart Case 2: Interactive Keypad Selection IVR Detection
+                    keypad_ivr_phrases = [
+                        "press 1", "press 2", "press 3", "press 4", "press 0",
+                        "press one", "press two", "press three", "press four",
+                        "press pound", "press star", "for sales", "for service",
+                        "for billing", "for english", "for spanish",
+                        "select from the following options", "listen carefully to the following options",
+                        "main menu", "to repeat this menu"
+                    ]
+                    if any(phrase in text_lower or phrase in text_norm for phrase in keypad_ivr_phrases):
+                        logger.warning(
+                            f"[LiveKit Agent] Keypad IVR selection menu detected for room '{room_name}' "
+                            f"(phrase match in '{text_clean}'). Ending call."
+                        )
+                        schedule_call_termination(delay_seconds=2.5, reason="keypad_ivr_detected")
+                        return
+
+                    # Smart Case 3: Caller Farewell / Concluded Call
+                    caller_farewell_phrases = [
+                        "goodbye", "bye", "bye for now", "have a good day", "have a great day",
+                        "have a wonderful day", "that's all thank you", "that's all, thank you",
+                        "that is all thank you", "that is all, thank you", "that's all thanks",
+                        "that is all thanks", "that's everything thank you", "that is everything",
+                        "no that's all", "no that is all", "no that's everything",
+                        "all set thank you", "all set, thank you", "thanks for your help bye",
+                        "thank you bye", "thank you, bye"
+                    ]
+                    if any(phrase in text_lower or phrase in text_norm for phrase in caller_farewell_phrases):
+                        logger.info(
+                            f"[LiveKit Agent] Caller farewell detected for room '{room_name}'. "
+                            f"Scheduling graceful delayed hangup."
+                        )
+                        schedule_call_termination(delay_seconds=3.5, reason="caller_farewell")
+                        return
 
                     # If customer continues speaking and call was not firmly rejected, cancel impending disconnect
                     sm = getattr(agent, "state_machine", None)
@@ -1173,12 +1373,13 @@ async def _agent_room_worker(
                                     "timestamp": time.strftime("%H:%M:%S", time.localtime(created_at)),
                                     "timestamp_epoch": created_at,
                                     "created_at": created_at,
+                                    "role": "assistant"
                                 })
                             logger.info(f"[LiveKit Transcript] Aria: {text_clean}")
                             agent.record_turn("assistant", text_clean)
                             asyncio.create_task(_broadcast_transcript("Aria", text_clean, True))
 
-                            # Trigger delayed call termination on completion or rejection
+                            # Trigger delayed call termination on completion or rejection or transfer
                             text_lower = text_clean.lower()
                             termination_phrases = [
                                 "have a fantastic day",
@@ -1192,6 +1393,11 @@ async def _agent_room_worker(
                                 "stay cool and have a wonderful day",
                                 "goodbye",
                                 "bye for now",
+                                "thank you for choosing",
+                                "connecting you directly with our",
+                                "transferring you directly to our",
+                                "automated system detected",
+                                "does not support automated keypad",
                             ]
                             is_terminal_text = any(phrase in text_lower for phrase in termination_phrases)
                             sm = getattr(agent, "state_machine", None)
@@ -1217,21 +1423,75 @@ async def _agent_room_worker(
                 except Exception as ex:
                     logger.debug(f"[LiveKit Agent] Context prune note: {ex}")
 
-            greeting = config.get(
-                "greeting",
-                "Hi there! I'm Aria, running on LiveKit with Groq and Deepgram. How can I help you today?"
-            )
-            # Fast-poll for the browser participant to connect so greeting audio isn't delayed
+            # ── WHEN-TO-ANSWER COVERAGE RULE ENFORCEMENT ─────────────────────
+            # Fast-poll for remote participant to connect
             wait_deadline = time.time() + 3.0
             while len(room.remote_participants) == 0 and time.time() < wait_deadline and room.isconnected():
                 await asyncio.sleep(0.05)
+
+            try:
+                from app.onboarding import determine_call_answering_decision
+                target_profile = resolved_client or config
+                answering_decision = determine_call_answering_decision(target_profile)
+            except Exception as _ans_err:
+                logger.warning(f"[LiveKit Agent] Answering decision evaluation note: {_ans_err}")
+                answering_decision = {"mode": "always_24_7", "should_answer": True, "pickup_delay_seconds": 0}
+
+            cov_mode = answering_decision.get("mode", "always_24_7")
+            pickup_delay = answering_decision.get("pickup_delay_seconds", 0)
+            biz = (resolved_client or {}).get("business_name") or "our company"
+
+            # Always ensure greeting is initialized to config / assistant default first
+            greeting = (
+                config.get("greeting")
+                or config.get("first_message")
+                or (resolved_client or {}).get("first_message")
+                or (resolved_client or {}).get("greeting")
+                or f"Thank you for calling {biz}! How can I help you today?"
+            )
+
+            # 1. Overflow Mode: Wait for human cell phone / team to ring first
+            if cov_mode == "overflow" and pickup_delay > 0:
+                logger.info(
+                    f"[LiveKit Agent] Answering Rule: OVERFLOW active. Waiting {pickup_delay}s "
+                    f"for primary cell phone to answer before AI receptionist takes over..."
+                )
+                delay_start = time.time()
+                while (time.time() - delay_start < pickup_delay) and room.isconnected():
+                    await asyncio.sleep(0.25)
+
+                if not room.isconnected():
+                    logger.info(f"[LiveKit Agent] Room disconnected during overflow delay (human answered or caller hung up). Room: {room_name}")
+                    return
+
+                # If caller is still waiting after delay, deliver the overflow backup greeting
+                if not config.get("custom_greeting_overridden"):
+                    greeting = (
+                        (resolved_client or {}).get("overflow_greeting")
+                        or f"Thank you for calling {biz}! Our team is currently assisting customers on site, but I can help you right away. What can we assist you with today?"
+                    )
+
+            # 2. After-Hours Only: If call arrives in-hours while office is open, transfer to office
+            elif cov_mode == "after_hours" and not answering_decision.get("should_answer", True):
+                local_time = answering_decision.get("schedule_status", {}).get("local_time", "now")
+                logger.info(
+                    f"[LiveKit Agent] Answering Rule: AFTER_HOURS active but office is currently OPEN ({local_time}). "
+                    f"Transferring caller directly to main office..."
+                )
+                forwarding_target = (resolved_client or {}).get("forwarding_phone") or "our main office"
+                greeting = f"Thank you for calling {biz}! Our main office is open right now. I am connecting you directly with our front desk team at {forwarding_target} right now."
+                schedule_call_termination(delay_seconds=4.5, reason="in_hours_office_transfer")
+
+            # 3. Always 24/7 or After-Hours when Closed: 0s pickup delay, standard greeting
+            else:
+                logger.info(f"[LiveKit Agent] Answering Rule: {cov_mode.upper()} active — immediate AI answer (0s delay).")
 
             session_info = _ACTIVE_SESSIONS.get(room_name)
             if session_info and not session_info.get("greeting_sent", False):
                 session_info["greeting_sent"] = True
                 try:
                     session.say(greeting)
-                    logger.info(f"[LiveKit Agent] Greeting sent to room: {room_name}")
+                    logger.info(f"[LiveKit Agent] Greeting sent to room: {room_name} (coverage: {cov_mode}, delay: {pickup_delay}s)")
                     # conversation_item_added event will append to transcript_turns, record turn, and broadcast synchronously
                 except Exception as e:
                     logger.warning(f"Could not say initial greeting: {e}")
@@ -1499,29 +1759,94 @@ async def create_outbound_call(
     prompt: Optional[str] = None,
     client_id: Optional[str] = None,
     provider: str = "telnyx",
+    extra_context: Optional[Dict[str, Any]] = None,
+    from_number: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Dispatch an outbound phone call via Telnyx SIP, Twilio SIP, or LiveKit SIP participant creation."""
     provider = (provider or "telnyx").lower().strip()
+    extra_context = extra_context or {}
 
     clean_phone = "".join(filter(lambda c: c.isdigit() or c == "+", phone_number))
     clean_digits = "".join(filter(str.isdigit, phone_number))
     suffix = clean_digits[-4:] if len(clean_digits) >= 4 else f"{int(time.time()) % 10000:04d}"
     actual_room = room_name or f"outbound-{int(time.time())}-{suffix}"
-    actual_prompt = prompt or _STAGED_ROOM_PROMPTS.get(actual_room) or _DEFAULT_AGENT_INSTRUCTIONS
+
+    cid = client_id or "ana-sales"
+    asst = None
+    try:
+        from app.agents import get_assistant
+        asst = get_assistant(cid)
+    except Exception as _e:
+        logger.warning(f"Could not load assistant '{cid}': {_e}")
+
+    caller_agent_name = "Ana" if cid == "ana-sales" else "Marcus"
+    default_name = (asst.get("name") if asst else None) or ("Ana Sales" if cid == "ana-sales" else "Marcus Sales")
+    default_voice = (asst.get("tts_voice") if asst else None) or ("flux-heather-en" if cid == "ana-sales" else "flux-bruce-en")
+    default_stt = (asst.get("stt_model") if asst else None) or "nova-3"
+    default_llm = (asst.get("llm_model") if asst else None) or "gemini-3.1-flash-lite"
+    default_greeting = (asst.get("first_message") if asst else None) or (
+        "Hey, this is Ana with OrxLabs — I'm actually an AI, but I promise I'll keep it quick. Do you have a couple minutes to chat?"
+        if cid == "ana-sales" else
+        "Hey, this is Marcus with OrxLabs — I'm actually an AI, but I promise I'll keep it quick. Do you have a couple minutes to chat?"
+    )
+    base_prompt = prompt or (asst.get("system_prompt") if asst else None) or _STAGED_ROOM_PROMPTS.get(actual_room) or _DEFAULT_AGENT_INSTRUCTIONS
+
+    # Arizona location & identity injection for Ana / Marcus (Oracle Phoenix Cloud datacenter proximity)
+    arizona_context = (
+        "\n<caller_origin_context>\n"
+        f"Caller Origin: {caller_agent_name} is calling from OrxLabs' Arizona operations center (Phoenix / Scottsdale, AZ).\n"
+        "Data Center Routing: Oracle Cloud Infrastructure (Region: us-phoenix-1, Arizona) for ultra-low latency voice.\n"
+        "Timezone: America/Phoenix (Mountain Standard Time, MST / UTC-7).\n"
+        "Conversational Guidance: If the prospect asks where you are based or calling from, state naturally and warmly: "
+        "'I\\'m with OrxLabs, based right here in Arizona — Phoenix area!'\n"
+        "</caller_origin_context>\n"
+    ) if cid in ("marcus-sales", "ana-sales") else ""
+
+    # If extra_context has business info, enrich prompt with contextual sales intelligence
+    biz_name = extra_context.get("business_name") or ""
+    biz_addr = extra_context.get("address") or ""
+    biz_hours = extra_context.get("operating_hours") or ""
+
+    if biz_name or biz_addr or biz_hours:
+        context_block = (
+            f"\n<prospect_business_info>\n"
+            f"Target Business Name: {biz_name}\n"
+            f"Location / Address: {biz_addr}\n"
+            f"Operating Hours: {biz_hours}\n"
+            f"Phone Number: {clean_phone}\n\n"
+            f"Contextual Guidance for {caller_agent_name}:\n"
+            f"- You are calling {biz_name or 'this HVAC contractor'}.\n"
+            f"- Their normal operating hours are {biz_hours or 'standard daytime hours'}.\n"
+            f"- Connect their operating hours directly to our value proposition: when their office is closed after-hours, on weekends, or when all technicians are tied up in attics or on ladders, our OrxLabs AI phone agent answers immediately on ring one 24/7, qualifies the caller, and books the emergency or repair job directly into their calendar so they never lose high-value jobs to competitors on Google.\n"
+            f"</prospect_business_info>\n\n"
+        )
+        actual_prompt = arizona_context + context_block + base_prompt
+    else:
+        actual_prompt = arizona_context + base_prompt
+
+    # Resolve outbound caller ID
+    telnyx_phone = getattr(settings, "TELNYX_PHONE_NUMBER", "") or os.getenv("TELNYX_PHONE_NUMBER", "+18005550199")
+    caller_caller_id = from_number or extra_context.get("from_number") or telnyx_phone
 
     # 1. Start the LiveKit voice agent session for this room
     agent_config = {
         "instructions": actual_prompt,
         "phone_number": clean_phone,
-        "caller": "LiveKit Outbound Dispatcher",
+        "caller": caller_caller_id,
         "called": clean_phone,
-        "assistant_id": client_id or "ana-sales",
-        "assistant_name": "Ana (Outbound Sales)",
+        "assistant_id": cid,
+        "assistant_name": default_name,
         "direction": "outbound",
-        "tts_voice": "flux-heather-en",
-        "stt_model": "nova-3",
-        "llm_model": "gemini-3.1-flash-lite",
-        "greeting": "Hey, this is Ana with OrxLabs — I'm actually an AI, but I'll keep it quick. Do you have a couple minutes to chat?",
+        "tts_voice": default_voice,
+        "stt_model": default_stt,
+        "llm_model": default_llm,
+        "greeting": default_greeting,
+        "business_name": biz_name,
+        "address": biz_addr,
+        "operating_hours": biz_hours,
+        "timezone": extra_context.get("timezone") or ("America/Phoenix" if cid in ("marcus-sales", "ana-sales") else "America/Chicago"),
+        "provider": provider,
+        **extra_context,
     }
     session_res = await start_voice_agent_for_room(actual_room, agent_config)
 
@@ -1571,15 +1896,15 @@ async def create_outbound_call(
 
     elif provider == "telnyx":
         telnyx_key = getattr(settings, "TELNYX_API_KEY", "") or os.getenv("TELNYX_API_KEY", "")
-        telnyx_phone = getattr(settings, "TELNYX_PHONE_NUMBER", "") or os.getenv("TELNYX_PHONE_NUMBER", "+18005550199")
         conn_id = getattr(settings, "TELNYX_SIP_CONNECTION_ID", "") or os.getenv("TELNYX_SIP_CONNECTION_ID", "")
+        active_from_number = from_number or extra_context.get("from_number") or telnyx_phone
 
         if telnyx_key:
             try:
                 async with httpx.AsyncClient(timeout=10.0) as client:
                     payload = {
                         "to": clean_phone,
-                        "from": telnyx_phone,
+                        "from": active_from_number,
                         "connection_id": conn_id,
                         "custom_headers": [{"name": "X-LiveKit-Room", "value": actual_room}],
                     }
@@ -1663,8 +1988,15 @@ async def create_outbound_call(
                 "from": tw_phone,
                 "notice": "TWILIO_ACCOUNT_SID/TWILIO_AUTH_TOKEN not configured; outbound dispatch simulated successfully.",
             }
+    elif provider in ("browser", "webrtc", "mic"):
+        dispatch_info = {
+            "provider": "browser",
+            "status": "ready",
+            "room_name": actual_room,
+            "notice": "WebRTC browser session ready. Connect via microphone over LiveKit.",
+        }
     else:
-        raise ValueError(f"Unsupported outbound provider: '{provider}'. Supported: 'telnyx', 'twilio', 'livekit'")
+        raise ValueError(f"Unsupported outbound provider: '{provider}'. Supported: 'telnyx', 'twilio', 'livekit', 'browser'")
 
     return {
         "success": True,

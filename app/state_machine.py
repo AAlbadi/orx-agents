@@ -52,7 +52,7 @@ MARCUS_BENEFITS_ARSENAL: Dict[str, str] = {
         "Our AI answers on ring one, knows HVAC terminology, books the job, and costs ten times less."
     ),
     "starter_plan_low_key": (
-        "There are zero setup fees, no contracts, and it starts at just ninety-nine bucks a month with two hundred minutes included. "
+        "There are zero setup fees, no contracts, and it starts at just twenty bucks a month with fifty minutes included, then twenty-five cents a minute for extra. "
         "You can hear the demo first, and activate it right inside that link in less than a minute."
     ),
 }
@@ -66,7 +66,7 @@ Follow this natural conversational cadence:
 1. Turn 1: Warm discovery covering calls when busy on a job AND after hours.
 2. Turn 2: Connect the pain (busy on ladder + after-hours calls losing leads to Google) and present 24/7 calendar booking relief. Ask: 'Would that be something you'd be interested in?' STOP TALKING. Do NOT offer the link or ask for the number yet!
 3. Q&A / Objections: If they ask questions, hesitate, or object, answer warmly and directly, build connection, and check understanding ('Does that make sense?' or 'Does that sound fair?'). NEVER push for the phone number repeatedly while they have questions!
-4. Turn 3: When they explicitly say yes / agree to get the link: THEN say you can send a demo link so they can hear it and decide if they like it. Mention it's super low-key starting at ninety-nine bucks a month with two hundred minutes included and no contracts, and ask for their mobile number!
+4. Turn 3: When they explicitly say yes / agree to get the link: THEN say you can send a demo link so they can hear it and decide if they like it. Mention it's really affordable starting at twenty bucks a month with fifty minutes included, then twenty-five cents a minute for extra, and no contracts, and ask for their mobile number!
 5. Turn 4: Capture mobile, verify number, and clean sign-off with goodbye.
 6. Opt-Out / Disinterest: If the prospect expresses firm disinterest or says they don't want it anymore, warmly sign off ('Totally understand, no worries at all. Have a wonderful day!') and immediately end the call.
 </identity>
@@ -119,10 +119,10 @@ STRICT RULES:
     "demo_link_offer": """<current_goal: OFFER_DEMO_LINK_AND_CAPTURE_MOBILE>
 The prospect said YES or showed interest in the solution ("yeah definitely", "yes", "sounds good", "sure", "I'd be interested")!
 NOW AND ONLY NOW OFFER THE LINK AND ASK FOR MOBILE:
-- "Awesome! I can send you a quick demo link so you can hear it for yourself, and then you decide if it's something you like. If you like it, it's super low-key—starts at just ninety-nine bucks a month with two hundred minutes included and no contracts, and you can activate it right inside that link in under a minute. What's the best mobile number to text that over to?"
+- "Awesome! I can send you a quick demo link so you can hear it for yourself, and then you decide if it's something you like. If you like it, it's really affordable—starts at just twenty bucks a month with fifty minutes included, then twenty-five cents a minute for extra, and no contracts, and you can activate it right inside that link in under a minute. What's the best mobile number to text that over to?"
 STRICT RULES:
 - Propose sending the demo link so they can hear it and decide.
-- Mention it's super low-key starting at ninety-nine bucks with two hundred minutes included and no contracts.
+- Mention it's really affordable starting at twenty bucks with fifty minutes included, then twenty-five cents a minute for extra, and no contracts.
 - Ask for their mobile number to text the link to.
 </current_goal>""",
 
@@ -177,8 +177,8 @@ MARCUS_STAGES["value_and_demo"] = MARCUS_STAGES["demo_link_offer"]
 MARCUS_STAGES["demo_bridge"] = MARCUS_STAGES["demo_fallback"]
 
 MARCUS_OBJECTIONS: Dict[str, str] = {
-    "pricing": "OBJECTION (Pricing / Cost): 'It\\'s super low-key—starts at just ninety-nine bucks a month, which includes two hundred minutes of answered calls, your dedicated line, and calendar booking with zero long-term contracts. Most contractors find that saving just one missed job covers the whole year. Does that sound fair?'",
-    "answering_service": "OBJECTION (Answering Service): 'Totally get that! But human answering services charge $400 a month, put people on 4-minute holds, and just scribble down a message. Ours answers calls on ring one, books the job directly into your calendar, and costs ten times less. Does that make sense?'",
+    "pricing": "OBJECTION (Pricing / Cost): 'Honestly it\\'s really affordable—starts at just twenty bucks a month, which includes fifty minutes of answered calls, then twenty-five cents a minute for extra, your dedicated line, and calendar booking with zero long-term contracts. Most contractors find that saving just one missed job covers the whole month. Does that sound fair?'",
+    "answering_service": "OBJECTION (Answering Service): 'Totally get that! But human answering services charge $400 a month, put people on 4-minute holds, and just scribble down a message. Ours answers calls on ring one, books the job directly into your calendar, and starts at twenty bucks with fifty minutes included, then twenty-five cents a minute for extra. Does that make sense?'",
     "we_manage": "OBJECTION (We Manage Fine / Voicemail): 'I hear you! But when someone calls for service after hours, homeowners rarely wait—they tap the next contractor on Google and that lead is lost. Plus, after a long day in the field, you don\\'t have to spend your evening calling back voicemails. Would that be something helpful for you guys?'",
     "busy": "OBJECTION (Busy Running Jobs): 'Totally understand, you\\'re slammed running jobs! That\\'s actually why contractors use this—so you never miss calls and leads while you\\'re up in an attic or on a ladder. Would you be open to hearing how it works whenever you get a quick breather?'",
     "ai_skeptic": "OBJECTION (AI Sounds Bad / Skeptic): 'Honestly, I get that—most AI sounds like a robotic GPS. But ours uses ultra-realistic human voices with natural conversational pacing. Would you be open to hearing a quick sample to see what you think?'",

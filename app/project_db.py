@@ -142,6 +142,7 @@ def init_project_db(client_id: str):
         CREATE INDEX IF NOT EXISTS idx_appointments_date ON appointments(appointment_date);
         CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status);
         CREATE INDEX IF NOT EXISTS idx_call_logs_caller ON call_logs(caller_phone);
+        CREATE VIEW IF NOT EXISTS calls AS SELECT * FROM call_logs;
         """)
 
         # Migrations for existing project databases
@@ -172,7 +173,12 @@ def init_project_db(client_id: str):
             ("verified_at", "TEXT DEFAULT ''"),
             ("sms_phone", "TEXT DEFAULT ''"),
             ("after_hours_action", "TEXT DEFAULT 'book_morning'"),
+            ("night_action", "TEXT DEFAULT 'book_morning'"),
             ("answering_coverage", "TEXT DEFAULT 'always_24_7'"),
+            ("overflow_delay_seconds", "INTEGER DEFAULT 15"),
+            ("schedule_config", "TEXT DEFAULT ''"),
+            ("transfer_to_human_policy", "TEXT DEFAULT 'life_safety_emergencies'"),
+            ("human_transfer_policy", "TEXT DEFAULT 'life_safety_emergencies'"),
         ]:
             if col_name not in pm_cols:
                 try:
@@ -182,7 +188,12 @@ def init_project_db(client_id: str):
 
         for col_name, col_def in [
             ("after_hours_action", "TEXT DEFAULT 'book_morning'"),
+            ("night_action", "TEXT DEFAULT 'book_morning'"),
             ("answering_coverage", "TEXT DEFAULT 'always_24_7'"),
+            ("overflow_delay_seconds", "INTEGER DEFAULT 15"),
+            ("schedule_config", "TEXT DEFAULT ''"),
+            ("transfer_to_human_policy", "TEXT DEFAULT 'life_safety_emergencies'"),
+            ("human_transfer_policy", "TEXT DEFAULT 'life_safety_emergencies'"),
         ]:
             if col_name not in cp_cols:
                 try:
@@ -204,6 +215,14 @@ def init_project_db(client_id: str):
                     cur.execute(f"ALTER TABLE google_calendar_config ADD COLUMN {col_name} {col_def}")
                 except Exception:
                     pass
+
+        cur.execute("SELECT client_id FROM project_meta WHERE client_id = ?", (client_id,))
+        if not cur.fetchone():
+            now_dt = time.strftime("%Y-%m-%d %H:%M:%S")
+            cur.execute("""
+                INSERT OR IGNORE INTO project_meta (client_id, project_name, business_name, status, created_at, updated_at)
+                VALUES (?, ?, ?, 'active', ?, ?)
+            """, (client_id, f"{client_id} Project", client_id, now_dt, now_dt))
 
         conn.commit()
     finally:
@@ -282,15 +301,56 @@ def create_project(data: Dict[str, Any], trigger_source: str = "admin") -> Dict[
         assigned = data.get("assigned_phone") or data.get("phone") or "+1 (833) 420-5227"
         owner_phone = data.get("owner_phone") or forwarding
         owner_email = data.get("owner_email") or data.get("email") or ""
-        timezone = data.get("timezone") or "America/New_York"
         status = data.get("status") or "active"
         sms_enabled = 1 if data.get("sms_notifications_enabled", True) else 0
         connection_status = data.get("connection_status") or "pending"
         carrier = data.get("carrier") or "Verizon"
         verified_at = data.get("verified_at") or data.get("forwarding_setup_at") or ""
         sms_phone = data.get("sms_phone") or forwarding or owner_phone
-        after_hours_action = data.get("after_hours_action") or data.get("night_action") or "book_morning"
-        answering_coverage = data.get("answering_coverage") or data.get("schedule_mode") or "always_24_7"
+
+        sched_cfg = data.get("schedule_config") or {}
+        if isinstance(sched_cfg, dict):
+            raw_tz = data.get("timezone") or sched_cfg.get("timezone") or "America/New_York"
+            after_hours_action = data.get("after_hours_action") or data.get("night_action") or sched_cfg.get("after_hours_action") or sched_cfg.get("night_action") or "book_morning"
+            raw_cov = str(data.get("answering_coverage") or data.get("schedule_mode") or sched_cfg.get("mode") or sched_cfg.get("answering_coverage") or sched_cfg.get("answering_mode") or "always_24_7").lower()
+            raw_delay = data.get("overflow_delay_seconds")
+            if raw_delay is None:
+                raw_delay = sched_cfg.get("overflowDelaySecs")
+            if raw_delay is None:
+                raw_delay = sched_cfg.get("overflow_delay_secs")
+            if raw_delay is None:
+                raw_delay = 15
+            sched_cfg_str = json.dumps(sched_cfg)
+        else:
+            raw_tz = data.get("timezone") or "America/New_York"
+            after_hours_action = data.get("after_hours_action") or data.get("night_action") or "book_morning"
+            raw_cov = str(data.get("answering_coverage") or data.get("schedule_mode") or "always_24_7").lower()
+            raw_delay = data.get("overflow_delay_seconds")
+            if raw_delay is None:
+                raw_delay = 15
+            sched_cfg_str = str(sched_cfg)
+
+        if "after" in raw_cov:
+            answering_coverage = "after_hours"
+        elif "overflow" in raw_cov:
+            answering_coverage = "overflow"
+        else:
+            answering_coverage = "always_24_7"
+
+        try:
+            overflow_delay_seconds = int(raw_delay)
+        except Exception:
+            overflow_delay_seconds = 15
+
+        from app.onboarding import clean_timezone, compile_agent_prompt
+        timezone = clean_timezone(raw_tz)
+        night_action = after_hours_action
+        transfer_to_human_policy = (
+            data.get("transfer_to_human_policy")
+            or data.get("human_transfer_policy")
+            or data.get("transfer_policy")
+            or "life_safety_emergencies"
+        )
 
         cur.execute("""
             INSERT INTO project_meta (
@@ -298,9 +358,10 @@ def create_project(data: Dict[str, Any], trigger_source: str = "admin") -> Dict[
                 forwarding_phone, assigned_phone, owner_phone, owner_email,
                 timezone, status, trigger_source, sms_notifications_enabled,
                 connection_status, carrier, verified_at, sms_phone,
-                after_hours_action, answering_coverage,
+                after_hours_action, night_action, answering_coverage,
+                overflow_delay_seconds, schedule_config, transfer_to_human_policy,
                 created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(client_id) DO UPDATE SET
                 project_name=excluded.project_name,
                 business_name=excluded.business_name,
@@ -318,20 +379,24 @@ def create_project(data: Dict[str, Any], trigger_source: str = "admin") -> Dict[
                 verified_at=excluded.verified_at,
                 sms_phone=excluded.sms_phone,
                 after_hours_action=excluded.after_hours_action,
+                night_action=excluded.night_action,
                 answering_coverage=excluded.answering_coverage,
+                overflow_delay_seconds=excluded.overflow_delay_seconds,
+                schedule_config=excluded.schedule_config,
+                transfer_to_human_policy=excluded.transfer_to_human_policy,
                 updated_at=excluded.updated_at
         """, (
             clean_id, project_name, biz_name, industry, address,
             forwarding, assigned, owner_phone, owner_email,
             timezone, status, trigger_source, sms_enabled,
             connection_status, carrier, verified_at, sms_phone,
-            after_hours_action, answering_coverage,
+            after_hours_action, night_action, answering_coverage,
+            overflow_delay_seconds, sched_cfg_str, transfer_to_human_policy,
             now_str, now_str
         ))
 
         # 2. Custom Prompt & Character-Optimized LiveKit Voice Instructions
         persona_name = data.get("persona_name") or "Riley"
-        from app.onboarding import compile_agent_prompt
         system_prompt = data.get("compiled_prompt") or data.get("system_prompt") or ""
         if not system_prompt or len(system_prompt) < 400:
             system_prompt = compile_agent_prompt(data)
@@ -360,8 +425,9 @@ def create_project(data: Dict[str, Any], trigger_source: str = "admin") -> Dict[
                 client_id, persona_name, system_prompt, livekit_prompt, first_message,
                 tts_voice, voice_speed, services, emergency_triggers,
                 hours, pricing_policy, booking_action, custom_qa, tone_preset,
-                after_hours_action, answering_coverage, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                after_hours_action, night_action, answering_coverage, overflow_delay_seconds, schedule_config,
+                transfer_to_human_policy, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(client_id) DO UPDATE SET
                 persona_name=excluded.persona_name,
                 system_prompt=excluded.system_prompt,
@@ -377,13 +443,18 @@ def create_project(data: Dict[str, Any], trigger_source: str = "admin") -> Dict[
                 custom_qa=excluded.custom_qa,
                 tone_preset=excluded.tone_preset,
                 after_hours_action=excluded.after_hours_action,
+                night_action=excluded.night_action,
                 answering_coverage=excluded.answering_coverage,
+                overflow_delay_seconds=excluded.overflow_delay_seconds,
+                schedule_config=excluded.schedule_config,
+                transfer_to_human_policy=excluded.transfer_to_human_policy,
                 updated_at=excluded.updated_at
         """, (
             clean_id, persona_name, system_prompt, livekit_prompt, first_message,
             tts_voice, voice_speed, services, emergency_triggers,
             hours, pricing_policy, booking_action, qa_str, tone_preset,
-            after_hours_action, answering_coverage, now_str
+            after_hours_action, night_action, answering_coverage, overflow_delay_seconds, sched_cfg_str,
+            transfer_to_human_policy, now_str
         ))
 
         # 3. Google Calendar Config
@@ -472,7 +543,7 @@ def create_project(data: Dict[str, Any], trigger_source: str = "admin") -> Dict[
                 {"speaker": "assistant", "text": f"Thank you for calling {biz_name}! This is {persona_name}. How can I assist you today?"},
                 {"speaker": "customer", "text": "Hello, I was wondering how much your diagnostic fee is for a maintenance check?"},
                 {"speaker": "assistant", "text": f"Great question! {pricing_policy or 'Our diagnostic fee is credited directly toward any repair you approve.'} Would you like me to see our earliest openings for this week?"},
-                {"speaker": "customer", "text": "Okay, that sounds fair. Let me check with my husband and call back this afternoon. Thank you!"},
+                {"speaker": "customer", "text": "Okay, that sounds fair. Let me check with my spouse and call back this afternoon. Thank you!"},
                 {"speaker": "assistant", "text": f"You're very welcome! Have a wonderful day, and we're here whenever you're ready."}
             ]
             cur.execute("""
@@ -584,9 +655,7 @@ def get_project(client_id: str) -> Optional[Dict[str, Any]]:
     try:
         cur.execute("SELECT * FROM project_meta WHERE client_id = ?", (clean_id,))
         meta_row = cur.fetchone()
-        if not meta_row:
-            return None
-        meta = dict(meta_row)
+        meta = dict(meta_row) if meta_row else {"client_id": clean_id, "business_name": clean_id, "status": "active"}
 
         cur.execute("SELECT * FROM custom_prompt WHERE client_id = ?", (clean_id,))
         prompt_row = cur.fetchone()
@@ -596,6 +665,18 @@ def get_project(client_id: str) -> Optional[Dict[str, Any]]:
                 prompt["custom_qa"] = json.loads(prompt["custom_qa"])
             except Exception:
                 pass
+
+        for json_key in ["schedule_config", "services", "emergency_triggers", "allowed_topics", "custom_topics"]:
+            if json_key in meta and isinstance(meta[json_key], str) and meta[json_key].strip().startswith(("{", "[")):
+                try:
+                    meta[json_key] = json.loads(meta[json_key])
+                except Exception:
+                    pass
+            if json_key in prompt and isinstance(prompt[json_key], str) and prompt[json_key].strip().startswith(("{", "[")):
+                try:
+                    prompt[json_key] = json.loads(prompt[json_key])
+                except Exception:
+                    pass
 
         cur.execute("SELECT * FROM google_calendar_config WHERE client_id = ?", (clean_id,))
         cal_row = cur.fetchone()
@@ -661,32 +742,78 @@ def update_project(client_id: str, updates: Dict[str, Any]) -> Dict[str, Any]:
         # Update Meta fields
         meta_fields = ["project_name", "business_name", "industry", "address",
                        "forwarding_phone", "assigned_phone", "owner_phone",
-                       "owner_email", "timezone", "status", "sms_notifications_enabled"]
+                       "owner_email", "timezone", "status", "sms_notifications_enabled",
+                       "after_hours_action", "night_action", "answering_coverage",
+                       "overflow_delay_seconds", "schedule_config", "transfer_to_human_policy", "human_transfer_policy"]
         meta_updates = {k: updates[k] for k in meta_fields if k in updates}
+        if "human_transfer_policy" in updates and "transfer_to_human_policy" not in meta_updates:
+            meta_updates["transfer_to_human_policy"] = updates["human_transfer_policy"]
+        if "transfer_policy" in updates and "transfer_to_human_policy" not in meta_updates:
+            meta_updates["transfer_to_human_policy"] = updates["transfer_policy"]
+
         if meta_updates:
             set_clause = ", ".join([f"{k} = ?" for k in meta_updates.keys()])
-            params = list(meta_updates.values()) + [now_str, clean_id]
+            params = [(json.dumps(v) if isinstance(v, (dict, list)) else v) for v in meta_updates.values()] + [now_str, clean_id]
             cur.execute(f"UPDATE project_meta SET {set_clause}, updated_at = ? WHERE client_id = ?", params)
+
+        # Map field aliases
+        if "human_transfer_policy" in updates:
+            updates["transfer_to_human_policy"] = updates["human_transfer_policy"]
+        elif "transfer_policy" in updates:
+            updates["transfer_to_human_policy"] = updates["transfer_policy"]
+        elif "transfer_to_human_policy" in updates:
+            updates["human_transfer_policy"] = updates["transfer_to_human_policy"]
+
+        if "diagnostic_fee" in updates and "pricing_policy" not in updates:
+            updates["pricing_policy"] = f"Diagnostic fee: {updates['diagnostic_fee']}"
+        if "pricing_fee" in updates and "pricing_policy" not in updates:
+            updates["pricing_policy"] = f"Diagnostic fee: {updates['pricing_fee']}"
+        if "booking_rule" in updates and "booking_action" not in updates:
+            updates["booking_action"] = f"Rule {updates['booking_rule']}"
 
         # Update Prompt fields
         prompt_fields = ["persona_name", "system_prompt", "livekit_prompt", "first_message", "tts_voice",
                          "voice_speed", "services", "emergency_triggers", "hours",
-                         "pricing_policy", "booking_action"]
+                         "pricing_policy", "booking_action", "after_hours_action", "night_action",
+                         "answering_coverage", "overflow_delay_seconds", "schedule_config",
+                         "transfer_to_human_policy", "human_transfer_policy"]
         prompt_updates = {k: updates[k] for k in prompt_fields if k in updates}
+        if "human_transfer_policy" in updates and "transfer_to_human_policy" not in prompt_updates:
+            prompt_updates["transfer_to_human_policy"] = updates["human_transfer_policy"]
+        if "transfer_policy" in updates and "transfer_to_human_policy" not in prompt_updates:
+            prompt_updates["transfer_to_human_policy"] = updates["transfer_policy"]
+
+        if "tts_voice" not in prompt_updates and ("persona_voice" in updates or "voice" in updates):
+            prompt_updates["tts_voice"] = updates.get("persona_voice") or updates.get("voice")
         if "custom_qa" in updates:
             qa_val = updates["custom_qa"]
             prompt_updates["custom_qa"] = json.dumps(qa_val) if isinstance(qa_val, list) else str(qa_val)
 
         # If voice instructions or business settings changed and no explicit livekit_prompt given, recompile
-        if "livekit_prompt" not in updates and any(k in updates for k in ["business_name", "persona_name", "hours", "services", "pricing_policy", "transfer_rules"]):
+        recompile_keys = [
+            "business_name", "persona_name", "hours", "services", "pricing_policy",
+            "diagnostic_fee", "pricing_fee", "fee_amount", "booking_action", "booking_mode",
+            "booking_rule", "booking_preference", "transfer_rules", "answering_coverage",
+            "overflow_delay_seconds", "schedule_config", "after_hours_action", "night_action", "timezone",
+            "transfer_to_human_policy", "human_transfer_policy", "transfer_policy"
+        ]
+        if "livekit_prompt" not in updates and any(k in updates for k in recompile_keys):
             combined_data = proj.get("meta", {}).copy()
             combined_data.update(proj.get("prompt", {}))
             combined_data.update(updates)
-            prompt_updates["livekit_prompt"] = compile_livekit_voice_prompt(combined_data)
+            if "transfer_to_human_policy" in updates:
+                combined_data["transfer_to_human_policy"] = updates["transfer_to_human_policy"]
+                combined_data["human_transfer_policy"] = updates["transfer_to_human_policy"]
+            combined_data.pop("livekit_prompt", None)
+            combined_data.pop("system_prompt", None)
+            combined_data.pop("compiled_prompt", None)
+            recompiled = compile_livekit_voice_prompt(combined_data)
+            prompt_updates["livekit_prompt"] = recompiled
+            prompt_updates["system_prompt"] = recompiled
 
         if prompt_updates:
             set_clause = ", ".join([f"{k} = ?" for k in prompt_updates.keys()])
-            params = list(prompt_updates.values()) + [now_str, clean_id]
+            params = [(json.dumps(v) if isinstance(v, (dict, list)) else v) for v in prompt_updates.values()] + [now_str, clean_id]
             cur.execute(f"UPDATE custom_prompt SET {set_clause}, updated_at = ? WHERE client_id = ?", params)
 
         # Update Calendar fields
@@ -696,7 +823,7 @@ def update_project(client_id: str, updates: Dict[str, Any]) -> Dict[str, Any]:
         cal_updates = {k: updates[k] for k in cal_fields if k in updates}
         if cal_updates:
             set_clause = ", ".join([f"{k} = ?" for k in cal_updates.keys()])
-            params = list(cal_updates.values()) + [clean_id]
+            params = [(json.dumps(v) if isinstance(v, (dict, list)) else v) for v in cal_updates.values()] + [clean_id]
             cur.execute(f"UPDATE google_calendar_config SET {set_clause} WHERE client_id = ?", params)
 
         conn.commit()
@@ -725,41 +852,68 @@ def delete_project(client_id: str) -> bool:
 def save_project_calendar_config(client_id: str, cal_data: Dict[str, Any]) -> Dict[str, Any]:
     """Updates client-specific Google Calendar configuration and slot limits."""
     clean_id = re.sub(r'[^a-zA-Z0-9_\-]', '_', client_id)
+    init_project_db(clean_id)
     conn = get_db_connection(clean_id)
     cur = conn.cursor()
     try:
-        cur.execute("""
-            UPDATE google_calendar_config SET
-                calendar_id = COALESCE(?, calendar_id),
-                service_account_json = COALESCE(?, service_account_json),
-                calendar_webhook_url = COALESCE(?, calendar_webhook_url),
-                sync_enabled = COALESCE(?, sync_enabled),
-                morning_slot_capacity = COALESCE(?, morning_slot_capacity),
-                afternoon_slot_capacity = COALESCE(?, afternoon_slot_capacity),
-                evening_slot_capacity = COALESCE(?, evening_slot_capacity),
-                is_connected = COALESCE(?, is_connected),
-                last_tested_at = COALESCE(?, last_tested_at),
-                last_status = COALESCE(?, last_status),
-                last_error = COALESCE(?, last_error),
-                auth_type = COALESCE(?, auth_type),
-                oauth_user_email = COALESCE(?, oauth_user_email)
-            WHERE client_id = ?
-        """, (
-            cal_data.get("calendar_id"),
-            cal_data.get("service_account_json"),
-            cal_data.get("calendar_webhook_url"),
-            cal_data.get("sync_enabled"),
-            cal_data.get("morning_slot_capacity"),
-            cal_data.get("afternoon_slot_capacity"),
-            cal_data.get("evening_slot_capacity"),
-            cal_data.get("is_connected"),
-            cal_data.get("last_tested_at"),
-            cal_data.get("last_status"),
-            cal_data.get("last_error"),
-            cal_data.get("auth_type"),
-            cal_data.get("oauth_user_email"),
-            clean_id
-        ))
+        cur.execute("SELECT client_id FROM google_calendar_config WHERE client_id = ?", (clean_id,))
+        if not cur.fetchone():
+            cur.execute("""
+                INSERT INTO google_calendar_config (
+                    client_id, calendar_id, service_account_json, calendar_webhook_url,
+                    sync_enabled, morning_slot_capacity, afternoon_slot_capacity,
+                    evening_slot_capacity, is_connected, last_tested_at, last_status,
+                    last_error, auth_type, oauth_user_email
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                clean_id,
+                cal_data.get("calendar_id", "primary"),
+                cal_data.get("service_account_json", ""),
+                cal_data.get("calendar_webhook_url", ""),
+                int(cal_data.get("sync_enabled", 1) or 1),
+                int(cal_data.get("morning_slot_capacity", 2) or 2),
+                int(cal_data.get("afternoon_slot_capacity", 2) or 2),
+                int(cal_data.get("evening_slot_capacity", 2) or 2),
+                int(cal_data.get("is_connected", 0) or 0),
+                cal_data.get("last_tested_at", ""),
+                cal_data.get("last_status", "untested"),
+                cal_data.get("last_error", ""),
+                cal_data.get("auth_type", "freebusy"),
+                cal_data.get("oauth_user_email", "")
+            ))
+        else:
+            cur.execute("""
+                UPDATE google_calendar_config SET
+                    calendar_id = COALESCE(?, calendar_id),
+                    service_account_json = COALESCE(?, service_account_json),
+                    calendar_webhook_url = COALESCE(?, calendar_webhook_url),
+                    sync_enabled = COALESCE(?, sync_enabled),
+                    morning_slot_capacity = COALESCE(?, morning_slot_capacity),
+                    afternoon_slot_capacity = COALESCE(?, afternoon_slot_capacity),
+                    evening_slot_capacity = COALESCE(?, evening_slot_capacity),
+                    is_connected = COALESCE(?, is_connected),
+                    last_tested_at = COALESCE(?, last_tested_at),
+                    last_status = COALESCE(?, last_status),
+                    last_error = COALESCE(?, last_error),
+                    auth_type = COALESCE(?, auth_type),
+                    oauth_user_email = COALESCE(?, oauth_user_email)
+                WHERE client_id = ?
+            """, (
+                cal_data.get("calendar_id"),
+                cal_data.get("service_account_json"),
+                cal_data.get("calendar_webhook_url"),
+                cal_data.get("sync_enabled"),
+                cal_data.get("morning_slot_capacity"),
+                cal_data.get("afternoon_slot_capacity"),
+                cal_data.get("evening_slot_capacity"),
+                cal_data.get("is_connected"),
+                cal_data.get("last_tested_at"),
+                cal_data.get("last_status"),
+                cal_data.get("last_error"),
+                cal_data.get("auth_type"),
+                cal_data.get("oauth_user_email"),
+                clean_id
+            ))
         conn.commit()
     finally:
         conn.close()
@@ -780,10 +934,26 @@ def get_project_calendar_config(client_id: str) -> Dict[str, Any]:
     if cal_file.exists():
         try:
             cal_data = json.loads(cal_file.read_text())
-            if cal_data:
+            if cal_data and cal_data.get("is_connected"):
                 return cal_data
         except Exception:
             pass
+
+    # 2. Query dedicated client.db directly
+    db_path = get_db_path(clean_id)
+    if db_path.exists():
+        conn = get_db_connection(clean_id)
+        cur = conn.cursor()
+        try:
+            cur.execute("SELECT * FROM google_calendar_config WHERE client_id = ?", (clean_id,))
+            row = cur.fetchone()
+            if row:
+                cal = dict(row)
+                return cal
+        except Exception:
+            pass
+        finally:
+            conn.close()
 
     proj = get_project(clean_id)
     if not proj or not proj.get("calendar"):
@@ -917,6 +1087,17 @@ def save_project_call(client_id: str, call_data: Dict[str, Any]) -> Dict[str, An
         conn.close()
 
     logger.info(f"Recorded call #{call_id} in dedicated DB for '{clean_id}'")
+
+    # Ingest call minutes into Polar for live usage-based metered billing
+    try:
+        dur_sec = float(call_data.get("duration", 0.0))
+        if dur_sec > 0:
+            dur_mins = round(dur_sec / 60.0, 2)
+            from app.onboarding import report_usage_event_to_polar
+            report_usage_event_to_polar(clean_id, dur_mins)
+    except Exception as usage_err:
+        logger.debug(f"Polar event report notice: {usage_err}")
+
     return call_data
 
 

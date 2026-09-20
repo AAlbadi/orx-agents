@@ -2698,27 +2698,26 @@ def simulate_agent_turn(client_profile: Dict[str, Any], user_message: str, histo
                 model=settings.GROQ_MODEL,
                 messages=messages,
                 temperature=0.4,
-                max_tokens=600,
+                max_tokens=100,
             )
             reply = completion.choices[0].message.content.strip()
             reply = reply.replace("*", "").replace("#", "").replace("- ", "")
 
-            if reply and len(reply) >= 10:
-                # Check if model triggered an emergency escalation or transfer
-                if any(t in reply.lower() for t in ["connecting you", "transferring you", "on-call", "emergency team", "evacuate", "step outside"]):
-                    if pol_id != "never_transfer_take_message":
-                        is_transfer = True
-                    if telemetry_badge == "STANDARD INQUIRY":
-                        telemetry_badge = "EMERGENCY TRIAGE"
-                elif telemetry_badge == "STANDARD INQUIRY" and any(t in reply.lower() for t in ["diy", "safety reasons", "cannot provide", "can't provide", "evaluate this in person", "certified technician"]):
-                    telemetry_badge = "GUARDRAIL ENFORCED"
+            # Check if model triggered an emergency escalation or transfer
+            if any(t in reply.lower() for t in ["connecting you", "transferring you", "on-call", "emergency team", "evacuate", "step outside"]):
+                if pol_id != "never_transfer_take_message":
+                    is_transfer = True
+                if telemetry_badge == "STANDARD INQUIRY":
+                    telemetry_badge = "EMERGENCY TRIAGE"
+            elif telemetry_badge == "STANDARD INQUIRY" and any(t in reply.lower() for t in ["diy", "safety reasons", "cannot provide", "can't provide", "evaluate this in person", "certified technician"]):
+                telemetry_badge = "GUARDRAIL ENFORCED"
 
-                return {
-                    "response": reply,
-                    "is_transfer": is_transfer,
-                    "telemetry_badge": telemetry_badge,
-                    "business_name": biz_name,
-                }
+            return {
+                "response": reply,
+                "is_transfer": is_transfer,
+                "telemetry_badge": telemetry_badge,
+                "business_name": biz_name,
+            }
         except Exception as e:
             logger.warning(f"Groq turn simulation fallback: {e}")
 
@@ -2737,30 +2736,29 @@ def simulate_agent_turn(client_profile: Dict[str, Any], user_message: str, histo
             messages.append({"role": "user", "content": user_message})
 
             completion = g_client.chat.completions.create(
-                model=getattr(settings, "GEMINI_MODEL", "gemini-2.5-flash"),
+                model=getattr(settings, "GEMINI_MODEL", "gemini-3.1-flash-lite"),
                 messages=messages,
                 temperature=0.4,
-                max_tokens=600,
+                max_tokens=100,
             )
             reply = completion.choices[0].message.content.strip()
             reply = reply.replace("*", "").replace("#", "").replace("- ", "")
 
-            if reply and len(reply) >= 10:
-                # Check if model triggered an emergency escalation or transfer
-                if any(t in reply.lower() for t in ["connecting you", "transferring you", "on-call", "emergency team", "evacuate", "step outside"]):
-                    if pol_id != "never_transfer_take_message":
-                        is_transfer = True
-                    if telemetry_badge == "STANDARD INQUIRY":
-                        telemetry_badge = "EMERGENCY TRIAGE"
-                elif telemetry_badge == "STANDARD INQUIRY" and any(t in reply.lower() for t in ["diy", "safety reasons", "cannot provide", "can't provide", "evaluate this in person", "certified technician"]):
-                    telemetry_badge = "GUARDRAIL ENFORCED"
+            # Check if model triggered an emergency escalation or transfer
+            if any(t in reply.lower() for t in ["connecting you", "transferring you", "on-call", "emergency team", "evacuate", "step outside"]):
+                if pol_id != "never_transfer_take_message":
+                    is_transfer = True
+                if telemetry_badge == "STANDARD INQUIRY":
+                    telemetry_badge = "EMERGENCY TRIAGE"
+            elif telemetry_badge == "STANDARD INQUIRY" and any(t in reply.lower() for t in ["diy", "safety reasons", "cannot provide", "can't provide", "evaluate this in person", "certified technician"]):
+                telemetry_badge = "GUARDRAIL ENFORCED"
 
-                return {
-                    "response": reply,
-                    "is_transfer": is_transfer,
-                    "telemetry_badge": telemetry_badge,
-                    "business_name": biz_name,
-                }
+            return {
+                "response": reply,
+                "is_transfer": is_transfer,
+                "telemetry_badge": telemetry_badge,
+                "business_name": biz_name,
+            }
         except Exception as e:
             logger.warning(f"Gemini turn simulation fallback: {e}")
 
@@ -2821,63 +2819,18 @@ def simulate_agent_turn(client_profile: Dict[str, Any], user_message: str, histo
         addr = client_profile.get("address", "")
         clean_addr, clean_city = sanitize_address_and_city(addr, client_profile.get("city", ""))
         reply = f"We are based in {clean_city} and dispatch our fully equipped service units directly to your location. What is your street address?"
-    elif any(k in msg_lower for k in ["install", "new ac", "new unit", "replacement", "no ac", "don't have an ac", "need an ac", "new roof", "re-roof", "repipe", "panel replacement", "upgrade"]):
-        if trade_key == "roofing":
-            reply = f"We can definitely take care of that! We offer comprehensive on-site roof inspections and estimates. Would you like to check our available times for an estimate?"
-        elif trade_key == "plumbing":
-            reply = f"We can definitely take care of that! We provide on-site assessments and upfront quotes for all installations and fixture replacements. Would you like to check available appointment times?"
-        elif trade_key == "electrical":
-            reply = f"We can definitely help with that! Our licensed electricians provide full on-site assessments and transparent pricing. Would you like to schedule a consultation?"
-        elif trade_key == "auto":
-            reply = f"We can certainly assist with parts installation and major vehicle services. Would you like to schedule a time to drop off your vehicle?"
-        elif trade_key == "legal":
-            reply = f"We can schedule an initial legal consultation with one of our attorneys to evaluate your case. Would morning or afternoon suit you best?"
-        elif trade_key == "dental_medical":
-            reply = f"We would be delighted to welcome you to our practice! Would you like to schedule an initial consultation and examination?"
-        elif trade_key == "realestate":
-            reply = f"We can definitely assist you with your property goals! Would you like to connect with our listing specialist or view available properties?"
-        elif trade_key == "salon_spa":
-            reply = f"We would love to book your appointment! What specific treatments or services are you looking to receive?"
-        elif trade_key == "restaurant":
-            reply = f"We would love to accommodate you! Are you looking to reserve a table, place an order, or discuss private event catering?"
-        else:
-            reply = f"We can definitely take care of that! We offer free in-person estimates where our specialist inspects your setup and provides exact options. Would you like to check our available times for a free consultation?"
-    elif any(k in msg_lower for k in ["not working", "broken", "warm air", "shut off", "rattle", "noise", "cooling", "trouble", "issue", "problem", "leak", "won't turn", "damaged", "stain", "fault"]):
-        trade_trouble_prompts = {
-            "roofing": "Dealing with roof damage or a leak can be stressful! Can you tell me a bit more—is water actively dripping inside, or did you notice missing shingles or storm damage?",
-            "plumbing": "Plumbing issues can be so disruptive! What seems to be happening—is there an active water leak, a backed-up drain, or an issue with your water heater?",
-            "electrical": "Electrical problems require careful attention! What kind of issue are you seeing—is a circuit breaker constantly tripping, an outlet dead, or lights flickering?",
-            "hvac": "Oh no, dealing with heating or AC trouble is such a headache! What seems to be happening—is it blowing the wrong temperature, making a strange sound, or completely shut off?",
-            "auto": "Car trouble is always frustrating! What seems to be going on with the vehicle—is there a check engine light, an unusual sound, or a drivability issue?",
-            "dental_medical": "I am sorry to hear you are having discomfort. Could you describe the symptoms or dental issue you are experiencing so we can best assist you?",
-            "legal": "I understand this is an important matter. Could you briefly share what legal issue or dispute you are seeking counsel for?",
-            "realestate": "I'd be glad to help resolve any property inquiries. What specific question or issue do you have regarding the property or listing?",
-            "restaurant": "We are sorry to hear there is an issue with your order or reservation. Can you tell me what happened so we can make it right immediately?",
-            "salon_spa": "I would be happy to help adjust or resolve any questions about your booking or service. What can I do for you today?",
-            "general": "Oh no, dealing with trouble is such a headache! What seems to be happening, and how can our team best help you today?"
-        }
-        reply = trade_trouble_prompts.get(trade_key, trade_trouble_prompts["general"])
-    elif any(k in msg_lower for k in ["book", "schedule", "appointment", "come over", "visit", "when can someone", "tour", "reservation"]):
+    elif any(k in msg_lower for k in ["install", "new ac", "new unit", "replacement", "no ac", "don't have an ac", "need an ac"]):
+        reply = f"We can definitely take care of that! We offer free in-person estimates where our comfort specialist inspects your home layout and provides exact options. Would you like to check our available times for a free consultation?"
+    elif any(k in msg_lower for k in ["not working", "broken", "warm air", "shut off", "rattle", "noise", "cooling", "trouble", "issue", "problem", "leak", "won't turn"]):
+        reply = f"Oh no, dealing with trouble is such a headache! What seems to be happening with the system—is it blowing warm air, making a strange sound, or completely shut off?"
+    elif any(k in msg_lower for k in ["book", "schedule", "appointment", "come over", "visit", "when can someone"]):
         raw_b = str(client_profile.get("booking_action") or "").lower()
         if any(k in raw_b for k in ["text", "reach out", "callback", "owner schedules", "lead capture", "details"]):
-            reply = f"I can take down your contact details and request right now, and our team at {biz_name} will reach out to you shortly to coordinate the best time! What is the best phone number and address for you?"
+            reply = f"I can take down your service address and issue right now, and our service team at {biz_name} will reach out to you shortly to arrange the best appointment time! What is your street address?"
         else:
-            reply = f"I can get an arrival window scheduled for you right away with {biz_name}! We have openings today between one and three, or tomorrow morning between eight and eleven. Which works better for you?"
+            reply = f"I can get an arrival window scheduled for you right away for {biz_name}! We have openings today between one and three, or tomorrow morning between eight and eleven. Which works better for you?"
     else:
-        trade_greeting_prompts = {
-            "roofing": f"Thanks for calling {biz_name}, this is {persona_name}! We specialize in roof inspections, leak repairs, and full replacements. How can we help you today?",
-            "plumbing": f"Thanks for calling {biz_name}, this is {persona_name}! We handle all plumbing repairs, drain cleanings, and water heaters. How can we help you today?",
-            "electrical": f"Thanks for calling {biz_name}, this is {persona_name}! We handle all residential and commercial electrical service and panel upgrades. How can we assist you today?",
-            "hvac": f"Thanks for calling {biz_name}, this is {persona_name}! We can certainly take care of that for you. What seems to be going on with your heating or cooling today?",
-            "auto": f"Thanks for calling {biz_name}, this is {persona_name}! We provide complete auto repair, maintenance, and diagnostics. How can we help with your vehicle today?",
-            "dental_medical": f"Thanks for calling {biz_name}, this is {persona_name}! How may our care team assist you with an appointment or inquiry today?",
-            "legal": f"Thanks for calling {biz_name}, this is {persona_name}! How may our legal team assist you today?",
-            "realestate": f"Thanks for calling {biz_name}, this is {persona_name}! How can our realty team assist you with buying, selling, or touring today?",
-            "restaurant": f"Thanks for calling {biz_name}, this is {persona_name}! How can we assist you with reservations, our menu, or dining today?",
-            "salon_spa": f"Thanks for calling {biz_name}, this is {persona_name}! How may we assist you with scheduling your appointment today?",
-            "general": f"Thanks for calling {biz_name}, this is {persona_name}! We can certainly take care of that for you. What can we help you with today?"
-        }
-        reply = trade_greeting_prompts.get(trade_key, trade_greeting_prompts["general"])
+        reply = f"Thanks for calling {biz_name}, this is {persona_name}! We can certainly take care of that for you. What seems to be going on with your system today?"
 
     return {
         "response": reply,
@@ -3491,7 +3444,7 @@ def generate_call_demo_script(profile: Dict[str, Any], scenario_id: Optional[str
     # ── Booking language variants ────────────────────────────────────────────
     if is_text_details_booking:
         booking_confirm_line = (
-            f"I've got all your details, {tdata['caller_name'].split()[0]} — {tdata['location_display']} for the {biz_name} team. "
+            f"I've got all your details, {tdata['caller_name'].split()[0]} — {tdata['customer_address']} for the {biz_name} team. "
             f"I'm texting you a confirmation right now, and one of our specialists will call you back within the hour to coordinate the exact time. "
             f"You don't have to do a thing."
         )
@@ -3499,12 +3452,19 @@ def generate_call_demo_script(profile: Dict[str, Any], scenario_id: Optional[str
         routine_status = "Inquiry Dispatched to Team — Callback Alert Sent"
         owner_alert_title = "⚡ New Booking — Team Callback Requested"
     else:
-        booking_confirm_line = tdata["booking_confirm_line"]
-        routine_slot   = tdata["routine_slot"]
-        routine_status = tdata["routine_status"]
-        owner_alert_title = tdata["owner_alert_title"]
+        booking_confirm_line = (
+            f"You're all set, {tdata['caller_name'].split()[0]}! I've locked you in for today between two and five PM at {tdata['customer_address']}. "
+            f"Our team will text you fifteen minutes before arrival so you're not just waiting. "
+            f"I just sent a confirmation text to your cell — anything else I can help with?"
+        )
+        routine_slot   = "Today 2:00 PM – 5:00 PM Window"
+        routine_status = "Appointment Booked — SMS Dispatched"
+        owner_alert_title = "⚡ New Job Booked"
 
-    sms_body_routine = tdata["sms_body_routine"]
+    sms_body_routine = (
+        f"Hi {tdata['caller_name'].split()[0]}! You're confirmed with {biz_name} for today, 2–5 PM at {tdata['customer_address']}. "
+        f"Our team will text 15 min before arrival. Reply to this text anytime with questions."
+    )
 
     # ── After-hours booking language ─────────────────────────────────────────
     if is_text_details_booking:
@@ -3517,12 +3477,21 @@ def generate_call_demo_script(profile: Dict[str, Any], scenario_id: Optional[str
         ah_status = "After-Hours Request — Team Alerted via SMS"
         owner_alert_ah_title = "🌙 After-Hours Request Dispatched"
     else:
-        ah_booking_line = tdata["ah_booking_line"]
-        ah_slot   = tdata["ah_slot"]
-        ah_status = tdata["ah_status"]
-        owner_alert_ah_title = tdata["owner_alert_ah_title"]
+        ah_booking_line = (
+            f"Perfect — I've reserved our first-priority slot tomorrow morning, eight to ten AM, at 1042 Bayside Avenue for you. "
+            f"I'm sending a confirmation text to your cell right now. "
+            f"Our team will reach out before they head out so you know exactly when to expect them. "
+            f"You did the right thing calling — we'll get you sorted first thing."
+        )
+        ah_slot   = "Tomorrow 8:00 AM – 10:00 AM Priority Slot"
+        ah_status = "After-Hours Priority Booked — SMS Confirmed"
+        owner_alert_ah_title = "🌙 After-Hours Priority Booking"
 
-    sms_body_ah = tdata["sms_body_ah"]
+    sms_body_ah = (
+        f"Hi Marcus! You're confirmed with {biz_name} for tomorrow, 8–10 AM at 1042 Bayside Avenue. "
+        f"Our team will text 15 min before arrival. Reply to this text with any questions — we've got you covered."
+    )
+
     # ════════════════════════════════════════════════════════════════════════
     # BUILD ALL SCENARIOS FOR SELECTED TRADE
     # ════════════════════════════════════════════════════════════════════════
@@ -3619,7 +3588,7 @@ def generate_call_demo_script(profile: Dict[str, Any], scenario_id: Optional[str
                 "captured_issue": tdata["title"],
                 "pricing_quoted": pricing,
                 "scheduled_slot": routine_slot,
-                "customer_address": tdata.get("location_display", tdata["customer_address"]),
+                "customer_address": tdata["customer_address"],
                 "status": routine_status,
                 "sms_preview": {
                     "to_phone": tdata["caller_phone"],
@@ -3628,7 +3597,7 @@ def generate_call_demo_script(profile: Dict[str, Any], scenario_id: Optional[str
                 },
                 "owner_dispatch": {
                     "title": owner_alert_title,
-                    "details": f"{tdata['caller_name']} • {tdata.get('location_display', tdata['customer_address'])} • {tdata['title']} • {pricing}",
+                    "details": f"{tdata['caller_name']} • {tdata['customer_address']} • {tdata['title']} • {pricing}",
                     "phone": owner_phone_display,
                 },
             },

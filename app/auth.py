@@ -129,8 +129,15 @@ async def send_phone_otp(phone: str, client_id: Optional[str] = None) -> Dict[st
     auth_db.setdefault("otps", {})[clean_phone] = otp_data
     _save_auth_storage(auth_db)
 
-    # Send SMS notification
-    sms_text = f"Your ORX Agents login code for {biz_name} is: {code}. Valid for 10 minutes. Do not share this code."
+    # Send SMS notification with both 6-digit code and 1-tap direct login link
+    base = getattr(settings, "PUBLIC_URL", "") or "https://agents.orxlabs.com"
+    base = base.strip().rstrip("/")
+    direct_link = f"{base}/portal?client_id={matched_client_id}&activated=1" if matched_client_id else f"{base}/portal"
+    sms_text = (
+        f"Your ORX Agents login code for {biz_name} is: {code}\n\n"
+        f"📲 Or tap to log in directly:\n{direct_link}\n\n"
+        f"Valid for 10 minutes. Do not share this code."
+    )
     sms_sent = False
     try:
         from app.integrations import send_sms

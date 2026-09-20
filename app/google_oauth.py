@@ -305,16 +305,21 @@ async def get_valid_access_token(client_id: str) -> Optional[str]:
 
 def disconnect_google_calendar(client_id: str) -> bool:
     """Disconnects Google Calendar for a client."""
-    from app.project_db import get_db_connection, get_project_dir
+    from app.project_db import get_db_connection, get_project_dir, init_project_db
+    from app.onboarding import get_client_profile, save_client_profile
 
+    init_project_db(client_id)
     conn = get_db_connection(client_id)
     cur = conn.cursor()
     try:
         cur.execute("""
             UPDATE google_calendar_config
             SET is_connected = 0,
+                sync_enabled = 0,
                 oauth_access_token = '',
                 oauth_refresh_token = '',
+                oauth_user_email = '',
+                calendar_id = 'primary',
                 last_status = 'disconnected'
             WHERE client_id = ?
         """, (client_id,))
@@ -328,11 +333,23 @@ def disconnect_google_calendar(client_id: str) -> bool:
         try:
             data = json.loads(cal_file.read_text())
             data["is_connected"] = False
+            data["sync_enabled"] = 0
             data["oauth_access_token"] = ""
             data["oauth_refresh_token"] = ""
+            data["oauth_user_email"] = ""
+            data["calendar_id"] = "primary"
+            data["last_status"] = "disconnected"
             cal_file.write_text(json.dumps(data, indent=2))
         except Exception:
             pass
+
+    prof = get_client_profile(client_id)
+    if prof:
+        prof["calendar_connected"] = False
+        prof["calendar_sync_enabled"] = False
+        prof["google_calendar_id"] = ""
+        prof["google_calendar_email"] = ""
+        save_client_profile(prof)
 
     logger.info(f"Disconnected Google Calendar for '{client_id}'")
     return True

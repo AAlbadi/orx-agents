@@ -336,9 +336,18 @@ async def check_google_calendar_freebusy(
     end_dt: datetime,
     calendar_id: str = "primary",
     service_account_data: str = "",
+    client_id: Optional[str] = None,
 ) -> bool:
     """Queries Google Calendar FreeBusy API. Returns True if FREE, False if BUSY."""
-    token = await get_google_auth_token(service_account_data)
+    token = None
+    if client_id:
+        try:
+            from app.google_oauth import get_valid_access_token
+            token = await get_valid_access_token(client_id)
+        except Exception:
+            token = None
+    if not token:
+        token = await get_google_auth_token(service_account_data)
     if not token:
         return True  # Fallback to local capacity check if no Google token
 
@@ -371,9 +380,18 @@ async def create_google_calendar_event(
     appointment: Dict[str, Any],
     calendar_id: str = "primary",
     service_account_data: str = "",
+    client_id: Optional[str] = None,
 ) -> Optional[str]:
     """Creates a confirmed event directly on the technician's Google Calendar."""
-    token = await get_google_auth_token(service_account_data)
+    token = None
+    if client_id:
+        try:
+            from app.google_oauth import get_valid_access_token
+            token = await get_valid_access_token(client_id)
+        except Exception:
+            token = None
+    if not token:
+        token = await get_google_auth_token(service_account_data)
     if not token:
         return None
 
@@ -582,7 +600,7 @@ async def check_technician_availability(
     # 2. Check Google Calendar FreeBusy (if credentials supplied)
     start_dt, end_dt = get_window_datetimes(norm_date, norm_win)
     is_gcal_free = await check_google_calendar_freebusy(
-        start_dt, end_dt, calendar_id=cal_id, service_account_data=sa_data
+        start_dt, end_dt, calendar_id=cal_id, service_account_data=sa_data, client_id=client_id
     )
 
     if not is_gcal_free:
