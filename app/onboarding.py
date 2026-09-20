@@ -1341,7 +1341,7 @@ async def complete_client_onboarding(data: Dict[str, Any], public_url: str = "")
 
     # Dispatch welcome / activation SMS
     sms_sent = False
-    phone = profile.get("forwarding_phone") or profile.get("owner_phone")
+    phone = profile.get("sms_phone") or profile.get("forwarding_phone") or profile.get("owner_phone")
     if phone:
         try:
             from app.integrations import send_sms

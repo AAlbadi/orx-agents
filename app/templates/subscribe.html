@@ -483,45 +483,312 @@
       color: var(--brand-dark);
     }
 
-    /* Active Business Sticky Top Banner */
-    .active-biz-banner {
-      display: none;
+    /* SMS Notifications Step Styles */
+    .sms-preview-card {
+      background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+      border-radius: 16px;
+      padding: 18px 20px;
+      color: #FFFFFF;
+      box-shadow: 0 12px 28px -6px rgba(15, 23, 42, 0.25), 0 4px 12px -2px rgba(15, 23, 42, 0.15);
+      margin-bottom: 22px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .sms-preview-topbar {
+      display: flex;
       align-items: center;
-      gap: 8px;
-      background: #EDF3EF;
-      border: 1px solid #D2E4D8;
-      border-radius: 30px;
-      padding: 6px 14px;
-      margin: 0 auto 16px auto;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .sms-preview-sender {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .sms-preview-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.16);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+    }
+    .sms-sender-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #F8FAFC;
+      display: block;
+      line-height: 1.2;
+    }
+    .sms-sender-meta {
+      font-size: 11px;
+      color: #94A3B8;
+      display: block;
+      margin-top: 2px;
+    }
+    .sms-live-pill {
+      font-size: 10.5px;
+      font-weight: 700;
+      background: rgba(16, 185, 129, 0.18);
+      color: #34D399;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      padding: 4px 10px;
+      border-radius: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .sms-bubble {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 14px;
+      padding: 14px 16px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .sms-bubble-badge {
+      display: inline-block;
+      font-size: 10.5px;
+      font-weight: 800;
+      color: #FDE047;
+      background: rgba(245, 158, 11, 0.22);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      padding: 2px 8px;
+      border-radius: 5px;
+      margin-bottom: 8px;
+      letter-spacing: 0.04em;
+    }
+    .sms-bubble-line {
+      color: #E2E8F0;
+      margin-bottom: 4px;
+      font-size: 12.5px;
+    }
+    .sms-bubble-line strong {
+      color: #FFF;
+    }
+    .sms-bubble-footer {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed rgba(255, 255, 255, 0.14);
+      font-size: 11.5px;
+      color: #38BDF8;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .sms-options-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .sms-option-card {
+      background: #FFFFFF;
+      border: 1.5px solid #E2E8F0;
+      border-radius: 12px;
+      padding: 14px 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      transition: all 0.18s ease;
+      user-select: none;
+    }
+    .sms-option-card:hover {
+      border-color: #94A3B8;
+      background: #F8FAFC;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    }
+    .sms-option-card.active {
+      border-color: #10B981;
+      background: #F0FDF4;
+      box-shadow: 0 0 0 1px #10B981, 0 4px 14px rgba(16, 185, 129, 0.08);
+    }
+    .sms-option-radio {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid #CBD5E1;
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+      background: #FFF;
+    }
+    .sms-option-card.active .sms-option-radio {
+      border-color: #10B981;
+    }
+    .sms-option-card.active .sms-option-radio::after {
+      content: "";
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #10B981;
+    }
+    .sms-option-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #0F172A;
+      line-height: 1.3;
+    }
+    .sms-option-desc {
       font-size: 12px;
-      color: var(--text-main);
-      width: fit-content;
-      max-width: 100%;
-      box-sizing: border-box;
-      overflow: hidden;
+      color: #64748B;
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+    .sms-option-tag {
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 12px;
+      background: #DCFCE7;
+      color: #166534;
+      border: 1px solid #BBF7D0;
       white-space: nowrap;
-      text-overflow: ellipsis;
+    }
+    .sms-indicator-banner {
+      background: #F0FDF4;
+      border: 1.5px solid #86EFAC;
+      border-radius: 10px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-top: 12px;
+      margin-bottom: 12px;
       animation: fadeIn 0.2s ease;
     }
-    .active-biz-banner.active {
-      display: inline-flex;
-    }
-    .active-biz-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #2E7D32;
+    .sms-indicator-icon {
+      font-size: 20px;
+      line-height: 1;
       flex-shrink: 0;
     }
-    .active-biz-badge {
-      background: var(--brand);
-      color: #FFF;
-      font-size: 9.5px;
+    .sms-indicator-text {
+      font-size: 13px;
+      color: #166534;
+      line-height: 1.45;
+    }
+    .sms-custom-box {
+      background: #F8FAFC;
+      border: 1.5px solid #CBD5E1;
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-top: 12px;
+      margin-bottom: 12px;
+      animation: qFadeSlide 0.22s ease forwards;
+    }
+
+    /* Existing Client Portal Access Section */
+    .nav-portal-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12.5px;
       font-weight: 700;
-      padding: 1px 6px;
-      border-radius: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
+      color: var(--brand);
+      background: var(--brand-soft);
+      border: 1.5px solid rgba(28, 51, 38, 0.14);
+      padding: 6px 13px;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: all 0.15s ease;
+    }
+    .nav-portal-btn:hover {
+      background: var(--brand);
+      color: #FFFFFF;
+      border-color: var(--brand);
+      transform: translateY(-1px);
+    }
+    .portal-access-section {
+      margin-top: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      background: #F8FAFC;
+      border: 1.5px solid #E2E8F0;
+      border-radius: 12px;
+      padding: 13px 16px;
+      transition: all 0.15s ease;
+    }
+    .portal-access-section:hover {
+      border-color: #CBD5E1;
+      background: #F1F5F9;
+    }
+    .portal-access-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .portal-access-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      background: #E2E8F0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .portal-access-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.25;
+    }
+    .portal-access-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      line-height: 1.35;
+    }
+    .portal-access-btn {
+      background: #FFFFFF;
+      color: var(--brand);
+      border: 1.5px solid #CBD5E1;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-weight: 700;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      flex-shrink: 0;
+    }
+    .portal-access-btn:hover {
+      background: var(--brand);
+      color: #FFFFFF;
+      border-color: var(--brand);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(28, 51, 38, 0.15);
+    }
+    @media (max-width: 600px) {
+      .portal-access-section {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      .portal-access-btn {
+        width: 100%;
+        justify-content: center;
+      }
     }
 
     /* Section Subheadings inside cards */
@@ -3144,11 +3411,10 @@
         <span class="nav-tag">agents.orxlabs</span>
       </a>
       <div style="display: flex; align-items: center; gap: 14px;">
-        <span style="font-size: 12px; color: var(--success); font-weight: 600; display: flex; align-items: center; gap: 5px;">
-          <span style="width: 6px; height: 6px; background: var(--success); border-radius: 50%;"></span>
-          Kokoro Voice Ready
-        </span>
-        <a href="/portal" style="font-size: 13px; font-weight: 600; color: var(--text-muted); text-decoration: none;">Client Portal</a>
+        <a href="/portal" class="nav-portal-btn">
+          <span>🔑</span>
+          <span>Client Portal</span>
+        </a>
       </div>
     </div>
   </nav>
@@ -3169,14 +3435,7 @@
         <div class="progress-track">
           <div class="progress-fill" id="progressFill"></div>
         </div>
-        <div class="step-indicator" id="stepCounter">1 of 4: Phone & Business</div>
-      </div>
-
-      <!-- Active Business Sticky Banner (Visible once business is set) -->
-      <div class="active-biz-banner" id="activeBizBanner">
-        <span class="active-biz-dot"></span>
-        <span>Configuring Riley for: <strong id="bannerBizName">Apex Services</strong></span>
-        <span class="active-biz-badge" id="bannerBizTrade">HVAC</span>
+        <div class="step-indicator" id="stepCounter">1 of 5: Phone & Business</div>
       </div>
 
       <!-- THE FOCUS CARD (ONE BOX AT A TIME) -->
@@ -3185,7 +3444,7 @@
         <!-- BOX 1: Enter Business Phone & Auto-Discover Details -->
         <div class="focus-step active" id="box1">
           <h2 class="focus-title" style="font-size: 20px; font-weight: 800; margin-bottom: 6px;">📞 Enter your business phone number</h2>
-          <p class="focus-sub" style="font-size: 14px; margin-bottom: 16px;">We'll auto-detect your business name, address, and hours.</p>
+          <p class="focus-sub" style="font-size: 14px; margin-bottom: 16px;">We'll auto-detect your business name, address, and industry.</p>
 
           <div class="input-row" style="position: relative;">
             <div style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 18px; pointer-events: none; z-index: 2;">📞</div>
@@ -3210,6 +3469,20 @@
             </button>
           </div>
 
+          <!-- Existing Client / Already Paid Portal Access Card -->
+          <div class="portal-access-section" id="portalAccessSection">
+            <div class="portal-access-left">
+              <div class="portal-access-icon">🔐</div>
+              <div>
+                <div class="portal-access-title">Already have an agent with us?</div>
+                <div class="portal-access-desc">Already subscribed or paid? Access your dashboard & live calls.</div>
+              </div>
+            </div>
+            <a href="/portal" class="portal-access-btn">
+              <span>Access Client Portal →</span>
+            </a>
+          </div>
+
           <!-- Smart Discovery Intelligence Card with Editable Inputs -->
           <div class="discovery-card" id="discoveryCard">
             <div class="discovery-header">
@@ -3221,13 +3494,13 @@
             </div>
 
             <!-- Notice when found -->
-            <div id="discFoundPrompt" style="display: none; background: #F0FDF4; border: 1.5px solid #BBEFCE; border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; font-size: 12.5px; color: #166534; line-height: 1.4;">
-              ✨ We found your business listing! Review your details below — <strong>you can edit any field if anything is incorrect</strong>:
+            <div id="discFoundPrompt" style="display: none; background: #F0FDF4; border: 1.5px solid #BBEFCE; border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; font-size: 13px; color: #166534; line-height: 1.4;">
+              ✨ Verified listing found! Review your details below — <strong>you can edit any field anytime</strong>:
             </div>
 
             <!-- Fallback notice if directory lookup didn't find the address -->
-            <div id="discNotFoundPrompt" style="display: none; background: #FFFBEB; border: 1.5px solid #FDE68A; border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; font-size: 12.5px; color: #92400E; line-height: 1.4;">
-              📍 Couldn't find a public directory listing for that number. <strong>Enter your details below</strong> — start typing your address for instant autocomplete:
+            <div id="discNotFoundPrompt" style="display: none; background: #F8FAFC; border: 1.5px solid #E2E8F0; border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; font-size: 13px; color: #334155; line-height: 1.4;">
+              📍 <strong>Enter your business details below</strong> — start typing your street address or service area for instant lookup:
             </div>
 
             <!-- Editable fields so the owner can review or adjust in 1 tap -->
@@ -3243,49 +3516,32 @@
               <div class="disc-field">
                 <label class="disc-label">
                   <span>Business Street Address or Service Area *</span>
-                  <span class="disc-label-hint">Live autocomplete search</span>
+                  <span class="disc-label-hint">Live search & manual entry supported</span>
                 </label>
                 <div class="address-autocomplete-wrapper">
-                  <input type="text" class="disc-input" id="discAddressInput" placeholder="Start typing address (e.g. 14027 Interurban Ave S)..." autocomplete="off">
+                  <input type="text" class="disc-input" id="discAddressInput" placeholder="e.g. 14027 Interurban Ave S, Seattle, WA or Greater Metro Area" autocomplete="street-address">
                   <div class="places-dropdown" id="addressDropdown"></div>
-                </div>
-              </div>
-
-              <div class="disc-row">
-                <div class="disc-field">
-                  <label class="disc-label">
-                    <span>Forwarding Phone Line</span>
-                    <span class="disc-label-hint">Your cell / office</span>
-                  </label>
-                  <input type="text" class="disc-input" id="discPhoneInput" placeholder="(555) 000-0000">
-                </div>
-                <div class="disc-field">
-                  <label class="disc-label">
-                    <span>Primary Trade / Category</span>
-                    <span class="disc-label-hint">Loads services & pricing</span>
-                  </label>
-                  <select class="disc-select" id="discTradeSelect">
-                    <option value="hvac">HVAC & Climate Control</option>
-                    <option value="plumbing">Plumbing & Drain Services</option>
-                    <option value="electrical">Electrical Services</option>
-                    <option value="roofing">Roofing & Gutters</option>
-                    <option value="dental_medical">Clinic / Dental</option>
-                    <option value="auto">Auto Repair</option>
-                    <option value="legal">Law Firm</option>
-                    <option value="restaurant">Restaurant</option>
-                    <option value="realestate">Real Estate</option>
-                    <option value="salon">Salon & Spa</option>
-                    <option value="general">General Contractor / Other</option>
-                  </select>
                 </div>
               </div>
 
               <div class="disc-field">
                 <label class="disc-label">
-                  <span>Operating Hours</span>
-                  <span class="disc-label-hint">When you take appointments</span>
+                  <span>Primary Trade / Category *</span>
+                  <span class="disc-label-hint">Pre-loads services, emergency rules & pricing</span>
                 </label>
-                <input type="text" class="disc-input" id="discHoursInput" placeholder="Mon-Fri 8:00 AM - 6:00 PM">
+                <select class="disc-select" id="discTradeSelect">
+                  <option value="hvac">HVAC & Climate Control</option>
+                  <option value="plumbing">Plumbing & Drain Services</option>
+                  <option value="electrical">Electrical Services</option>
+                  <option value="roofing">Roofing & Gutters</option>
+                  <option value="dental_medical">Clinic / Dental Practice</option>
+                  <option value="auto">Auto Repair & Service</option>
+                  <option value="legal">Law Firm & Legal Services</option>
+                  <option value="restaurant">Restaurant & Hospitality</option>
+                  <option value="realestate">Real Estate & Property Management</option>
+                  <option value="salon_spa">Salon & Spa Services</option>
+                  <option value="general">General Contractor / Other Business</option>
+                </select>
               </div>
             </div>
 
@@ -3294,9 +3550,124 @@
                 <span>🔍 Search Different Number</span>
               </button>
               <button type="button" class="btn-confirm-biz" id="btnConfirmBiz">
-                <span>Confirm & Continue to Trade (1/5) →</span>
+                <span>Confirm & Continue to SMS Setup →</span>
               </button>
             </div>
+          </div>
+        </div>
+
+        <!-- BOX 2: Instant SMS Lead Notifications -->
+        <div class="focus-step" id="boxSms">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <span style="font-size: 11px; font-weight: 800; color: var(--brand); text-transform: uppercase; letter-spacing: 0.05em;">Step 2: Instant Notifications</span>
+            <span class="discovery-badge" style="background: #F0FDF4; color: #166534; border: 1px solid #BBEFCE;">⚡ Real-Time SMS Dispatch</span>
+          </div>
+
+          <h2 class="focus-title" style="font-size: 22px; font-weight: 800; margin-bottom: 6px;">
+            💬 Where should Riley text your leads?
+          </h2>
+          <p class="focus-sub" style="font-size: 14px; margin-bottom: 18px;">
+            Whenever Riley books an appointment, captures caller details, or flags an emergency, you'll receive a live SMS alert instantly.
+          </p>
+
+          <!-- Cool Realistic SMS Message Preview Widget -->
+          <div class="sms-preview-card">
+            <div class="sms-preview-topbar">
+              <div class="sms-preview-sender">
+                <div class="sms-preview-avatar">🤖</div>
+                <div class="sms-sender-text">
+                  <span class="sms-sender-title">Riley AI Receptionist</span>
+                  <span class="sms-sender-meta">Instant Dispatch Alert &bull; Just now</span>
+                </div>
+              </div>
+              <span class="sms-live-pill">
+                <span style="width: 6px; height: 6px; background: #34D399; border-radius: 50%;"></span>
+                Live Alert Preview
+              </span>
+            </div>
+
+            <div class="sms-bubble">
+              <div class="sms-bubble-badge">🚨 NEW APPOINTMENT BOOKED</div>
+              <div class="sms-bubble-line"><strong>Customer:</strong> David Miller &bull; <span class="sms-mock-phone">(206) 555-0192</span></div>
+              <div class="sms-bubble-line"><strong>Service:</strong> Emergency Diagnostic (<span id="smsPreviewTrade">HVAC</span>)</div>
+              <div class="sms-bubble-line"><strong>Arrival Window:</strong> Tomorrow, 9:00 AM – 11:00 AM</div>
+              <div class="sms-bubble-line"><strong>Caller Notes:</strong> <em>"AC blowing warm air, fan not spinning outside."</em></div>
+              <div class="sms-bubble-footer">
+                <span>📲 Riley held calendar slot & texted caller instant booking confirmation</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- The Core Question & Choice Cards -->
+          <div style="margin-top: 18px; margin-bottom: 8px;">
+            <div style="font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 10px;">
+              Choose which phone receives these text alerts:
+            </div>
+
+            <div class="sms-options-grid">
+              <!-- Option 1: Same Phone -->
+              <div class="sms-option-card active" id="smsOptSame" data-mode="same">
+                <div class="sms-option-radio"></div>
+                <div style="flex: 1;">
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                    <div class="sms-option-title">
+                      📱 Text my business phone: <strong class="sms-biz-phone-display">(555) 000-0000</strong>
+                    </div>
+                    <span class="sms-option-tag">Recommended if mobile</span>
+                  </div>
+                  <div class="sms-option-desc">
+                    Riley will send instant call alerts, booking summaries, and customer info directly to this number.
+                  </div>
+                </div>
+              </div>
+
+              <!-- Option 2: Different Phone -->
+              <div class="sms-option-card" id="smsOptDiff" data-mode="different">
+                <div class="sms-option-radio"></div>
+                <div style="flex: 1;">
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                    <div class="sms-option-title">
+                      📲 Text a different cell phone number
+                    </div>
+                    <span class="sms-option-tag" style="background: #F1F5F9; color: #475569; border-color: #CBD5E1;">Landline / VoIP fallback</span>
+                  </div>
+                  <div class="sms-option-desc">
+                    Use this if your main business line is a landline, or you want texts sent to a private mobile or dispatch team.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Indication Banner for Same Phone ("we indeced that in a good way and move on") -->
+            <div class="sms-indicator-banner" id="smsSameIndicator">
+              <div class="sms-indicator-icon">✅</div>
+              <div class="sms-indicator-text">
+                <div><strong>Ready to receive SMS!</strong> All call transcripts, booking alerts, and emergency notifications will be texted to <strong class="sms-biz-phone-display">(555) 000-0000</strong>.</div>
+              </div>
+            </div>
+
+            <!-- Expandable Section for Different Phone ("a itle sectino oepn to enter sms number") -->
+            <div class="sms-custom-box" id="smsDiffSection" style="display: none;">
+              <label class="disc-label" style="margin-bottom: 6px;">
+                <span style="font-weight: 700;">Mobile Number for Text Alerts *</span>
+                <span class="disc-label-hint">Must be SMS-capable mobile</span>
+              </label>
+              <div class="input-row" style="position: relative;">
+                <div style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 16px; pointer-events: none;">📲</div>
+                <input type="tel" class="focus-input" id="inSmsDiffPhone" placeholder="(555) 000-0000" style="padding-left: 44px; height: 48px; font-size: 16px; font-weight: 600; width: 100%; box-sizing: border-box;" autocomplete="tel">
+              </div>
+              <div id="smsDiffFeedback" style="font-size: 12px; color: #64748B; margin-top: 6px;">
+                Enter a 10-digit mobile number for SMS alerts
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Bar -->
+          <div class="focus-actions" style="margin-top: 22px;">
+            <button type="button" class="btn-focus-back" id="btnBackSms">← Back to Business Info</button>
+            <button type="button" class="btn-focus-next" id="btnContinueSms">
+              <span>Continue to Trade Setup (1/5) →</span>
+            </button>
           </div>
         </div>
 
@@ -4067,21 +4438,33 @@
 
     function showBox(num) {
       state.step = num;
-      document.querySelectorAll(".focus-step").forEach((box, i) => {
-        box.classList.toggle("active", (i + 1) === num);
+      const boxes = [
+        document.getElementById("box1"),
+        document.getElementById("boxSms"),
+        document.getElementById("box2"),
+        document.getElementById("box3"),
+        document.getElementById("box4")
+      ];
+      boxes.forEach((box, i) => {
+        if (box) box.classList.toggle("active", (i + 1) === num);
       });
 
       if (num === 2) {
+        if (typeof updateSmsStepUI === "function") updateSmsStepUI();
+      }
+
+      if (num === 3) {
         showQStep(state.playbookSubStep || 1);
       }
 
       const stepLabels = [
-        "1 of 4: Phone & Business",
-        "2 of 4: Smart Playbook Q&A",
-        "3 of 4: Live Call Simulation",
-        "4 of 4: Activate & Connect"
+        "1 of 5: Phone & Business",
+        "2 of 5: SMS Notifications",
+        "3 of 5: Receptionist Playbook",
+        "4 of 5: Live Call Simulation",
+        "5 of 5: Activate & Connect"
       ];
-      const fillPcts = [25, 50, 75, 100];
+      const fillPcts = [20, 40, 60, 80, 100];
       const fillElem = document.getElementById("progressFill");
       const counterElem = document.getElementById("stepCounter");
       if (fillElem) fillElem.style.width = `${fillPcts[num - 1] || 100}%`;
@@ -4092,18 +4475,8 @@
       if (activeInput) setTimeout(() => activeInput.focus(), 150);
     }
 
-    // Sticky Active Business Banner
-    function updateActiveBizBanner() {
-      const banner = document.getElementById("activeBizBanner");
-      const nameElem = document.getElementById("bannerBizName");
-      const tradeBadge = document.getElementById("bannerBizTrade");
-      if (banner && nameElem && tradeBadge) {
-        nameElem.textContent = state.bizName || "Your Company";
-        const tradeObj = tradeData[state.trade] || tradeData.general;
-        tradeBadge.textContent = tradeObj.name;
-        banner.classList.add("active");
-      }
-    }
+    // Sticky Active Business Banner (removed per design update)
+    function updateActiveBizBanner() {}
 
     function escapeHtml(str) {
       if (!str) return "";
@@ -4359,28 +4732,134 @@
     function confirmAndAdvanceBiz() {
       const bizInput = document.getElementById("discBizNameInput");
       const addrInput = document.getElementById("discAddressInput");
-      const phoneInput = document.getElementById("discPhoneInput");
       const tradeSelect = document.getElementById("discTradeSelect");
-      const hoursInput = document.getElementById("discHoursInput");
 
       if (bizInput && bizInput.value.trim()) state.bizName = bizInput.value.trim();
       if (addrInput && addrInput.value.trim()) state.address = addrInput.value.trim();
-      if (phoneInput && phoneInput.value.trim()) state.phone = phoneInput.value.trim();
       if (tradeSelect && tradeSelect.value) {
         state.trade = tradeSelect.value;
         selectTrade(state.trade);
       }
-      if (hoursInput && hoursInput.value.trim()) state.hours = hoursInput.value.trim();
 
+      if (!state.phone) {
+        state.phone = inPhoneQuery.value.trim();
+      }
       if (!state.bizName) {
         state.bizName = inPhoneQuery.value.trim() || "My Business";
       }
 
-      updateActiveBizBanner();
+      updateSmsStepUI();
       showBox(2);
     }
 
     if (btnConfirmBiz) btnConfirmBiz.addEventListener("click", confirmAndAdvanceBiz);
+
+    // -----------------------------------------------------------------------
+    // STEP 2: SMS ROUTING & NOTIFICATIONS CONTROLLER
+    // -----------------------------------------------------------------------
+    const smsOptSame = document.getElementById("smsOptSame");
+    const smsOptDiff = document.getElementById("smsOptDiff");
+    const smsSameIndicator = document.getElementById("smsSameIndicator");
+    const smsDiffSection = document.getElementById("smsDiffSection");
+    const inSmsDiffPhone = document.getElementById("inSmsDiffPhone");
+    const smsDiffFeedback = document.getElementById("smsDiffFeedback");
+    const btnBackSms = document.getElementById("btnBackSms");
+    const btnContinueSms = document.getElementById("btnContinueSms");
+
+    state.smsOption = "same";
+    state.smsPhone = "";
+
+    function updateSmsStepUI() {
+      const currentPhone = state.phone || inPhoneQuery.value.trim() || "(555) 000-0000";
+      document.querySelectorAll(".sms-biz-phone-display").forEach(el => {
+        el.textContent = currentPhone;
+      });
+      const tradeObj = tradeData[state.trade] || tradeData.general;
+      const tradePreview = document.getElementById("smsPreviewTrade");
+      if (tradePreview) tradePreview.textContent = tradeObj.name;
+    }
+
+    if (smsOptSame) {
+      smsOptSame.addEventListener("click", () => {
+        state.smsOption = "same";
+        smsOptSame.classList.add("active");
+        if (smsOptDiff) smsOptDiff.classList.remove("active");
+        if (smsSameIndicator) smsSameIndicator.style.display = "flex";
+        if (smsDiffSection) smsDiffSection.style.display = "none";
+        state.smsPhone = state.phone || inPhoneQuery.value.trim();
+        if (btnContinueSms) {
+          btnContinueSms.innerHTML = "<span>Continue to Trade Setup (1/5) →</span>";
+        }
+      });
+    }
+
+    if (smsOptDiff) {
+      smsOptDiff.addEventListener("click", () => {
+        state.smsOption = "different";
+        smsOptDiff.classList.add("active");
+        if (smsOptSame) smsOptSame.classList.remove("active");
+        if (smsSameIndicator) smsSameIndicator.style.display = "none";
+        if (smsDiffSection) {
+          smsDiffSection.style.display = "block";
+          if (inSmsDiffPhone) setTimeout(() => inSmsDiffPhone.focus(), 100);
+        }
+        if (btnContinueSms) {
+          btnContinueSms.innerHTML = "<span>Save Mobile & Continue →</span>";
+        }
+      });
+    }
+
+    if (inSmsDiffPhone) {
+      inSmsDiffPhone.addEventListener("input", (e) => {
+        let val = e.target.value;
+        if (/^[\d\s\(\)\-\.]+$/.test(val) && val.replace(/\D/g, "").length <= 10) {
+          let digits = val.replace(/\D/g, "");
+          if (digits.length > 0) {
+            let x = digits.match(/(\d{0,3})(\d{0,3})(\d{0,4})/);
+            e.target.value = !x[2] ? x[1] : `(${x[1]}) ${x[2]}` + (x[3] ? `-${x[3]}` : "");
+          }
+          if (digits.length === 10) {
+            state.smsPhone = e.target.value;
+            if (smsDiffFeedback) {
+              smsDiffFeedback.innerHTML = `<span style="color: #10B981; font-weight: 600;">✅ Valid mobile number! All lead texts and transcripts will be sent here.</span>`;
+            }
+          } else {
+            if (smsDiffFeedback) {
+              smsDiffFeedback.innerHTML = `<span style="color: #64748B;">Enter a 10-digit mobile number for SMS alerts</span>`;
+            }
+          }
+        }
+      });
+    }
+
+    if (btnBackSms) {
+      btnBackSms.addEventListener("click", () => {
+        showBox(1);
+      });
+    }
+
+    if (btnContinueSms) {
+      btnContinueSms.addEventListener("click", () => {
+        if (state.smsOption === "different") {
+          const raw = inSmsDiffPhone ? inSmsDiffPhone.value.trim() : "";
+          const digits = raw.replace(/\D/g, "");
+          if (digits.length < 10) {
+            if (smsDiffFeedback) {
+              smsDiffFeedback.innerHTML = `<span style="color: #DC2626; font-weight: 600;">⚠️ Please enter a complete 10-digit mobile number for SMS alerts.</span>`;
+            }
+            if (inSmsDiffPhone) inSmsDiffPhone.focus();
+            return;
+          }
+          state.smsPhone = raw;
+        } else {
+          state.smsPhone = state.phone || inPhoneQuery.value.trim();
+        }
+
+        // Advance to Question 1 in Playbook
+        showBox(3);
+        showQStep(1);
+      });
+    }
 
     // -----------------------------------------------------------------------
     // TOPIC CATALOG & ANSWERABLE TOPICS BUILDER
@@ -5743,7 +6222,7 @@
 
     function showQStep(num) {
       if (num < 1) {
-        showBox(1);
+        showBox(2);
         return;
       }
       if (num > TOTAL_SUBSTEPS) {
@@ -5777,7 +6256,7 @@
       const btnBack = document.getElementById("btnBack2");
       const btnNext = document.getElementById("btnNext2");
       if (btnBack) {
-        btnBack.textContent = num === 1 ? "← Back to Business Info" : "← Previous Question";
+        btnBack.textContent = num === 1 ? "← Back to SMS Setup" : "← Previous Question";
       }
       if (btnNext) {
         btnNext.disabled = false;
@@ -5823,7 +6302,12 @@
       btnBack2.onclick = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        showQStep((state.playbookSubStep || 1) - 1);
+        const currentSub = state.playbookSubStep || 1;
+        if (currentSub <= 1) {
+          showBox(2);
+        } else {
+          showQStep(currentSub - 1);
+        }
       };
     }
     const btnNext2 = document.getElementById("btnNext2");
@@ -5851,8 +6335,8 @@
       isTheaterRunning = false;
       if (callAudioPlaying) {
         callAudioPlaying.pause();
-        callAudioPlaying = null;
       }
+      callAudioPlaying = null;
       if (callTimerInterval) {
         clearInterval(callTimerInterval);
         callTimerInterval = null;
@@ -5884,7 +6368,7 @@
 
     async function compileAndLaunchCallTheater() {
       stopCallSimulation();
-      showBox(3);
+      showBox(4);
 
       const dialogueList = document.getElementById("theaterDialogueList");
       const outcomeCard = document.getElementById("theaterOutcomeCard");
@@ -5921,7 +6405,9 @@
           id: state.clientId,
           business_name: state.bizName || "Apex Services",
           address: state.address || state.query,
-          forwarding_phone: state.phone || "+1 (555) 234-5678",
+          forwarding_phone: state.smsPhone || state.phone || "+1 (555) 234-5678",
+          sms_phone: state.smsPhone || state.phone || "+1 (555) 234-5678",
+          business_phone: state.phone || "+1 (555) 234-5678",
           industry: state.trade,
           persona_name: state.personaName,
           persona_voice: state.personaVoice,
@@ -6313,20 +6799,20 @@
       chip.addEventListener("click", () => sendSim(chip.dataset.q));
     });
 
-    // Step 3 Navigation
+    // Step 4 Navigation (Live Call Simulation)
     document.getElementById("btnBack3").addEventListener("click", () => {
       stopCallSimulation();
       state.playbookSubStep = 5;
-      showBox(2);
+      showBox(3);
     });
     document.getElementById("btnNext3").addEventListener("click", () => {
       stopCallSimulation();
-      showBox(4);
+      showBox(5);
     });
 
-    // STEP 4: PAY PAGE & CARRIER CONNECT
+    // STEP 5: PAY PAGE & CARRIER CONNECT
     document.getElementById("btnBack4").addEventListener("click", () => {
-      showBox(3);
+      showBox(4);
     });
 
     function updateCarrierDial(carrier) {
@@ -6390,8 +6876,10 @@
             client_id: state.clientId,
             business_name: state.bizName || "My Business",
             address: state.address || state.query,
-            forwarding_phone: state.phone || "+1 (555) 234-5678",
-            owner_phone: state.phone || "+1 (555) 234-5678",
+            forwarding_phone: state.smsPhone || state.phone || "+1 (555) 234-5678",
+            owner_phone: state.smsPhone || state.phone || "+1 (555) 234-5678",
+            business_phone: state.phone || "+1 (555) 234-5678",
+            sms_phone: state.smsPhone || state.phone || "+1 (555) 234-5678",
             industry: state.trade,
             trade: state.trade,
             persona_name: state.personaName,
