@@ -341,8 +341,8 @@ def create_project(data: Dict[str, Any], trigger_source: str = "admin") -> Dict[
             livekit_prompt = system_prompt
 
         first_message = data.get("first_message") or (
-            f"Thank you for calling {biz_name}. This is {persona_name}, your virtual receptionist. "
-            f"How may I help get your service scheduled today?"
+            f"Thank you for calling {biz_name}! This is {persona_name}. "
+            f"How can I help you today?"
         )
         tts_voice = data.get("persona_voice") or data.get("tts_voice") or "flux-heather-en"
         voice_speed = float(data.get("voice_speed", 1.0))
@@ -399,7 +399,7 @@ def create_project(data: Dict[str, Any], trigger_source: str = "admin") -> Dict[
         oauth_access = data.get("oauth_access_token", "")
         oauth_refresh = data.get("oauth_refresh_token", "")
         is_conn = 1 if (data.get("is_connected") or oauth_email) else 0
-        auth_type = data.get("auth_type", "oauth" if oauth_email else "manual")
+        auth_type = data.get("auth_type") or ("freebusy" if ("@" in oauth_email and not oauth_refresh and not oauth_access) else ("oauth" if oauth_email else "manual"))
         last_stat = 'connected' if is_conn else 'untested'
 
         cur.execute("""
@@ -421,7 +421,7 @@ def create_project(data: Dict[str, Any], trigger_source: str = "admin") -> Dict[
                 oauth_access_token=CASE WHEN excluded.oauth_access_token != '' THEN excluded.oauth_access_token ELSE google_calendar_config.oauth_access_token END,
                 oauth_refresh_token=CASE WHEN excluded.oauth_refresh_token != '' THEN excluded.oauth_refresh_token ELSE google_calendar_config.oauth_refresh_token END,
                 oauth_user_email=CASE WHEN excluded.oauth_user_email != '' THEN excluded.oauth_user_email ELSE google_calendar_config.oauth_user_email END,
-                auth_type=CASE WHEN excluded.auth_type != '' THEN excluded.auth_type ELSE google_calendar_config.auth_type END
+                auth_type=CASE WHEN excluded.auth_type != '' AND excluded.auth_type != 'oauth' THEN excluded.auth_type ELSE COALESCE(NULLIF(google_calendar_config.auth_type, ''), excluded.auth_type) END
         """, (
             clean_id, cal_id, sa_json, cal_webhook, sync_enabled, m_cap, a_cap, e_cap,
             is_conn, now_str if is_conn else None, last_stat,
@@ -446,7 +446,7 @@ def create_project(data: Dict[str, Any], trigger_source: str = "admin") -> Dict[
                 "notes": "System making unusual noise, technician requested."
             }
             call1_trans = [
-                {"speaker": "assistant", "text": f"Thank you for calling {biz_name}! This is {persona_name}. How can I help get your service scheduled today?"},
+                {"speaker": "assistant", "text": f"Thank you for calling {biz_name}! This is {persona_name}. How can I help you today?"},
                 {"speaker": "customer", "text": "Hi, our system started making a loud rattling sound this morning. Can someone come take a look?"},
                 {"speaker": "assistant", "text": "I can definitely help with that! Let's get a certified technician out to diagnose that for you. What is your service address?"},
                 {"speaker": "customer", "text": "We're at 742 Evergreen Terrace. My name is Marcus Vance."},
@@ -740,7 +740,9 @@ def save_project_calendar_config(client_id: str, cal_data: Dict[str, Any]) -> Di
                 is_connected = COALESCE(?, is_connected),
                 last_tested_at = COALESCE(?, last_tested_at),
                 last_status = COALESCE(?, last_status),
-                last_error = COALESCE(?, last_error)
+                last_error = COALESCE(?, last_error),
+                auth_type = COALESCE(?, auth_type),
+                oauth_user_email = COALESCE(?, oauth_user_email)
             WHERE client_id = ?
         """, (
             cal_data.get("calendar_id"),
@@ -754,6 +756,8 @@ def save_project_calendar_config(client_id: str, cal_data: Dict[str, Any]) -> Di
             cal_data.get("last_tested_at"),
             cal_data.get("last_status"),
             cal_data.get("last_error"),
+            cal_data.get("auth_type"),
+            cal_data.get("oauth_user_email"),
             clean_id
         ))
         conn.commit()

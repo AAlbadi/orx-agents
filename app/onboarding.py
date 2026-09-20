@@ -1344,28 +1344,8 @@ async def complete_client_onboarding(data: Dict[str, Any], public_url: str = "")
     phone = profile.get("sms_phone") or profile.get("forwarding_phone") or profile.get("owner_phone")
     if phone:
         try:
-            from app.integrations import send_sms
-            biz = profile.get("business_name") or "Your Business"
-            assigned = profile.get("assigned_phone") or "+1 (833) 420-5227"
-            # Format number nicely for SMS
-            digits = "".join(filter(str.isdigit, assigned))
-            if len(digits) == 11 and digits.startswith("1"):
-                digits = digits[1:]
-            if len(digits) == 10:
-                assigned_fmt = f"+1 ({digits[:3]}) {digits[3:6]}-{digits[6:]}"
-            else:
-                assigned_fmt = assigned
-            base = public_url.rstrip("/") if public_url else "https://agents.orxlabs.com"
-            portal_url = f"{base}/portal?client_id={client_id}&activated=1"
-            sms_msg = (
-                f"🎉 Welcome to ORX Agents, {biz}!\n"
-                f"Your dedicated AI receptionist number is ready:\n"
-                f"📞 {assigned_fmt}\n\n"
-                f"To activate: forward your Google Maps number to {assigned_fmt}\n"
-                f"Portal: {portal_url}"
-            )
-            res = await send_sms(to_phone=phone, message=sms_msg)
-            sms_sent = res.get("status") in ("sent", "simulated_success")
+            sms_res = await send_activation_sms(profile, public_url=public_url)
+            sms_sent = sms_res.get("status") in ("sent", "simulated_success") or sms_res.get("success", False)
         except Exception as err:
             logger.warning(f"Onboarding welcome SMS failed: {err}")
 
@@ -1384,81 +1364,95 @@ async def complete_client_onboarding(data: Dict[str, Any], public_url: str = "")
     }
 
 
-def send_activation_sms(profile: Dict[str, Any], public_url: str = "") -> bool:
-    """Send a Plivo SMS to the client's forwarding phone after successful Polar payment.
-    Contains their assigned number, carrier-specific activation dial code, and unique portal link.
-    Returns True on success, False if Plivo not configured (safe silent fallback).
+def build_activation_sms_message(profile: Dict[str, Any], public_url: str = "") -> str:
+    """Builds an actionable 1-tap activation SMS containing:
+    1. Dedicated AI receptionist phone number
+    2. Exact carrier dialing codes (*71, *61*, **61*, *72) with clickable tel: dialer links
+    3. Direct 1-tap connect link to open dialer directly from mobile SMS
+    4. Explicit note to link Google Calendar for live arrival window conflict prevention
+    5. Portal management link
     """
-    from app.config import settings
-
-    plivo_auth_id = getattr(settings, "PLIVO_AUTH_ID", "")
-    plivo_auth_token = getattr(settings, "PLIVO_AUTH_TOKEN", "")
-    plivo_phone = getattr(settings, "PLIVO_PHONE_NUMBER", "")
-
-    if not (plivo_auth_id and plivo_auth_token and plivo_phone):
-        logger.warning("Plivo not configured — skipping activation SMS (set PLIVO_AUTH_ID, PLIVO_AUTH_TOKEN, PLIVO_PHONE_NUMBER in .env)")
-        return False
-
-    forwarding_phone = profile.get("forwarding_phone", "")
-    if not forwarding_phone:
-        logger.warning(f"No forwarding phone for client '{profile.get('id')}' — skipping SMS")
-        return False
-
-    assigned_phone = profile.get("assigned_phone", plivo_phone)
-    client_id = profile.get("id", "")
-    biz_name = profile.get("business_name", "your business")
+    assigned_phone = profile.get("assigned_phone") or "+1 (833) 420-5227"
+    client_id = profile.get("id") or profile.get("client_id") or ""
+    biz_name = profile.get("business_name") or "your business"
     carrier = (profile.get("carrier") or "verizon").lower()
 
-    # Build carrier-specific dial code from assigned digits
     digits = "".join(filter(str.isdigit, assigned_phone))
-    carrier_codes = {
-        "verizon":  f"*71{digits}",
-        "att":      f"*61*{digits}#",
-        "tmobile":  f"**61*{digits}#",
-        "t-mobile": f"**61*{digits}#",
-    }
-    dial_code = carrier_codes.get(carrier, f"*71{digits}")
-    carrier_label = carrier.title().replace("Tmobile", "T-Mobile")
-
-    # Format assigned phone for display
     if len(digits) == 11 and digits.startswith("1"):
-        digits_display = digits[1:]
+        digits_10 = digits[1:]
+    elif len(digits) == 10:
+        digits_10 = digits
     else:
-        digits_display = digits
-    formatted = f"({digits_display[:3]}) {digits_display[3:6]}-{digits_display[6:]}" if len(digits_display) == 10 else assigned_phone
+        digits_10 = digits
 
-    # Build portal URL
+    formatted = f"({digits_10[:3]}) {digits_10[3:6]}-{digits_10[6:]}" if len(digits_10) == 10 else assigned_phone
+
+    carrier_codes = {
+        "verizon": f"*71{digits_10}",
+        "att": f"*61*{digits_10}#",
+        "tmobile": f"**61*{digits_10}#",
+        "t-mobile": f"**61*{digits_10}#",
+        "landline": f"*72{digits_10}",
+        "other": f"*72{digits_10}",
+    }
+    primary_code = carrier_codes.get(carrier, f"*71{digits_10}")
+    primary_label = carrier.title().replace("Tmobile", "T-Mobile")
+
     base = public_url.rstrip("/") if public_url else "https://agents.orxlabs.com"
+    connect_url = f"{base}/portal?client_id={client_id}&connect=1&carrier={carrier}"
     portal_url = f"{base}/portal?client_id={client_id}&activated=1"
 
     sms_body = (
         f"🎉 Welcome to ORX Agents, {biz_name}!\n\n"
-        f"Your AI receptionist Riley is ready. Your dedicated line:\n"
+        f"Your AI receptionist Riley is live on your dedicated line:\n"
         f"📞 {formatted}\n\n"
-        f"To activate on {carrier_label}, open your Phone app and dial:\n"
-        f"  {dial_code}\n"
-        f"(tap the number to call it directly)\n\n"
-        f"Manage your receptionist:\n"
-        f"{portal_url}\n\n"
+        f"👉 CLICK TO CONNECT NOW (1-Tap Call):\n"
+        f"Tap the number below for your mobile carrier. It opens your phone dialer directly—just press Call! (Your cell rings first; Riley only answers missed calls):\n"
+        f"• {primary_label}: tel:{primary_code} (or dial {primary_code})\n"
+        f"• Other carriers: tel:*71{digits_10} (Verizon) | tel:*61*{digits_10}%23 (AT&T) | tel:**61*{digits_10}%23 (T-Mobile)\n\n"
+        f"📲 Or click this link to connect directly from SMS:\n"
+        f"{connect_url}\n\n"
+        f"📅 GOOGLE CALENDAR:\n"
+        f"Please connect your Google Calendar in your portal (takes 10 secs with zero passwords) so Riley checks live arrival windows and prevents double-booking!\n\n"
+        f"Access Your Portal:\n{portal_url}\n\n"
         f"Reply STOP to opt out."
     )
+    return sms_body
 
+
+async def send_activation_sms(profile: Dict[str, Any], public_url: str = "") -> Dict[str, Any]:
+    """Send an activation SMS to the client's SMS/forwarding phone after successful payment.
+    Contains their assigned number, carrier-specific activation dial code, clickable dialer link,
+    direct SMS connect link, and Google Calendar sync instructions.
+    Uses app.integrations.send_sms with multi-provider (Twilio, Plivo, Telnyx) and simulated fallback.
+    """
+    from app.integrations import send_sms
+
+    sms_target = profile.get("sms_phone") or profile.get("forwarding_phone") or profile.get("owner_phone") or ""
+    if not sms_target:
+        logger.warning(f"No SMS or forwarding phone for client '{profile.get('id')}' — skipping SMS")
+        return {"status": "skipped", "error": "No recipient phone number on file"}
+
+    sms_body = build_activation_sms_message(profile, public_url=public_url)
+    res = await send_sms(to_phone=sms_target, message=sms_body)
+    logger.info(f"Activation SMS dispatched to {sms_target} for '{profile.get('business_name')}': {res.get('status')}")
+    return res
+
+
+def send_activation_sms_sync(profile: Dict[str, Any], public_url: str = "") -> Dict[str, Any]:
+    """Synchronous execution wrapper for send_activation_sms."""
+    import asyncio
     try:
-        import plivo
-        client = plivo.RestClient(plivo_auth_id, plivo_auth_token)
-        response = client.messages.create(
-            src=plivo_phone,
-            dst=forwarding_phone,
-            text=sms_body
-        )
-        logger.info(f"Activation SMS sent to {forwarding_phone} for '{biz_name}' (message_uuid={response[1].get('message_uuid', 'n/a')})")
-        return True
-    except ImportError:
-        logger.warning("plivo package not installed — run: pip install plivo")
-        return False
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                return pool.submit(asyncio.run, send_activation_sms(profile, public_url)).result()
+        else:
+            return asyncio.run(send_activation_sms(profile, public_url))
     except Exception as e:
-        logger.error(f"Failed to send activation SMS to {forwarding_phone}: {e}")
-        return False
+        logger.error(f"Error in send_activation_sms_sync: {e}")
+        return {"status": "error", "error": str(e)}
 
 def get_client_profile(client_id: str) -> Optional[Dict[str, Any]]:
     """Retrieves a client profile by ID."""
@@ -1822,8 +1816,10 @@ def compile_agent_prompt(profile: Dict[str, Any]) -> str:
     first_msg = (
         profile.get("first_message")
         or profile.get("greeting")
-        or f"Thank you for calling {biz_name}! This is {persona_name}. How can I help get your home taken care of today?"
+        or f"Thank you for calling {biz_name}! This is {persona_name}. How can I help you today?"
     )
+    if any(p in first_msg.lower() for p in ["comfortable today", "taken care of today", "scheduled today"]):
+        first_msg = f"Thank you for calling {biz_name}! This is {persona_name}. How can I help you today?"
 
     # Emergency Transfer Line
     transfer_addon = ""
@@ -1860,6 +1856,18 @@ Authorized services: {services_text}.
 - FORMATTING: Spoken voice only—never use markdown, asterisks, bullet points, or lists.
 </conversational_rules>
 
+<field_confirmation_protocol>
+ADDRESS CAPTURE & CONFIRMATION PROTOCOL:
+- When the caller provides their service address, IMMEDIATELY read it back verbatim and ask ONLY for confirmation: 'Got it — so I have [Full Address]. Did I get that right?' (STOP and wait for confirmation).
+- Once confirmed by the caller, that address is PERMANENTLY LOCKED.
+- CRITICAL RULE: NEVER ASK FOR THE SERVICE ADDRESS AGAIN UNDER ANY CIRCUMSTANCES.
+- When completing the booking in the final recap, ALWAYS use the confirmed address directly: 'You\\'re all set, [Name]! We have our team scheduled for [Confirmed Address]...' NEVER ask 'And just to confirm, what is your service address?'.
+
+PHONE NUMBER CAPTURE & CONFIRMATION PROTOCOL:
+- When the caller provides their mobile number, IMMEDIATELY read it back digit-by-digit and ask ONLY for confirmation: 'Perfect — I have six one two, seven one six, nine nine eight nine. Did I get that right?' (STOP and wait for confirmation).
+- Once confirmed, proceed to the recap.
+</field_confirmation_protocol>
+
 <after_hours_policy>
 Active Mode: {night_rule_title}
 Schedule: {hours_str} ({timezone_name})
@@ -1873,14 +1881,16 @@ Immediate Action: Express priority empathy, provide safety instructions, and esc
 
 <booking_flow_state_machine>
 1. Warm Greeting: '{first_msg}'
-2. Symptom Discovery & Triage First: When caller shares a problem, react with warm empathy, but do NOT jump to booking or ask for an address yet. Ask what symptoms they are experiencing: 'Oh no, dealing with {metrics["trade_short"]} trouble is such a headache! What seems to be happening with the system—is it blowing warm air, making a strange sound, or completely shut off?'
-3. Consultative Scheduling Offer: Once they describe the symptoms, acknowledge with expert knowledge. Explain that a technician should inspect it in person to diagnose properly. Transparently propose looking at arrival windows for the team to come out later today or tomorrow: 'Got it, that definitely sounds like something one of our technicians should inspect to diagnose properly. We can get you on the schedule so our team can come out and take care of that for you. Would you like to check our available appointment times?'
-4. Service Address Capture: Only when caller agrees to check times or schedule, collect their address to check route openings (never claim immediate dispatch or closest technician): 'Great! What is your service address so I can check our schedule for your area?'
-5. Arrival Window Selection: Offer two clear arrival windows for the team to come out: 'Got it, [Address]. We have an opening today between one and three, or tomorrow morning between eight and eleven. Which arrival window works better for your schedule?'
+2. Symptom Discovery & Triage First:
+   - For REPAIRS / BREAKDOWNS / PROBLEMS: React with warm empathy, but do NOT jump to booking or ask for an address yet: 'Oh no, dealing with {metrics["trade_short"]} trouble is such a headache! What seems to be happening with the system—is it blowing warm air, making a strange sound, or completely shut off?'
+   - For NEW INSTALLATIONS / REPLACEMENTS / QUOTES: Acknowledge enthusiastically: 'We\\'d love to help you with a new system installation! That\\'s a great project, and we provide free in-person estimates. Would you like to check our available times for a comfort consultant to come out and provide a free estimate?'
+3. Consultative Scheduling Offer: Once they describe symptoms or confirm interest in an estimate, acknowledge with expert knowledge. Propose checking available arrival windows for the team to come out later today or tomorrow: 'Got it, that definitely sounds like something one of our technicians should inspect to diagnose properly. We can get you on the schedule so our team can come out and take care of that for you. Would you like to check our available appointment times?'
+4. Service Address Capture & Immediate Confirmation: Only when caller agrees to check times or schedule, collect their address: 'Great! What is your service address so I can check our schedule for your area?' Immediately read it back: 'Got it — so I have [Address]. Did I get that right?' Once confirmed, NEVER re-ask for the address!
+5. Arrival Window Selection: Offer two clear arrival windows for the team to come out: 'Got it! We have an opening today between one and three, or tomorrow morning between eight and eleven. Which arrival window works better for your schedule?'
 6. Scheduling Conflict Handling: If caller rejects proposed times, immediately adapt: 'No problem at all! What day or time window works best for your schedule?'
-7. Caller Name & Cell Capture: 'And what is your full name and the best cell number for dispatch arrival updates?'
-8. Complete 5-Point Recap & Confirmation: 'You are all set, [Name]! We have our technician scheduled for [Address] for your [Issue] on [Day] between [Time Window]. We just sent a confirmation text with arrival tracking to [Phone]. Does everything sound good?'
-9. Clean Sign-Off: 'Thank you for choosing {biz_name}. Stay comfortable, and have a wonderful day!'
+7. Caller Name & Cell Capture: 'And what is your full name and the best cell number for dispatch arrival updates?' Read number back and confirm.
+8. Complete 5-Point Recap & Confirmation: All details are confirmed. Deliver the complete recap directly without asking for any information again: 'You are all set, [Name]! We have our team scheduled for [Address] for your [Issue] on [Day] between [Time Window]. We just sent a confirmation text with arrival tracking to [Phone]. Does everything sound good?'
+9. Clean Sign-Off: 'Thank you for choosing {biz_name}. Have a wonderful day!'
 </booking_flow_state_machine>
 
 <objection_playbook>
@@ -2048,10 +2058,14 @@ def simulate_agent_turn(client_profile: Dict[str, Any], user_message: str, histo
     elif any(k in msg_lower for k in ["where", "address", "location"]):
         addr = client_profile.get("address", "")
         reply = f"We are based at {addr or 'our central office'} and dispatch our fully equipped mobile service vans directly to your location. What is your street address?"
+    elif any(k in msg_lower for k in ["install", "new ac", "new unit", "replacement", "no ac", "don't have an ac", "need an ac"]):
+        reply = f"We can definitely take care of that! We offer free in-person estimates where our comfort specialist inspects your home layout and provides exact options. Would you like to check our available times for a free consultation?"
+    elif any(k in msg_lower for k in ["not working", "broken", "warm air", "shut off", "rattle", "noise", "cooling", "trouble", "issue", "problem", "leak", "won't turn"]):
+        reply = f"Oh no, dealing with trouble is such a headache! What seems to be happening with the system—is it blowing warm air, making a strange sound, or completely shut off?"
     elif any(k in msg_lower for k in ["book", "schedule", "appointment", "come over", "visit"]):
         reply = f"I can get an arrival window scheduled for you right away for {biz_name}! We have openings today between one and three, or tomorrow morning between eight and eleven. Which works better for you?"
     else:
-        reply = f"Thanks for calling {biz_name}, this is {persona_name}! We can certainly take care of that for you. Would you like me to book our next available technician or answer any questions?"
+        reply = f"Thanks for calling {biz_name}, this is {persona_name}! We can certainly take care of that for you. What seems to be going on with your system today?"
 
     return {
         "response": reply,

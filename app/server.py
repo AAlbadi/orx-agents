@@ -795,7 +795,7 @@ async def api_compile_onboarding_prompt(profile: Dict[str, Any] = Body(...)):
         "prompt": prompt,
         "char_count": len(prompt),
         "word_count": len(prompt.split()),
-        "first_message": profile.get("first_message") or f"Thank you for calling {biz}! This is {persona}. How can I help get your home comfortable today?",
+        "first_message": profile.get("first_message") or f"Thank you for calling {biz}! This is {persona}. How can I help you today?",
     }
 
 
@@ -887,7 +887,7 @@ async def api_polar_webhook(request: Request):
 
                     try:
                         http_base = str(request.base_url).rstrip("/")
-                        send_activation_sms(profile, public_url=http_base)
+                        await send_activation_sms(profile, public_url=http_base)
                     except Exception as sms_err:
                         logger.warning(f"Activation SMS failed (non-fatal): {sms_err}")
 
@@ -898,10 +898,10 @@ async def api_polar_webhook(request: Request):
 
 
 @app.post("/api/payment/simulate")
-async def api_simulate_payment(payload: Dict[str, Any] = Body(...)):
+async def api_simulate_payment(request: Request, payload: Dict[str, Any] = Body(...)):
     """Simulates payment completion for a client company, provisioning their dedicated
     project directory, SQLite database (client.db), custom LiveKit prompt, and Google Calendar config."""
-    from app.onboarding import get_client_profile, save_client_profile
+    from app.onboarding import get_client_profile, save_client_profile, send_activation_sms
     from app.project_db import trigger_new_client_project
 
     client_id = payload.get("client_id") or payload.get("id") or f"client_{int(time.time())}"
@@ -921,6 +921,7 @@ async def api_simulate_payment(payload: Dict[str, Any] = Body(...)):
         "owner_phone": owner_phone,
         "phone": owner_phone,
         "forwarding_phone": owner_phone,
+        "sms_phone": owner_phone,
         "google_calendar_id": cal_id,
         "polar_status": "active",
         "payment_status": "paid",
@@ -934,12 +935,50 @@ async def api_simulate_payment(payload: Dict[str, Any] = Body(...)):
     # Provision project directory, client.db SQLite tables, prompt.json, calendar.json
     project = trigger_new_client_project(profile_data)
 
+    # Trigger 1-tap activation SMS
+    try:
+        http_base = str(request.base_url).rstrip("/")
+        await send_activation_sms(profile_data, public_url=http_base)
+    except Exception as sms_err:
+        logger.warning(f"Activation SMS simulation failed (non-fatal): {sms_err}")
+
     return {
         "success": True,
         "message": f"Payment processed and dedicated project provisioned for '{biz_name}'",
         "client_id": client_id,
         "project": project,
         "database_path": str(project.get("db_path", f"data/projects/{client_id}/client.db")),
+    }
+
+
+@app.post("/api/client/send-setup-sms")
+@app.post("/api/client/resend-activation-sms")
+async def api_resend_setup_sms(request: Request, payload: Dict[str, Any] = Body(...)):
+    """Dispatches or resends the 1-tap carrier connection & activation SMS to the client's mobile phone."""
+    from app.onboarding import get_client_profile, send_activation_sms
+
+    client_id = payload.get("client_id") or payload.get("id")
+    if not client_id:
+        raise HTTPException(status_code=400, detail="Missing client_id")
+
+    profile = get_client_profile(client_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail=f"Client '{client_id}' not found")
+
+    if payload.get("phone"):
+        profile["sms_phone"] = payload["phone"]
+    if payload.get("carrier"):
+        profile["carrier"] = payload["carrier"]
+
+    http_base = str(request.base_url).rstrip("/")
+    res = await send_activation_sms(profile, public_url=http_base)
+
+    target_phone = profile.get("sms_phone") or profile.get("forwarding_phone") or profile.get("owner_phone")
+    return {
+        "success": True,
+        "status": res.get("status", "sent"),
+        "to": target_phone,
+        "message": f"1-Tap activation SMS with carrier dialing link sent to {target_phone}."
     }
 
 
@@ -1589,6 +1628,7 @@ async def api_connect_calendar_freebusy(
     if prof:
         prof["google_calendar_id"] = email
         prof["google_calendar_email"] = email
+        prof["auth_type"] = "freebusy"
         prof["calendar_sync_enabled"] = True
         prof["calendar_connected"] = True
         save_client_profile(prof)
@@ -1636,6 +1676,7 @@ async def api_test_project_calendar(client_id: str, payload: Optional[Dict[str, 
             is_free = True
 
         result = {
+            "success": True,
             "connected": True,
             "status": "freebusy_active",
             "calendar_id": cal_id,
@@ -1912,7 +1953,7 @@ async def api_admin_client_full(client_id: str):
     first_message = (
         profile.get("first_message")
         or proj_prompt.get("first_message")
-        or f"Thank you for calling {biz_name}! This is Riley. How can I help get your home comfortable today?"
+        or f"Thank you for calling {biz_name}! This is Riley. How can I help you today?"
     )
     persona_name = profile.get("persona_name") or proj_prompt.get("persona_name") or "Riley"
     tts_voice = profile.get("tts_voice") or proj_prompt.get("tts_voice") or "flux-heather-en"
@@ -2011,6 +2052,7 @@ async def api_admin_client_full(client_id: str):
             "fee_policy": fee_policy,
             "status": status,
             "created_at": created_at,
+            "google_calendar_id": profile.get("google_calendar_id") or proj_cal.get("calendar_id") or "",
             "portal_url": f"/portal?client_id={client_id}",
         },
         "prompt": {
@@ -2076,6 +2118,7 @@ async def api_admin_client_test_routing(client_id: str, payload: Dict[str, Any] 
 
     return {
         "success": True,
+        "status": "ok",
         "client_id": client_id,
         "business_name": profile.get("business_name"),
         "assigned_phone": assigned_phone,
@@ -2085,13 +2128,18 @@ async def api_admin_client_test_routing(client_id: str, payload: Dict[str, Any] 
         "carrier": profile.get("carrier", "Verizon"),
         "verified_at": profile.get("verified_at") or profile.get("forwarding_setup_at") or "Not yet verified",
         "dedicated_room": dedicated_room,
+        "room_name": dedicated_room,
         "phone_routing_active": phone_routing_active or True,
         "persona_name": profile.get("persona_name", "Riley"),
+        "voice_persona": profile.get("persona_name", "Riley"),
         "first_message": profile.get("first_message") or profile.get("greeting") or f"Thank you for calling {profile.get('business_name')}! This is {profile.get('persona_name', 'Riley')}.",
+        "greeting": profile.get("first_message") or profile.get("greeting") or f"Thank you for calling {profile.get('business_name')}! This is {profile.get('persona_name', 'Riley')}.",
+        "hours": profile.get("hours", "Mon-Fri 8:00 AM - 6:00 PM"),
         "after_hours_action": profile.get("after_hours_action") or profile.get("night_action") or "book_morning",
         "pricing_policy": profile.get("pricing_policy") or profile.get("diagnostic_fee") or "$89",
         "emergency_triggers": profile.get("emergency_triggers") or "Gas smell, water leak, flooding",
         "prompt_char_count": len(compiled),
+        "system_prompt_length": len(compiled),
         "prompt_mirrored_rules": {
             "has_after_hours_policy": "<after_hours_policy>" in compiled or "after hours" in compiled.lower(),
             "has_emergency_triage": "<emergency_triage_rules>" in compiled or "emergency" in compiled.lower(),

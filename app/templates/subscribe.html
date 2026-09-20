@@ -3570,33 +3570,6 @@
             Whenever Riley books an appointment, captures caller details, or flags an emergency, you'll receive a live SMS alert instantly.
           </p>
 
-          <!-- Cool Realistic SMS Message Preview Widget -->
-          <div class="sms-preview-card">
-            <div class="sms-preview-topbar">
-              <div class="sms-preview-sender">
-                <div class="sms-preview-avatar">🤖</div>
-                <div class="sms-sender-text">
-                  <span class="sms-sender-title">Riley AI Receptionist</span>
-                  <span class="sms-sender-meta">Instant Dispatch Alert &bull; Just now</span>
-                </div>
-              </div>
-              <span class="sms-live-pill">
-                <span style="width: 6px; height: 6px; background: #34D399; border-radius: 50%;"></span>
-                Live Alert Preview
-              </span>
-            </div>
-
-            <div class="sms-bubble">
-              <div class="sms-bubble-badge">🚨 NEW APPOINTMENT BOOKED</div>
-              <div class="sms-bubble-line"><strong>Customer:</strong> David Miller &bull; <span class="sms-mock-phone">(206) 555-0192</span></div>
-              <div class="sms-bubble-line"><strong>Service:</strong> Emergency Diagnostic (<span id="smsPreviewTrade">HVAC</span>)</div>
-              <div class="sms-bubble-line"><strong>Arrival Window:</strong> Tomorrow, 9:00 AM – 11:00 AM</div>
-              <div class="sms-bubble-line"><strong>Caller Notes:</strong> <em>"AC blowing warm air, fan not spinning outside."</em></div>
-              <div class="sms-bubble-footer">
-                <span>📲 Riley held calendar slot & texted caller instant booking confirmation</span>
-              </div>
-            </div>
-          </div>
 
           <!-- The Core Question & Choice Cards -->
           <div style="margin-top: 18px; margin-bottom: 8px;">
@@ -6876,6 +6849,13 @@
       btn.innerHTML = `<span>Connecting to Checkout... ⚡</span>`;
       btn.disabled = true;
 
+      const calInputEmail = (document.getElementById("onboardGCalEmailInput")?.value || "").trim();
+      const effectiveCalEmail = calInputEmail || state.google_calendar_id || "primary";
+      if (calInputEmail && calInputEmail.includes("@")) {
+        state.google_calendar_id = calInputEmail;
+        state.calendar_connected = true;
+      }
+
       // 1. Immediately send full user playbook info to system to provision agent & dedicated database
       try {
         await fetch("/api/onboarding/complete", {
@@ -6905,10 +6885,18 @@
             assigned_phone: state.assignedPhone,
             plan: "starter",
             polar_status: "active",
-            google_calendar_id: state.google_calendar_id || "primary",
-            calendar_sync_enabled: state.calendar_connected ? 1 : 1
+            google_calendar_id: effectiveCalEmail,
+            calendar_sync_enabled: (effectiveCalEmail && effectiveCalEmail.includes("@")) ? 1 : 1
           })
         });
+
+        if (effectiveCalEmail && effectiveCalEmail.includes("@")) {
+          await fetch(`/api/projects/${encodeURIComponent(state.clientId)}/calendar/freebusy`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ client_id: state.clientId, email: effectiveCalEmail })
+          }).catch(() => {});
+        }
       } catch (err) {
         console.warn("Onboarding project provisioning sync notice:", err);
       }
@@ -6967,7 +6955,55 @@
       });
     }
 
-    setupMic("micBtn1", "inPhoneQuery");
+    async function connectGoogleCalendarFreeBusyOnboarding() {
+      const emailInput = document.getElementById("onboardGCalEmailInput");
+      const email = (emailInput ? emailInput.value : "").trim() || state.owner_email || "";
+      if (!email || !email.includes("@")) {
+        alert("Please enter a valid Google Calendar email address (e.g. dispatch@mycompany.com or yourname@gmail.com).");
+        if (emailInput) emailInput.focus();
+        return;
+      }
+      const cid = state.clientId || `cli_${Math.random().toString(36).substring(2, 9)}`;
+      state.clientId = cid;
+      const btn = document.getElementById("btnOnboardGCalFreeBusy");
+      const btnText = document.getElementById("btnOnboardGCalText");
+      const desc = document.getElementById("onboardingGCalDesc");
+      if (btnText) btnText.textContent = "Syncing...";
+      if (btn) btn.disabled = true;
+
+      try {
+        const res = await fetch(`/api/projects/${encodeURIComponent(cid)}/calendar/freebusy`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            client_id: cid,
+            email: email
+          })
+        });
+        const data = await res.json();
+        if (data.success || data.connected) {
+          state.google_calendar_id = email;
+          state.calendar_connected = true;
+          if (desc) {
+            desc.style.color = "#059669";
+            desc.textContent = `✓ FreeBusy Linked to ${email}. Real-time double-booking prevention active!`;
+          }
+          if (btn) {
+            btn.style.background = "#10B981";
+            btn.style.borderColor = "#059669";
+          }
+          if (btnText) btnText.textContent = "✓ Connected";
+        } else {
+          alert("Could not connect calendar: " + (data.detail || "Unknown error"));
+          if (btnText) btnText.textContent = "⚡ Connect FreeBusy";
+          if (btn) btn.disabled = false;
+        }
+      } catch (err) {
+        alert("Error connecting Google Calendar: " + err.message);
+        if (btnText) btnText.textContent = "⚡ Connect FreeBusy";
+        if (btn) btn.disabled = false;
+      }
+    }
 
     async function connectGoogleCalendarOnboarding() {
       const cid = state.clientId || `cli_${Math.random().toString(36).substring(2, 9)}`;
