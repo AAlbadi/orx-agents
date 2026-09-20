@@ -523,11 +523,11 @@
             We sent an SMS to your cell with your dedicated number and carrier quick-dial code. Complete your 1-tap carrier connection below to start routing calls.
           </p>
           <div style="display: flex; gap: 10px; font-size: 11.5px; font-weight: 700; color: #065F46;">
-            <span>✓ $99/mo Starter Plan</span>
+            <span>✓ $20/mo Starter Plan</span>
             <span>•</span>
-            <span>✓ 200 Min Included</span>
+            <span>✓ 60 Min Included</span>
             <span>•</span>
-            <span>✓ $0.15/min Overage</span>
+            <span>✓ $0.25/min Overage</span>
             <span>•</span>
             <span>✓ Dedicated Line Assigned</span>
           </div>
@@ -545,7 +545,7 @@
       <div>
         <a href="https://polar.sh" target="_blank" class="btn-polar-badge">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-          <span id="planBadge">Polar Active • $99/mo (200 min incl.)</span>
+          <span id="planBadge">Polar Active • $20/mo (60 min incl.)</span>
         </a>
       </div>
     </header>
@@ -584,6 +584,23 @@
             <button type="button" id="btnVerifyPing" style="background: #FFF; border: 1px solid var(--border); padding: 11px 18px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; color: var(--text-main); cursor: pointer;">
               <span>⚡ Confirm & Verify Connection</span>
             </button>
+            <button type="button" id="btnWatchVideoGuide" style="background: #FFF; border: 1.5px solid #D97706; padding: 10px 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; color: #B45309; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              <span>📹 Watch 60-Second Video Tutorial</span>
+            </button>
+          </div>
+
+          <!-- Email Setup Delivery -->
+          <div style="margin-top: 14px; padding: 12px 14px; background: #FFF; border: 1px solid var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+            <div style="font-size: 12.5px; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
+              <span>📧</span>
+              <span>Need setup instructions or dialing codes sent to your email?</span>
+            </div>
+            <div style="display: flex; gap: 6px; flex: 1; min-width: 260px; max-width: 380px;">
+              <input type="email" id="inputActivationEmail" placeholder="your@email.com" class="control-input" style="padding: 7px 10px; font-size: 12px; margin: 0; flex: 1;">
+              <button type="button" id="btnSendActivationEmail" style="white-space: nowrap; background: var(--brand); color: #FFF; border: none; border-radius: 6px; padding: 7px 14px; font-size: 12px; font-weight: 600; cursor: pointer;">Email Me Info</button>
+            </div>
+            <div id="emailSendResult" style="display: none; width: 100%; font-size: 11.5px; color: var(--success); font-weight: 600; margin-top: 4px;"></div>
           </div>
 
           <!-- Subtle drawer for Office Phone / App Users in Portal -->
@@ -656,9 +673,14 @@
     <div class="portal-layout">
       <!-- Recent Calls -->
       <section class="card-section">
-        <div class="section-head">
+        <div class="section-head" style="display: flex; align-items: center; justify-content: space-between;">
           <h2 class="section-title">Recent Inbound Calls</h2>
-          <span style="font-size: 12px; color: var(--text-tertiary);" id="callListStatus">Loading...</span>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <button type="button" id="btnSimulateCall" style="background: var(--bg-card); border: 1px solid var(--border); padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text-main); display: inline-flex; align-items: center; gap: 5px; box-shadow: var(--shadow-sm); transition: all 0.15s;">
+              <span>📞 Simulate Inbound Call</span>
+            </button>
+            <span style="font-size: 12px; color: var(--text-tertiary);" id="callListStatus">Loading...</span>
+          </div>
         </div>
 
         <div id="callList">
@@ -671,7 +693,7 @@
       <!-- Subscription & Billing Card -->
       <section class="card-section" style="margin-top: 16px;">
         <div class="section-head">
-          <h2 class="section-title">Subscription & Billing</h2>
+          <h2 class="section-title">Subscription & Live Billing</h2>
         </div>
         <div style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
           <div style="display: flex; align-items: center; justify-content: space-between;">
@@ -700,45 +722,134 @@
               <span style="font-size: 12px; color: var(--text-tertiary);" id="subMonthMinutes">0 min used (200 min incl.)</span>
             </div>
           </div>
-          <a href="https://polar.sh" target="_blank" style="display: block; text-align: center; padding: 10px; border-radius: 12px; background: rgba(16,185,129,0.08); color: #10b981; font-size: 13px; font-weight: 600; text-decoration: none; border: 1px solid rgba(16,185,129,0.15); transition: all 0.2s;" onmouseover="this.style.background='rgba(16,185,129,0.15)'" onmouseout="this.style.background='rgba(16,185,129,0.08)'">
-            Manage Subscription on Polar →
-          </a>
+
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px;">
+            <a href="https://polar.sh" target="_blank" style="flex: 1; text-align: center; padding: 10px; border-radius: 10px; background: rgba(16,185,129,0.08); color: #10b981; font-size: 12.5px; font-weight: 600; text-decoration: none; border: 1px solid rgba(16,185,129,0.15); transition: all 0.15s;">
+              Manage on Polar →
+            </a>
+            <button type="button" id="btnCancelSubscription" style="padding: 10px 16px; border-radius: 10px; background: #FEF2F2; color: #DC2626; font-size: 12px; font-weight: 600; border: 1px solid #FCA5A5; cursor: pointer; transition: all 0.15s;">
+              End / Cancel Subscription
+            </button>
+            <button type="button" id="btnReactivateSubscription" style="display: none; padding: 10px 16px; border-radius: 10px; background: #ECFDF5; color: #059669; font-size: 12px; font-weight: 600; border: 1px solid #6EE7B7; cursor: pointer; transition: all 0.15s;">
+              Reactivate Line
+            </button>
+          </div>
+          <div id="cancelFeedback" style="display: none; font-size: 11.5px; padding: 8px 10px; border-radius: 8px; background: #FEF2F2; color: #991B1B; border: 1px solid #FCA5A5;"></div>
         </div>
       </section>
 
-      <!-- Sidebar: Quick Toggles & Test -->
+      <!-- Sidebar: Friendly Settings & Live Testing -->
       <aside>
+        <!-- Card 1: AI Voice & Persona -->
         <div class="sidebar-card">
-          <h3 class="sidebar-title">Business Profile & Hours</h3>
-          <div class="control-group">
-            <label class="control-label">Your Forwarding Cell</label>
-            <input type="tel" class="control-input" id="editForwardPhone" value="+1 (555) 234-5678">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <h3 class="sidebar-title" style="margin-bottom: 0;">🎙️ AI Receptionist & Voice</h3>
+            <span style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: var(--brand-soft); color: var(--brand);" id="activeVoiceBadge">Riley (Warm)</span>
           </div>
+          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
+            Select your receptionist persona and custom opening greeting.
+          </p>
+
+          <div style="margin-bottom: 12px;">
+            <label class="control-label" style="margin-bottom: 6px; display: block;">Voice Persona</label>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;" id="voiceSelectorPills">
+              <button type="button" class="voice-pill active" data-voice="af_heart" data-name="Riley" style="background: var(--brand); color: #FFF; border: none; padding: 8px 6px; border-radius: 8px; font-size: 11.5px; font-weight: 600; cursor: pointer; text-align: center;">
+                <div>👩 Riley</div>
+                <div style="font-size: 9.5px; opacity: 0.85;">Warm & Natural</div>
+              </button>
+              <button type="button" class="voice-pill" data-voice="am_michael" data-name="Michael" style="background: #FFF; color: var(--text-main); border: 1px solid var(--border); padding: 8px 6px; border-radius: 8px; font-size: 11.5px; font-weight: 600; cursor: pointer; text-align: center;">
+                <div>👨 Michael</div>
+                <div style="font-size: 9.5px; opacity: 0.85;">Professional</div>
+              </button>
+              <button type="button" class="voice-pill" data-voice="af_sarah" data-name="Sarah" style="background: #FFF; color: var(--text-main); border: 1px solid var(--border); padding: 8px 6px; border-radius: 8px; font-size: 11.5px; font-weight: 600; cursor: pointer; text-align: center;">
+                <div>👩 Sarah</div>
+                <div style="font-size: 9.5px; opacity: 0.85;">Direct & Clear</div>
+              </button>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label class="control-label">Receptionist Name</label>
+            <input type="text" class="control-input" id="editPersonaName" value="Riley">
+          </div>
+
+          <div class="control-group">
+            <label class="control-label">Opening Greeting Phrase</label>
+            <input type="text" class="control-input" id="editGreeting" placeholder="e.g. Thank you for calling Apex Climate. This is Riley. How can I help today?">
+          </div>
+        </div>
+
+        <!-- Card 2: Contact & Phone Routing -->
+        <div class="sidebar-card" style="margin-top: 16px;">
+          <h3 class="sidebar-title">📱 Phones & Notifications</h3>
+          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
+            Configure where calls forward and where instant SMS lead alerts are delivered.
+          </p>
+
+          <div class="control-group">
+            <label class="control-label">Forwarding Phone (For Missed Calls / Transfer)</label>
+            <input type="tel" class="control-input" id="editForwardPhone" value="+1 (555) 234-5678">
+            <span style="font-size: 10.5px; color: var(--text-tertiary);">Where customer calls bounce if transferred.</span>
+          </div>
+
+          <div class="control-group" style="margin-top: 8px;">
+            <label class="control-label">SMS Alert Cell (For New Leads & Bookings)</label>
+            <input type="tel" class="control-input" id="editSmsPhone" placeholder="+1 (555) 000-0000">
+            <span style="font-size: 10.5px; color: var(--text-tertiary);">Where instant booking SMS summaries are texted.</span>
+          </div>
+        </div>
+
+        <!-- Card 3: Operating Hours & Night-Call Policy -->
+        <div class="sidebar-card" style="margin-top: 16px;">
+          <h3 class="sidebar-title">🕒 Schedule & Night-Call Policy</h3>
+          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
+            Set your normal business hours and what Riley does when someone calls after-hours.
+          </p>
+
           <div class="control-group">
             <label class="control-label">Operating Hours</label>
             <input type="text" class="control-input" id="editHours" value="Mon-Fri 7:30 AM to 6:00 PM">
           </div>
+
+          <div class="control-group">
+            <label class="control-label">When Someone Calls After-Hours</label>
+            <select class="control-input" id="editNightAction" style="cursor: pointer;">
+              <option value="book_morning" selected>Book first available morning arrival window (Recommended)</option>
+              <option value="sms_urgent">Take caller details & text owner cell immediately</option>
+              <option value="transfer_tech">Transfer directly to emergency on-call technician</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Card 4: Services, Territory & Pricing -->
+        <div class="sidebar-card" style="margin-top: 16px;">
+          <h3 class="sidebar-title">🛠️ Services, Pricing & Emergency Rules</h3>
+          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
+            Tailor what services Riley quotes, diagnostic fee policies, and emergency words.
+          </p>
+
+          <div class="control-group">
+            <label class="control-label">Diagnostic Fee / Pricing Policy</label>
+            <input type="text" class="control-input" id="editPricing" placeholder="e.g. $89 Diagnostic Fee credited toward repair">
+          </div>
+
           <div class="control-group">
             <label class="control-label">Physical Address / Coverage Territory</label>
             <input type="text" class="control-input" id="editAddress" placeholder="e.g. 1200 Westlake Ave, Seattle WA">
           </div>
+
           <div class="control-group">
             <label class="control-label">Core Services Offered</label>
             <input type="text" class="control-input" id="editServices" placeholder="e.g. AC Repair, Furnace Tune-Up, Heat Pumps">
           </div>
-          <button type="button" class="btn-save-settings" id="btnSaveSettings">Save Profile Changes</button>
-        </div>
 
-        <div class="sidebar-card" style="margin-top: 16px;">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-            <h3 class="sidebar-title" style="margin-bottom: 0;">🧠 AI Voice Master Prompt</h3>
-            <span style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: var(--brand-soft); color: var(--brand);">Marcus-Smart</span>
+          <div class="control-group">
+            <label class="control-label">Emergency Triggers (Transfers or Priority Alert)</label>
+            <input type="text" class="control-input" id="editEmergency" placeholder="e.g. Active gas smell, water pouring through ceiling, sparks">
           </div>
-          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
-            Your custom-compiled XML prompt driving LiveKit voice intake, 4-slot lead capture, and booking logic.
-          </p>
-          <textarea class="control-input" id="editPrompt" rows="6" style="font-family: var(--font-mono); font-size: 11px; line-height: 1.4; resize: vertical;" placeholder="Agent master prompt..."></textarea>
-          <button type="button" class="btn-save-settings" id="btnSavePrompt" style="margin-top: 8px; width: 100%;">Save Custom Prompt</button>
+
+          <button type="button" class="btn-save-settings" id="btnSaveSettings" style="margin-top: 14px; width: 100%; padding: 12px; font-size: 13.5px;">Save Receptionist Settings</button>
+          <div id="saveFeedback" style="display: none; margin-top: 8px; font-size: 12px; font-weight: 600; text-align: center; color: var(--success);"></div>
         </div>
 
         <div class="sidebar-card" style="margin-top: 16px;">
@@ -793,6 +904,79 @@
           <div class="test-reply" id="quickTestReply"></div>
         </div>
       </aside>
+    </div>
+  </div>
+
+  <!-- Video Tutorial Modal -->
+  <div id="videoGuideModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.68); z-index: 9999; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px);">
+    <div style="background: #FFF; border-radius: 16px; max-width: 620px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); overflow: hidden; border: 1px solid var(--border);">
+      <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--bg-subtle);">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 18px;">📹</span>
+          <div>
+            <h3 style="font-size: 15px; font-weight: 700; color: var(--text-main); margin: 0;">How Conditional Call Forwarding Works</h3>
+            <p style="font-size: 11.5px; color: var(--text-muted); margin: 0;">Your personal phone rings first — Riley only answers unanswered calls.</p>
+          </div>
+        </div>
+        <button type="button" id="btnCloseVideoModal" style="background: transparent; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); padding: 4px 8px; line-height: 1;">✕</button>
+      </div>
+
+      <div style="padding: 20px;">
+        <!-- Embedded YouTube Video Container -->
+        <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 10px; background: #000; margin-bottom: 16px; box-shadow: var(--shadow-sm);">
+          <iframe id="videoIframe" style="position: absolute; top:0; left: 0; width: 100%; height: 100%; border: 0;" src="https://www.youtube-nocookie.com/embed/kYJvM9lZJ0w" title="Carrier Call Forwarding Guide" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+
+        <div style="background: var(--bg-canvas); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px;">
+          <div style="font-size: 12px; font-weight: 700; color: var(--text-main); margin-bottom: 6px;">3-Step Setup Quick Reference:</div>
+          <ol style="font-size: 12px; color: var(--text-muted); line-height: 1.55; padding-left: 18px; margin: 0;">
+            <li>Select your mobile carrier on the dashboard.</li>
+            <li>Tap the connect button or dial the code from your cell keypad.</li>
+            <li>Listen for the carrier confirmation tone/beeps and hang up. That's it!</li>
+          </ol>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 16px;">
+          <thead>
+            <tr style="background: var(--bg-subtle); text-align: left;">
+              <th style="padding: 7px 10px; border-radius: 6px 0 0 6px;">Carrier</th>
+              <th style="padding: 7px 10px;">Dial Code (Turn ON)</th>
+              <th style="padding: 7px 10px; border-radius: 0 6px 6px 0;">Turn OFF</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom: 1px solid var(--border);">
+              <td style="padding: 7px 10px; font-weight: 600;">Verizon</td>
+              <td style="padding: 7px 10px; font-family: monospace; color: var(--brand); font-weight: 700;">*71 + Dedicated Number</td>
+              <td style="padding: 7px 10px; font-family: monospace; color: var(--text-muted);">*73</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border);">
+              <td style="padding: 7px 10px; font-weight: 600;">AT&T</td>
+              <td style="padding: 7px 10px; font-family: monospace; color: var(--brand); font-weight: 700;">*61* + Dedicated Number + #</td>
+              <td style="padding: 7px 10px; font-family: monospace; color: var(--text-muted);">#61#</td>
+            </tr>
+            <tr style="border-bottom: 1px solid var(--border);">
+              <td style="padding: 7px 10px; font-weight: 600;">T-Mobile</td>
+              <td style="padding: 7px 10px; font-family: monospace; color: var(--brand); font-weight: 700;">**61* + Dedicated Number + #</td>
+              <td style="padding: 7px 10px; font-family: monospace; color: var(--text-muted);">##61#</td>
+            </tr>
+            <tr>
+              <td style="padding: 7px 10px; font-weight: 600;">Desk Phone / VoIP</td>
+              <td style="padding: 7px 10px; font-family: monospace; color: var(--brand); font-weight: 700;">*72 + Dedicated Number</td>
+              <td style="padding: 7px 10px; font-family: monospace; color: var(--text-muted);">*73</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <a href="https://www.youtube.com/watch?v=kYJvM9lZJ0w" target="_blank" style="font-size: 12px; color: #B45309; text-decoration: underline; font-weight: 600;">
+            Open in YouTube App ↗
+          </a>
+          <button type="button" id="btnDismissVideoModal" style="background: var(--brand); color: #FFF; border: none; border-radius: 8px; padding: 8px 18px; font-size: 12.5px; font-weight: 600; cursor: pointer;">
+            Got It, Thanks!
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1025,24 +1209,93 @@
       }
     }
 
+    let selectedVoice = "af_heart";
+
     function populateDashboardUI(p) {
       currentClient = p;
       document.getElementById("bannerBizName").textContent = p.business_name || "Your Business";
       document.getElementById("assignedPhoneVal").textContent = p.assigned_phone || "+1 (833) 420-5227";
       document.getElementById("forwardPhoneVal").textContent = p.forwarding_phone || "+1 (555) 234-5678";
-      document.getElementById("editForwardPhone").value = p.forwarding_phone || "+1 (555) 234-5678";
-      document.getElementById("editHours").value = p.hours || "Mon-Fri 8:00 AM to 6:00 PM";
+
+      // 1. Receptionist Persona & Voice
+      const personaInput = document.getElementById("editPersonaName");
+      if (personaInput) personaInput.value = p.persona_name || "Riley";
+      const greetingInput = document.getElementById("editGreeting");
+      if (greetingInput) greetingInput.value = p.greeting || p.first_message || `Thank you for calling ${p.business_name || "our company"}! This is ${p.persona_name || "Riley"}. How can I help get your service scheduled today?`;
+
+      const vVoice = p.persona_voice || p.voice || "af_heart";
+      selectedVoice = vVoice;
+      document.querySelectorAll(".voice-pill").forEach(pill => {
+        const isMatch = pill.dataset.voice === vVoice || (vVoice.includes("michael") && pill.dataset.voice.includes("michael")) || (vVoice.includes("sarah") && pill.dataset.voice.includes("sarah"));
+        if (isMatch) {
+          pill.style.background = "var(--brand)";
+          pill.style.color = "#FFF";
+          pill.style.border = "none";
+          const badge = document.getElementById("activeVoiceBadge");
+          if (badge) badge.textContent = `${pill.dataset.name} Active`;
+        } else {
+          pill.style.background = "#FFF";
+          pill.style.color = "var(--text-main)";
+          pill.style.border = "1px solid var(--border)";
+        }
+      });
+
+      // 2. Phones
+      const forwardInput = document.getElementById("editForwardPhone");
+      if (forwardInput) forwardInput.value = p.forwarding_phone || p.phone || "";
+      const smsInput = document.getElementById("editSmsPhone");
+      if (smsInput) smsInput.value = p.sms_phone || p.owner_phone || p.forwarding_phone || "";
+
+      // 3. Schedule & After-Hours
+      const hoursInput = document.getElementById("editHours");
+      if (hoursInput) hoursInput.value = p.hours || "Mon-Fri 7:30 AM to 6:00 PM";
+      const nightSelect = document.getElementById("editNightAction");
+      if (nightSelect && (p.after_hours_action || p.night_action)) {
+        nightSelect.value = p.after_hours_action || p.night_action;
+      }
+
+      // 4. Services & Pricing
+      const pricingInput = document.getElementById("editPricing");
+      if (pricingInput) pricingInput.value = p.pricing_policy || p.diagnostic_fee || "$89 Diagnostic Fee credited toward repair";
       const addrInput = document.getElementById("editAddress");
       if (addrInput) addrInput.value = p.address || "";
       const servInput = document.getElementById("editServices");
       if (servInput) servInput.value = p.services || "";
-      const promptInput = document.getElementById("editPrompt");
-      if (promptInput) promptInput.value = p.compiled_prompt || p.livekit_prompt || p.custom_prompt || "";
-      if (p.plan) {
-        document.getElementById("planBadge").textContent = `Polar Active • ${p.plan.toUpperCase()} Plan`;
+      const emInput = document.getElementById("editEmergency");
+      if (emInput) emInput.value = p.emergency_triggers || p.transfer_rules || "";
+
+      // Subscription status & cancellation UI
+      const subPlan = document.getElementById("subPlanName");
+      if (subPlan) subPlan.textContent = (p.plan || "starter").charAt(0).toUpperCase() + (p.plan || "starter").slice(1) + " Plan";
+
+      const subBadge = document.getElementById("subStatusBadge");
+      const btnCancel = document.getElementById("btnCancelSubscription");
+      const btnReactivate = document.getElementById("btnReactivateSubscription");
+      const planBadge = document.getElementById("planBadge");
+
+      if (p.polar_status === "canceled") {
+        if (subBadge) {
+          subBadge.textContent = "Canceled";
+          subBadge.style.background = "#FEE2E2";
+          subBadge.style.color = "#DC2626";
+          subBadge.style.borderColor = "#FCA5A5";
+        }
+        if (btnCancel) btnCancel.style.display = "none";
+        if (btnReactivate) btnReactivate.style.display = "inline-block";
+        if (planBadge) planBadge.textContent = "Subscription Canceled (Inactive)";
+      } else {
+        if (subBadge) {
+          subBadge.textContent = "Active";
+          subBadge.style.background = "rgba(16,185,129,0.1)";
+          subBadge.style.color = "#10b981";
+          subBadge.style.borderColor = "rgba(16,185,129,0.2)";
+        }
+        if (btnCancel) btnCancel.style.display = "inline-block";
+        if (btnReactivate) btnReactivate.style.display = "none";
+        if (planBadge) planBadge.textContent = `Polar Active • ${(p.plan || "starter").toUpperCase()} Plan ($99/mo)`;
       }
 
-      // Handle Connection Status
+      // Handle Carrier Connection Status
       updateConnectionUI(p);
 
       // Load Project Calendar Config if available
@@ -1072,18 +1325,6 @@
       if (p.id) {
         loadProjectStats(p.id);
         loadProjectCalls(p.id);
-      }
-
-      // Subscription info
-      const subPlan = document.getElementById("subPlanName");
-      const subBadge = document.getElementById("subStatusBadge");
-      if (subPlan) subPlan.textContent = (p.plan || "starter").charAt(0).toUpperCase() + (p.plan || "starter").slice(1);
-      if (subBadge) {
-        const isActive = p.polar_status === "active";
-        subBadge.textContent = isActive ? "Active" : "Trial";
-        subBadge.style.background = isActive ? "rgba(16,185,129,0.1)" : "rgba(245,158,11,0.1)";
-        subBadge.style.color = isActive ? "#10b981" : "#f59e0b";
-        subBadge.style.borderColor = isActive ? "rgba(16,185,129,0.2)" : "rgba(245,158,11,0.2)";
       }
     }
 
@@ -1125,14 +1366,14 @@
 
     async function loadProjectCalls(projectId) {
       try {
-        const res = await fetch(`/api/admin/clients/${encodeURIComponent(projectId)}/calls?limit=20`);
+        const res = await fetch(`/api/admin/clients/${encodeURIComponent(projectId)}/calls?limit=30`);
         const data = await res.json();
         const callList = document.getElementById("callList");
         const status = document.getElementById("callListStatus");
         if (!callList) return;
 
         if (!data.calls || data.calls.length === 0) {
-          callList.innerHTML = `<div class="call-row" style="text-align: center; padding: 24px; color: var(--text-tertiary); font-size: 13px;">No calls yet. Your AI receptionist is ready and waiting!</div>`;
+          callList.innerHTML = `<div class="call-row" style="text-align: center; padding: 24px; color: var(--text-tertiary); font-size: 13px;">No calls recorded yet. Click "Simulate Inbound Call" above to test!</div>`;
           if (status) status.textContent = "0 calls";
           return;
         }
@@ -1140,40 +1381,69 @@
         if (status) status.textContent = `${data.calls.length} call${data.calls.length !== 1 ? 's' : ''}`;
         callList.innerHTML = data.calls.map(call => {
           const info = call.extracted_info || {};
-          const name = info.customer_name || info.name || "";
+          const name = info.customer_name || info.client_name || info.name || "";
           const phone = call.caller_phone || "Unknown";
           const service = info.service_requested || info.service || "";
           const dur = call.call_duration ? `${Math.round(call.call_duration)}s` : "";
           const date = call.created_at ? new Date(call.created_at).toLocaleDateString("en-US", {month: "short", day: "numeric", hour: "numeric", minute: "2-digit"}) : "";
           const hasRecording = call.recording_file;
+          let transcript = [];
+          if (Array.isArray(call.transcript)) {
+            transcript = call.transcript;
+          } else if (typeof call.transcript === "string" && call.transcript.startsWith("[")) {
+            try { transcript = JSON.parse(call.transcript); } catch (e) {}
+          }
 
-          // Determine badge
           let badgeClass = "badge-inquiry";
           let badgeText = "General Inquiry";
           if (service.toLowerCase().includes("emergency") || service.toLowerCase().includes("gas") || service.toLowerCase().includes("leak")) {
             badgeClass = "badge-transferred";
             badgeText = "Emergency";
-          } else if (info.appointment_date || info.appointment_time) {
+          } else if (info.appointment_date || info.appointment_time || info.window) {
             badgeClass = "badge-booked";
             badgeText = "Appointment Booked";
           }
 
-          return `<div class="call-row" style="cursor: pointer;" onclick="this.querySelector('.call-detail')?.classList.toggle('hidden')">
-            <div class="call-meta">
-              <span class="caller-id">
+          const recFilename = hasRecording ? call.recording_file.split('/').pop() : "";
+
+          return `<div class="call-row" style="cursor: pointer; border-bottom: 1px solid var(--border); padding: 14px 16px; transition: background 0.15s;" onclick="this.querySelector('.call-detail')?.classList.toggle('hidden')">
+            <div class="call-meta" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+              <span class="caller-id" style="font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 6px;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
                 <span>${name ? name + " • " : ""}${phone}</span>
               </span>
               <span style="display: flex; align-items: center; gap: 6px;">
-                ${dur ? `<span style="font-size: 11px; color: var(--text-tertiary); font-family: monospace;">${dur}</span>` : ""}
+                ${dur ? `<span style="font-size: 11px; color: var(--text-tertiary); font-family: monospace;">⏱ ${dur}</span>` : ""}
                 <span class="call-badge ${badgeClass}">${badgeText}</span>
               </span>
             </div>
-            <div class="call-snippet">${service ? service : (date || "Call recorded")}</div>
-            <div class="call-detail hidden" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border);">
-              ${date ? `<div style="font-size: 11px; color: var(--text-tertiary); margin-bottom: 4px;">${date}</div>` : ""}
-              ${info.service_address ? `<div style="font-size: 12px; color: var(--text-secondary);">📍 ${info.service_address}</div>` : ""}
-              ${hasRecording ? `<audio controls preload="none" style="width: 100%; margin-top: 6px; height: 32px;"><source src="/api/recordings/${call.recording_file.split('/').pop()}" type="audio/wav"></audio>` : ""}
+            <div class="call-snippet" style="font-size: 13px; color: var(--text-muted);">${service ? service : (date || "Customer call recorded")}</div>
+            <div class="call-detail hidden" style="margin-top: 10px; padding: 12px; background: var(--bg-canvas); border-radius: 8px; border: 1px solid var(--border);">
+              <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-tertiary); margin-bottom: 6px; flex-wrap: wrap; gap: 4px;">
+                <span>📅 ${date}</span>
+                ${info.appointment_time || info.window ? `<span style="font-weight: 700; color: #065F46;">Arrival: ${info.appointment_date || "Confirmed"} (${info.appointment_time || info.window})</span>` : ""}
+              </div>
+              ${info.service_address ? `<div style="font-size: 12px; color: var(--text-main); font-weight: 600; margin-bottom: 8px;">📍 Service Address: ${info.service_address}</div>` : ""}
+              ${hasRecording ? `
+                <div style="margin-top: 8px; margin-bottom: 10px;">
+                  <div style="font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px;">Call Audio Recording:</div>
+                  <audio controls preload="none" style="width: 100%; height: 32px;" onclick="event.stopPropagation();">
+                    <source src="/api/recordings/${recFilename}" type="audio/wav">
+                  </audio>
+                </div>
+              ` : ""}
+              ${transcript.length > 0 ? `
+                <div style="margin-top: 8px; border-top: 1px dashed var(--border); padding-top: 8px;">
+                  <div style="font-size: 11px; font-weight: 700; color: var(--text-tertiary); margin-bottom: 6px; text-transform: uppercase;">Transcript</div>
+                  <div style="display: flex; flex-direction: column; gap: 6px; font-size: 12px; max-height: 180px; overflow-y: auto;">
+                    ${transcript.map(t => `
+                      <div style="padding: 6px 10px; border-radius: 6px; ${t.speaker === 'assistant' ? 'background: var(--brand-soft); color: var(--brand); align-self: flex-start;' : 'background: #FFF; border: 1px solid var(--border); align-self: flex-end;'} max-width: 90%;">
+                        <strong>${t.speaker === 'assistant' ? (p.persona_name || 'Riley') : 'Caller'}:</strong> ${t.text}
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              ` : ""}
             </div>
           </div>`;
         }).join("");

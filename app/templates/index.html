@@ -248,13 +248,54 @@
 
     <!-- CLIENTS TAB -->
     <div id="tab-clients" class="hidden flex-1 overflow-y-auto p-6 bg-[#08090c] custom-scrollbar">
-      <div class="max-w-6xl mx-auto space-y-6">
-        <div class="flex items-center justify-between">
-          <h2 class="text-xl font-bold text-white">Clients</h2>
-          <button onclick="fetchClientsTab()" class="text-xs text-[#10b981] hover:underline">Refresh</button>
+      <div class="max-w-7xl mx-auto space-y-6">
+        <!-- Top header, stats & search bar -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#1a1d26] pb-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <h2 class="text-xl font-bold text-white tracking-tight">🏢 Business Owners & Client Accounts</h2>
+              <span id="clients-total-badge" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-800/60">0 Clients</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-1">End-to-end client directory: click any client card to inspect their live AI prompt, call transcripts, recordings, and real-time $20/mo usage cost.</p>
+          </div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <div class="relative min-w-[240px]">
+              <input type="text" id="clients-search-input" oninput="filterClientsGrid()" placeholder="🔍 Search business, owner, phone..." class="w-full bg-[#111318] border border-[#1a1d26] rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition">
+            </div>
+            <button onclick="fetchClientsTab()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition flex items-center gap-1 cursor-pointer">
+              <span>↻</span> Refresh
+            </button>
+          </div>
         </div>
+
+        <!-- KPI Summary Pills -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div class="bg-[#111318] border border-[#1a1d26] rounded-xl p-3">
+            <div class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Active Subscriptions</div>
+            <div class="text-lg font-extrabold text-white mt-0.5" id="kpi-active-clients">0</div>
+            <div class="text-[10px] text-emerald-400 mt-0.5">✓ $20/mo Tier (60 min incl.)</div>
+          </div>
+          <div class="bg-[#111318] border border-[#1a1d26] rounded-xl p-3">
+            <div class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Total Calls Handled</div>
+            <div class="text-lg font-extrabold text-white mt-0.5" id="kpi-total-calls">0</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">Across all client DBs</div>
+          </div>
+          <div class="bg-[#111318] border border-[#1a1d26] rounded-xl p-3">
+            <div class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Total Usage Minutes</div>
+            <div class="text-lg font-extrabold text-white mt-0.5" id="kpi-total-minutes">0m</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">Live speech duration</div>
+          </div>
+          <div class="bg-[#111318] border border-[#1a1d26] rounded-xl p-3">
+            <div class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Total Booked Appts</div>
+            <div class="text-lg font-extrabold text-white mt-0.5" id="kpi-total-appts">0</div>
+            <div class="text-[10px] text-emerald-400 mt-0.5">Synced to Google Cal</div>
+          </div>
+        </div>
+
+        <!-- Grid of client cards -->
         <div id="clients-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div class="text-slate-500 text-sm">Loading clients...</div>
+          <div class="text-slate-500 text-sm p-4">Loading client records...</div>
         </div>
       </div>
     </div>
@@ -941,71 +982,493 @@
       }
     }
 
+    // ─── END-TO-END CLIENT PROFILE DOSSIER CONTROLLER ─────────────────────────
+    let allClientsData = [];
+    let currentDossierClient = null;
+
     async function fetchClientsTab() {
       const grid = document.getElementById('clients-grid');
+      const totalBadge = document.getElementById('clients-total-badge');
+      const kpiActive = document.getElementById('kpi-active-clients');
+      const kpiCalls = document.getElementById('kpi-total-calls');
+      const kpiMinutes = document.getElementById('kpi-total-minutes');
+      const kpiAppts = document.getElementById('kpi-total-appts');
+
       try {
         const res = await fetch('/api/admin/clients');
-        if(!res.ok) throw new Error('API Error');
+        if (!res.ok) throw new Error('API Error fetching clients');
         const data = await res.json();
-        
-        grid.innerHTML = data.clients.map(c => `
-          <div class="bg-[#111318] border border-[#1a1d26] rounded-xl p-4 hover:border-[#10b981]/50 transition cursor-pointer" onclick="expandClient('${c.id}')">
-            <div class="flex justify-between items-start mb-2">
-              <h3 class="font-bold text-white text-base">${c.business_name}</h3>
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${c.status === 'active' ? 'bg-[#10b981]/20 text-[#10b981]' : 'bg-amber-500/20 text-amber-500'}">${c.status || 'Active'}</span>
-            </div>
-            <div class="text-xs text-slate-400 mb-4 space-y-1">
-              <p>ID: ${c.id}</p>
-              <p>Industry: ${c.industry || 'N/A'}</p>
-              <p>Phone: ${c.assigned_phone || 'None'}</p>
-            </div>
-            <div class="flex justify-between text-xs text-slate-500 border-t border-[#1a1d26] pt-2">
-              <span>${c.calls_count || 0} Calls</span>
-              <span>${c.appointments_count || 0} Appointments</span>
-            </div>
-            <div id="client-expand-${c.id}" class="hidden mt-4 pt-4 border-t border-[#1a1d26] space-y-3">
-              <div class="text-xs text-slate-300 font-mono bg-[#07080b] p-2 rounded">
-                ${c.prompt_preview || 'No prompt set.'}
+        allClientsData = data.clients || [];
+
+        // Update top KPIs
+        let activeCount = 0;
+        let totalCallsCount = 0;
+        let totalMins = 0;
+        let totalApptsCount = 0;
+
+        allClientsData.forEach(c => {
+          if (c.status === 'active') activeCount++;
+          totalCallsCount += (c.total_calls || 0);
+          totalMins += (c.total_minutes || 0);
+          totalApptsCount += (c.total_appointments || 0);
+        });
+
+        if (totalBadge) totalBadge.textContent = `${allClientsData.length} Clients`;
+        if (kpiActive) kpiActive.textContent = activeCount;
+        if (kpiCalls) kpiCalls.textContent = totalCallsCount;
+        if (kpiMinutes) kpiMinutes.textContent = `${Math.round(totalMins)}m`;
+        if (kpiAppts) kpiAppts.textContent = totalApptsCount;
+
+        renderClientsGrid(allClientsData);
+      } catch (err) {
+        if (grid) grid.innerHTML = `<div class="text-rose-400 text-xs p-4">Failed to load client accounts: ${err.message}</div>`;
+      }
+    }
+
+    function filterClientsGrid() {
+      const q = document.getElementById('clients-search-input')?.value.toLowerCase().trim() || '';
+      if (!q) {
+        renderClientsGrid(allClientsData);
+        return;
+      }
+      const filtered = allClientsData.filter(c => {
+        const name = (c.business_name || '').toLowerCase();
+        const owner = (c.owner_name || '').toLowerCase();
+        const phone = (c.assigned_phone || c.owner_phone || c.forwarding_phone || '').toLowerCase();
+        const trade = (c.trade || c.industry || '').toLowerCase();
+        const id = (c.id || '').toLowerCase();
+        return name.includes(q) || owner.includes(q) || phone.includes(q) || trade.includes(q) || id.includes(q);
+      });
+      renderClientsGrid(filtered);
+    }
+
+    function renderClientsGrid(clients) {
+      const grid = document.getElementById('clients-grid');
+      if (!grid) return;
+
+      if (!clients || clients.length === 0) {
+        grid.innerHTML = `<div class="text-slate-500 text-xs p-6 col-span-3 text-center">No matching client accounts found.</div>`;
+        return;
+      }
+
+      grid.innerHTML = clients.map(c => {
+        const trade = (c.trade || c.industry || 'hvac').toLowerCase();
+        let icon = '❄️';
+        if (trade.includes('plumb')) icon = '🚰';
+        else if (trade.includes('electr')) icon = '⚡';
+        else if (trade.includes('roof')) icon = '🏠';
+        else if (trade.includes('dent') || trade.includes('medic')) icon = '🦷';
+        else if (trade.includes('auto')) icon = '🚗';
+
+        const estCost = c.estimated_cost != null ? '$' + Number(c.estimated_cost).toFixed(2) : '$20.00';
+        const calls = c.total_calls || c.calls_count || 0;
+        const appts = c.total_appointments || c.appointments_count || 0;
+        const mins = c.total_minutes || 0;
+        const isActive = c.status === 'active';
+
+        return `
+          <div class="bg-[#111318] border border-[#1a1d26] hover:border-emerald-500/50 rounded-2xl p-4 transition duration-200 flex flex-col justify-between group shadow-lg shadow-black/40">
+            <div>
+              <div class="flex items-start justify-between gap-2 mb-2.5">
+                <div class="flex items-center gap-2">
+                  <span class="text-lg">${icon}</span>
+                  <div>
+                    <h3 class="font-bold text-white text-sm group-hover:text-emerald-300 transition line-clamp-1">${c.business_name}</h3>
+                    <div class="text-[10px] text-slate-500 font-mono">ID: ${c.id}</div>
+                  </div>
+                </div>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${isActive ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800' : 'bg-amber-950/80 text-amber-300 border border-amber-800'}">${c.status || 'Active'}</span>
               </div>
-              <div class="flex gap-2">
-                <input type="text" id="test-chat-${c.id}" placeholder="Test message..." class="flex-1 bg-[#07080b] border border-[#1a1d26] rounded px-2 text-xs text-white">
-                <button onclick="event.stopPropagation(); sendTestChat('${c.id}')" class="px-2 py-1 bg-[#10b981] text-black font-bold text-xs rounded">Send</button>
+
+              <!-- Owner & Contact Info -->
+              <div class="bg-[#07080b] border border-[#161922] rounded-xl p-2.5 space-y-1 text-[11px] mb-3">
+                <div class="flex items-center justify-between text-slate-400">
+                  <span>👤 Owner</span>
+                  <span class="text-slate-200 font-medium">${c.owner_name || 'Business Owner'}</span>
+                </div>
+                <div class="flex items-center justify-between text-slate-400">
+                  <span>📞 Inbound AI</span>
+                  <span class="text-sky-400 font-mono font-semibold">${c.assigned_phone || '+1 (833) 420-5227'}</span>
+                </div>
+                <div class="flex items-center justify-between text-slate-400">
+                  <span>📲 Forwarding</span>
+                  <span class="text-slate-300 font-mono">${c.forwarding_phone || c.owner_phone || 'None'}</span>
+                </div>
               </div>
-              <div id="test-chat-res-${c.id}" class="text-xs text-slate-400"></div>
+
+              <!-- Metrics Row (Calls, Usage, Appts, Cost) -->
+              <div class="grid grid-cols-4 gap-1.5 text-center text-[10px] font-semibold mb-3">
+                <div class="bg-[#161922] rounded-lg py-1 px-1">
+                  <div class="text-slate-500 text-[9px]">CALLS</div>
+                  <div class="text-white font-bold">${calls}</div>
+                </div>
+                <div class="bg-[#161922] rounded-lg py-1 px-1">
+                  <div class="text-slate-500 text-[9px]">USAGE</div>
+                  <div class="text-slate-200 font-bold">${mins}m</div>
+                </div>
+                <div class="bg-[#161922] rounded-lg py-1 px-1">
+                  <div class="text-slate-500 text-[9px]">APPTS</div>
+                  <div class="text-emerald-400 font-bold">${appts}</div>
+                </div>
+                <div class="bg-[#161922] rounded-lg py-1 px-1">
+                  <div class="text-slate-500 text-[9px]">COST</div>
+                  <div class="text-emerald-300 font-bold">${estCost}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer Action Buttons -->
+            <div class="flex items-center gap-1.5 border-t border-[#1a1d26] pt-3">
+              <button onclick="openClientProfileDrawer('${c.id}')" class="flex-1 py-1.5 px-3 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-600/40 text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer">
+                <span>🔍</span> Full Dossier
+              </button>
+              <a href="/portal?client_id=${encodeURIComponent(c.id)}" target="_blank" class="py-1.5 px-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition" title="Open Client Portal">
+                ↗ Portal
+              </a>
+              <button onclick="quickTestClientVoice('${c.id}')" class="py-1.5 px-2.5 rounded-xl bg-purple-900/40 hover:bg-purple-800/60 text-purple-300 border border-purple-700/50 text-xs font-semibold transition" title="Test Voice in Browser">
+                🎙️
+              </button>
             </div>
           </div>
-        `).join('');
-      } catch(err) {
-        grid.innerHTML = `<div class="text-red-400 text-sm">Failed to load clients: ${err.message}</div>`;
+        `;
+      }).join('');
+    }
+
+    async function openClientProfileDrawer(clientId) {
+      const modal = document.getElementById('modal-client-dossier');
+      if (modal) modal.classList.remove('hidden');
+      switchDossierTab('overview');
+
+      try {
+        const res = await fetch(`/api/admin/clients/${encodeURIComponent(clientId)}/full`);
+        if (!res.ok) throw new Error('Could not load client dossier');
+        const data = await res.json();
+        currentDossierClient = data;
+
+        const c = data.client || {};
+        const p = data.prompt || {};
+        const s = data.stats || {};
+        const calls = data.calls || [];
+        const appts = data.appointments || [];
+
+        // Header
+        const el = (id) => document.getElementById(id);
+        if (el('dossier-biz-name')) el('dossier-biz-name').textContent = c.business_name || 'Client';
+        if (el('dossier-client-id')) el('dossier-client-id').textContent = c.id;
+        if (el('dossier-owner-contact')) el('dossier-owner-contact').textContent = `Owner: ${c.owner_name} • ${c.owner_phone || c.owner_email || ''}`;
+        if (el('dossier-trade-badge')) el('dossier-trade-badge').textContent = (c.trade || 'HVAC').toUpperCase();
+        if (el('dossier-portal-link')) el('dossier-portal-link').href = c.portal_url || `/portal?client_id=${c.id}`;
+        
+        let icon = '❄️';
+        const trade = (c.trade || '').toLowerCase();
+        if (trade.includes('plumb')) icon = '🚰';
+        else if (trade.includes('electr')) icon = '⚡';
+        else if (trade.includes('roof')) icon = '🏠';
+        if (el('dossier-trade-icon')) el('dossier-trade-icon').textContent = icon;
+
+        // Overview tab
+        if (el('dossier-field-owner-name')) el('dossier-field-owner-name').textContent = c.owner_name || 'Not provided';
+        if (el('dossier-field-owner-email')) el('dossier-field-owner-email').textContent = c.owner_email || 'Not provided';
+        if (el('dossier-field-owner-phone')) el('dossier-field-owner-phone').textContent = c.owner_phone || 'None';
+        if (el('dossier-field-assigned-phone')) el('dossier-field-assigned-phone').textContent = c.assigned_phone || '+1 (833) 420-5227';
+        if (el('dossier-field-forwarding-phone')) el('dossier-field-forwarding-phone').textContent = c.forwarding_phone || 'None';
+        if (el('dossier-field-sms-phone')) el('dossier-field-sms-phone').textContent = c.sms_phone || c.forwarding_phone || 'None';
+        if (el('dossier-field-address')) el('dossier-field-address').textContent = c.address || 'Standard Service Area';
+        if (el('dossier-field-hours')) el('dossier-field-hours').textContent = c.hours || 'Mon-Fri 8:00 AM - 6:00 PM';
+        if (el('dossier-field-timezone')) el('dossier-field-timezone').textContent = c.timezone || 'America/New_York';
+        if (el('dossier-field-diag-fee')) el('dossier-field-diag-fee').textContent = c.diagnostic_fee || '$89';
+        if (el('dossier-field-fee-policy')) el('dossier-field-fee-policy').textContent = c.fee_policy || 'Credited towards approved repair';
+
+        // Prompt tab
+        if (el('dossier-prompt-persona')) el('dossier-prompt-persona').textContent = p.persona_name || 'Riley';
+        if (el('dossier-prompt-voice')) el('dossier-prompt-voice').textContent = `TTS: ${p.tts_voice || 'flux-heather-en'}`;
+        if (el('dossier-prompt-chars')) el('dossier-prompt-chars').textContent = `${p.char_count || (p.system_prompt || '').length} chars`;
+        if (el('dossier-prompt-tokens')) el('dossier-prompt-tokens').textContent = `~${p.est_tokens || Math.ceil((p.system_prompt || '').length / 4)} tokens`;
+        if (el('dossier-input-greeting')) el('dossier-input-greeting').value = p.first_message || '';
+        if (el('dossier-input-prompt')) el('dossier-input-prompt').value = p.system_prompt || '';
+
+        // Calls tab count & render
+        if (el('dossier-calls-count')) el('dossier-calls-count').textContent = calls.length;
+        renderDossierCalls(calls);
+
+        // Usage & Cost tab
+        const bill = s.total_client_bill != null ? '$' + s.total_client_bill.toFixed(2) : '$20.00';
+        const mins = s.total_minutes || 0;
+        const overageMins = s.overage_minutes || 0;
+        const overageCost = s.overage_cost ? '$' + s.overage_cost.toFixed(2) : '$0.00';
+        const grossProfit = s.estimated_gross_profit ? '$' + s.estimated_gross_profit.toFixed(2) : '$20.00';
+        const wholesale = s.wholesale_api_cost ? '$' + s.wholesale_api_cost.toFixed(2) : '$0.00';
+
+        if (el('dossier-cost-total')) el('dossier-cost-total').textContent = bill;
+        if (el('dossier-cost-breakdown')) el('dossier-cost-breakdown').textContent = `$20.00 base + ${overageCost} overage (${overageMins}m @ $0.25)`;
+        if (el('dossier-cost-minutes')) el('dossier-cost-minutes').textContent = `${mins}m`;
+        if (el('dossier-cost-min-detail')) {
+          const rem = Math.max(0, (s.included_minutes || 60) - mins).toFixed(1);
+          el('dossier-cost-min-detail').textContent = overageMins > 0 ? `${overageMins}m overage billed` : `${rem} free minutes remaining`;
+        }
+        if (el('dossier-cost-margin')) el('dossier-cost-margin').textContent = `${s.margin_pct || 95}%`;
+        if (el('dossier-cost-margin-sub')) el('dossier-cost-margin-sub').textContent = `Wholesale API cost: ~${wholesale}`;
+        if (el('dossier-cost-gross-profit')) el('dossier-cost-gross-profit').textContent = `~${grossProfit} / month`;
+
+        // Appointments tab
+        if (el('dossier-appts-count')) el('dossier-appts-count').textContent = appts.length;
+        renderDossierAppointments(appts);
+
+      } catch (err) {
+        alert('Failed to load full client dossier: ' + err.message);
       }
     }
 
-    function expandClient(id) {
-      const div = document.getElementById('client-expand-'+id);
-      if(div) div.classList.toggle('hidden');
+    function renderDossierCalls(calls) {
+      const container = document.getElementById('dossier-calls-container');
+      if (!container) return;
+
+      if (!calls || calls.length === 0) {
+        container.innerHTML = `<div class="text-slate-500 text-xs p-6 text-center bg-[#0e111a] rounded-2xl border border-[#1a1d26]">No calls recorded for this business yet. Dedicated line is live and waiting for caller traffic!</div>`;
+        return;
+      }
+
+      container.innerHTML = calls.map((call, idx) => {
+        const info = call.extracted_info || {};
+        const callerName = info.customer_name || info.name || 'Caller';
+        const service = info.service_requested || info.service || 'Inbound Inquiry';
+        const addr = info.service_address || info.address || '';
+        const transcript = Array.isArray(call.transcript) ? call.transcript : [];
+
+        return `
+          <div class="bg-[#0e111a] border border-[#1a1d26] rounded-2xl p-4 space-y-3">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#161922] pb-2.5">
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span class="font-bold text-white text-xs">${callerName} &bull; ${call.caller_phone}</span>
+                <span class="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300 font-mono">${call.duration_formatted || call.duration_seconds + 's'}</span>
+              </div>
+              <div class="text-[11px] text-slate-400 font-mono">${call.created_at || 'Recent Call'}</div>
+            </div>
+
+            <!-- Extracted lead highlights -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs bg-[#07080b] p-2.5 rounded-xl border border-[#161922]">
+              <div><span class="text-slate-500">Service:</span> <span class="text-slate-200 font-medium">${service}</span></div>
+              <div><span class="text-slate-500">Address:</span> <span class="text-slate-200 font-medium">${addr || 'Not specified'}</span></div>
+            </div>
+
+            <!-- Audio Recording Player if exists -->
+            ${call.recording_url ? `
+              <div class="pt-1">
+                <audio controls src="${call.recording_url}" class="w-full h-8 rounded accent-emerald-500"></audio>
+              </div>
+            ` : ''}
+
+            <!-- Conversational Transcript Accordion -->
+            <details class="group">
+              <summary class="text-xs text-purple-400 hover:text-purple-300 cursor-pointer font-medium select-none">
+                💬 View Conversational Transcript (${transcript.length} turns)
+              </summary>
+              <div class="mt-2.5 space-y-1.5 p-3 rounded-xl bg-[#07080b] border border-[#161922] max-h-56 overflow-y-auto custom-scrollbar">
+                ${transcript.length > 0 ? transcript.map(t => {
+                  const speaker = (t.role || t.speaker || 'Agent').toLowerCase();
+                  const isUser = speaker.includes('user') || speaker.includes('caller');
+                  return `
+                    <div class="flex flex-col ${isUser ? 'items-end' : 'items-start'} my-1">
+                      <span class="text-[9px] text-slate-500 mb-0.5">${isUser ? '👤 Caller' : '🎙️ AI Receptionist'}</span>
+                      <div class="px-2.5 py-1.5 rounded-xl text-xs max-w-[85%] leading-relaxed ${isUser ? 'bg-purple-700 text-white rounded-tr-none' : 'bg-slate-800 text-slate-200 rounded-tl-none border border-slate-700'}">
+                        ${t.text || t.message || ''}
+                      </div>
+                    </div>
+                  `;
+                }).join('') : '<div class="text-slate-500 text-xs italic">No transcript recorded for this turn.</div>'}
+              </div>
+            </details>
+          </div>
+        `;
+      }).join('');
     }
 
-    async function sendTestChat(id) {
-      const input = document.getElementById('test-chat-'+id);
-      const resDiv = document.getElementById('test-chat-res-'+id);
-      const msg = input.value.trim();
-      if(!msg) return;
-      resDiv.textContent = 'Sending...';
+    function renderDossierAppointments(appts) {
+      const container = document.getElementById('dossier-appointments-container');
+      if (!container) return;
+
+      if (!appts || appts.length === 0) {
+        container.innerHTML = `<div class="text-slate-500 text-xs p-6 text-center bg-[#0e111a] rounded-2xl border border-[#1a1d26]">No appointments booked yet. Appointments booked over the phone appear here in real-time.</div>`;
+        return;
+      }
+
+      container.innerHTML = appts.map(apt => `
+        <div class="bg-[#0e111a] border border-[#1a1d26] rounded-2xl p-4 space-y-2">
+          <div class="flex items-center justify-between border-b border-[#161922] pb-2">
+            <div class="flex items-center gap-2">
+              <span class="text-emerald-400 font-bold text-xs">${apt.client_name}</span>
+              <span class="text-slate-400 font-mono text-xs">${apt.client_phone}</span>
+            </div>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-800 uppercase">${apt.status || 'Confirmed'}</span>
+          </div>
+          <div class="text-xs text-slate-300">
+            <span class="text-slate-500">Service:</span> ${apt.service_requested} &bull; <span class="text-slate-500">Arrival:</span> ${apt.appointment_date} (${apt.window})
+          </div>
+          ${apt.service_address ? `<div class="text-xs text-slate-300"><span class="text-slate-500">Address:</span> ${apt.service_address}</div>` : ''}
+          ${apt.summary ? `<div class="text-xs text-slate-400 italic bg-[#07080b] p-2 rounded-lg border border-[#161922]">${apt.summary}</div>` : ''}
+        </div>
+      `).join('');
+    }
+
+    function switchDossierTab(tabKey) {
+      const tabs = ['overview', 'prompt', 'calls', 'cost', 'appointments', 'testchat'];
+      tabs.forEach(t => {
+        const btn = document.getElementById('dossier-tab-btn-' + t);
+        const pane = document.getElementById('dossier-content-' + t);
+        if (btn) {
+          if (t === tabKey) {
+            btn.className = 'py-3 px-3 border-b-2 border-emerald-400 text-white transition font-bold';
+          } else {
+            btn.className = 'py-3 px-3 border-b-2 border-transparent text-slate-400 hover:text-white transition';
+          }
+        }
+        if (pane) {
+          pane.classList.toggle('hidden', t !== tabKey);
+        }
+      });
+    }
+
+    function closeClientDossier() {
+      const modal = document.getElementById('modal-client-dossier');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    async function saveDossierPrompt() {
+      if (!currentDossierClient || !currentDossierClient.client) return;
+      const cid = currentDossierClient.client.id;
+      const prompt = document.getElementById('dossier-input-prompt')?.value.trim();
+      const firstMsg = document.getElementById('dossier-input-greeting')?.value.trim();
+      const statusEl = document.getElementById('dossier-save-status');
+      const btn = document.getElementById('dossier-save-prompt-btn');
+
+      if (!prompt) {
+        alert('Prompt cannot be empty');
+        return;
+      }
+
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span>⟳</span> Saving...';
+      }
+
       try {
-        const res = await fetch(`/api/admin/clients/${id}/test-chat`, {
+        const res = await fetch(`/api/admin/clients/${encodeURIComponent(cid)}/update-prompt`, {
           method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({message: msg})
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            system_prompt: prompt,
+            first_message: firstMsg
+          })
+        });
+        if (!res.ok) throw new Error('Failed to save prompt');
+        if (statusEl) {
+          statusEl.textContent = '✅ Saved & recompiled successfully!';
+          statusEl.className = 'text-xs text-emerald-400 font-semibold';
+          setTimeout(() => { if (statusEl) statusEl.textContent = ''; }, 3000);
+        }
+        fetchClientsTab();
+      } catch (err) {
+        alert('Save error: ' + err.message);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<span>💾</span> Save & Recompile Prompt';
+        }
+      }
+    }
+
+    function copyDossierPrompt() {
+      const p = document.getElementById('dossier-input-prompt')?.value;
+      if (p) {
+        navigator.clipboard.writeText(p);
+        alert('Full prompt copied to clipboard!');
+      }
+    }
+
+    function testVoiceForClientFromDrawer() {
+      if (!currentDossierClient) return;
+      const p = document.getElementById('dossier-input-prompt')?.value.trim();
+      const greeting = document.getElementById('dossier-input-greeting')?.value.trim();
+      const bizName = currentDossierClient.client?.business_name || 'Business';
+      const persona = currentDossierClient.prompt?.persona_name || 'Riley';
+
+      closeClientDossier();
+
+      // Populate onboarding simulation inputs so startInPageVoiceTest uses them
+      const onbPrompt = document.getElementById('onb-sim-prompt');
+      const onbFirst = document.getElementById('onb-sim-firstmsg');
+      const onbBiz = document.getElementById('onb-sim-name');
+      const onbPersona = document.getElementById('onb-sim-persona');
+
+      if (onbPrompt && p) onbPrompt.value = p;
+      if (onbFirst && greeting) onbFirst.value = greeting;
+      if (onbBiz) onbBiz.value = bizName;
+      if (onbPersona) onbPersona.value = persona;
+
+      startInPageVoiceTest();
+    }
+
+    function quickTestClientVoice(clientId) {
+      openClientProfileDrawer(clientId);
+      setTimeout(() => {
+        testVoiceForClientFromDrawer();
+      }, 400);
+    }
+
+    async function sendDossierChat() {
+      if (!currentDossierClient || !currentDossierClient.client) return;
+      const cid = currentDossierClient.client.id;
+      const input = document.getElementById('dossier-chat-input');
+      const history = document.getElementById('dossier-chat-history');
+      const btn = document.getElementById('dossier-chat-send-btn');
+      const msg = input?.value.trim();
+      if (!msg) return;
+
+      input.value = '';
+      if (history.children.length === 1 && history.children[0].classList.contains('italic')) {
+        history.innerHTML = '';
+      }
+
+      // Add user message
+      const uDiv = document.createElement('div');
+      uDiv.className = 'flex flex-col items-end my-1';
+      uDiv.innerHTML = `<span class="text-[9px] text-slate-500 mb-0.5">👤 You (Caller)</span><div class="px-2.5 py-1.5 rounded-xl text-xs bg-purple-700 text-white rounded-tr-none">${msg}</div>`;
+      history.appendChild(uDiv);
+      history.scrollTop = history.scrollHeight;
+
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Simulating...';
+      }
+
+      try {
+        const res = await fetch(`/api/admin/clients/${encodeURIComponent(cid)}/test-chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: msg })
         });
         const data = await res.json();
-        resDiv.innerHTML = `<span class="text-[#10b981]">Reply:</span> ${data.reply || 'Success'}`;
-        input.value = '';
-      } catch(err) {
-        resDiv.textContent = 'Error: ' + err.message;
+        const reply = data.reply || 'Thank you for reaching out!';
+
+        const aDiv = document.createElement('div');
+        aDiv.className = 'flex flex-col items-start my-1';
+        aDiv.innerHTML = `<span class="text-[9px] text-slate-500 mb-0.5">🎙️ AI Receptionist</span><div class="px-2.5 py-1.5 rounded-xl text-xs bg-slate-800 text-slate-200 rounded-tl-none border border-slate-700">${reply}</div>`;
+        history.appendChild(aDiv);
+        history.scrollTop = history.scrollHeight;
+      } catch (err) {
+        const eDiv = document.createElement('div');
+        eDiv.className = 'text-xs text-rose-400 italic';
+        eDiv.textContent = 'Error: ' + err.message;
+        history.appendChild(eDiv);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Send Turn';
+        }
       }
     }
 
-    // Override renderCallList to use the new Logs table
     function renderCallList() {
       const tbody = document.getElementById('logs-table-body');
       const count = document.getElementById('logs-count');
@@ -4102,6 +4565,195 @@
         <button onclick="endInPageVoiceTest()" class="px-6 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition shadow-lg shadow-rose-950 cursor-pointer">
           End Call
         </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- COMPREHENSIVE END-TO-END CLIENT PROFILE DOSSIER MODAL -->
+  <div id="modal-client-dossier" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+    <div class="w-full max-w-5xl bg-[#0b0d13] border border-[#1e2330] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+      
+      <!-- Top header bar -->
+      <div class="p-5 border-b border-[#1e2330] bg-[#0e111a] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div id="dossier-trade-icon" class="w-10 h-10 rounded-2xl bg-emerald-950/80 border border-emerald-700/60 flex items-center justify-center text-xl shrink-0">🏢</div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 id="dossier-biz-name" class="text-lg font-bold text-white">Apex Climate & Air</h3>
+              <span id="dossier-status-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-800">Active</span>
+              <span id="dossier-trade-badge" class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-800 text-slate-300">HVAC</span>
+            </div>
+            <div class="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
+              <span>ID: <code id="dossier-client-id" class="text-slate-300">cli_demo</code></span>
+              <span>&bull;</span>
+              <span id="dossier-owner-contact">Owner: Abdul Aziz</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 flex-wrap">
+          <a id="dossier-portal-link" href="#" target="_blank" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition flex items-center gap-1">
+            <span>↗</span> Open Client Portal
+          </a>
+          <button onclick="testVoiceForClientFromDrawer()" id="dossier-test-voice-btn" class="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition shadow-lg shadow-purple-950 flex items-center gap-1 cursor-pointer">
+            <span>🎙️</span> Test Agent Voice
+          </button>
+          <button onclick="closeClientDossier()" class="w-8 h-8 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center text-sm font-bold transition cursor-pointer">
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <!-- Dossier Tabs -->
+      <div class="flex items-center gap-1 border-b border-[#1e2330] px-5 bg-[#090b10] overflow-x-auto text-xs font-semibold">
+        <button onclick="switchDossierTab('overview')" id="dossier-tab-btn-overview" class="py-3 px-3 border-b-2 border-emerald-400 text-white transition">📋 Overview & Owner</button>
+        <button onclick="switchDossierTab('prompt')" id="dossier-tab-btn-prompt" class="py-3 px-3 border-b-2 border-transparent text-slate-400 hover:text-white transition">🤖 AI Prompt & Persona</button>
+        <button onclick="switchDossierTab('calls')" id="dossier-tab-btn-calls" class="py-3 px-3 border-b-2 border-transparent text-slate-400 hover:text-white transition">📞 Call History & Transcripts (<span id="dossier-calls-count">0</span>)</button>
+        <button onclick="switchDossierTab('cost')" id="dossier-tab-btn-cost" class="py-3 px-3 border-b-2 border-transparent text-slate-400 hover:text-white transition">💰 Usage & Cost Analytics</button>
+        <button onclick="switchDossierTab('appointments')" id="dossier-tab-btn-appointments" class="py-3 px-3 border-b-2 border-transparent text-slate-400 hover:text-white transition">📅 Appointments (<span id="dossier-appts-count">0</span>)</button>
+        <button onclick="switchDossierTab('testchat')" id="dossier-tab-btn-testchat" class="py-3 px-3 border-b-2 border-transparent text-slate-400 hover:text-white transition">💬 Test Turn Simulator</button>
+      </div>
+
+      <!-- Tab Contents Area -->
+      <div class="flex-1 overflow-y-auto p-5 custom-scrollbar bg-[#08090c] space-y-4">
+        
+        <!-- 1. OVERVIEW & OWNER TAB -->
+        <div id="dossier-content-overview" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Owner & Identity Card -->
+            <div class="bg-[#0e111a] border border-[#1a1d26] rounded-2xl p-4 space-y-3">
+              <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                <span>👤</span> Business Owner Profile
+              </h4>
+              <div class="space-y-2 text-xs">
+                <div class="flex justify-between py-1 border-b border-[#161922]"><span class="text-slate-400">Owner Name</span><span class="text-white font-medium" id="dossier-field-owner-name">—</span></div>
+                <div class="flex justify-between py-1 border-b border-[#161922]"><span class="text-slate-400">Owner Email</span><span class="text-white font-medium" id="dossier-field-owner-email">—</span></div>
+                <div class="flex justify-between py-1 border-b border-[#161922]"><span class="text-slate-400">Owner Cell Phone</span><span class="text-emerald-400 font-mono font-medium" id="dossier-field-owner-phone">—</span></div>
+                <div class="flex justify-between py-1 border-b border-[#161922]"><span class="text-slate-400">Assigned Inbound Line</span><span class="text-sky-400 font-mono font-bold" id="dossier-field-assigned-phone">—</span></div>
+                <div class="flex justify-between py-1 border-b border-[#161922]"><span class="text-slate-400">Carrier Forwarding Line</span><span class="text-slate-200 font-mono" id="dossier-field-forwarding-phone">—</span></div>
+                <div class="flex justify-between py-1"><span class="text-slate-400">Instant SMS Alert Mobile</span><span class="text-slate-200 font-mono" id="dossier-field-sms-phone">—</span></div>
+              </div>
+            </div>
+
+            <!-- Operations & Policy Card -->
+            <div class="bg-[#0e111a] border border-[#1a1d26] rounded-2xl p-4 space-y-3">
+              <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                <span>⚙️</span> Operations & Policy Settings
+              </h4>
+              <div class="space-y-2 text-xs">
+                <div class="flex justify-between py-1 border-b border-[#161922]"><span class="text-slate-400">Service Territory</span><span class="text-white font-medium" id="dossier-field-address">—</span></div>
+                <div class="flex justify-between py-1 border-b border-[#161922]"><span class="text-slate-400">Operating Schedule</span><span class="text-white font-medium" id="dossier-field-hours">—</span></div>
+                <div class="flex justify-between py-1 border-b border-[#161922]"><span class="text-slate-400">Timezone</span><span class="text-slate-300 font-mono" id="dossier-field-timezone">—</span></div>
+                <div class="flex justify-between py-1 border-b border-[#161922]"><span class="text-slate-400">Diagnostic Fee</span><span class="text-emerald-400 font-bold" id="dossier-field-diag-fee">—</span></div>
+                <div class="flex justify-between py-1 border-b border-[#161922]"><span class="text-slate-400">Fee Credit Policy</span><span class="text-slate-300" id="dossier-field-fee-policy">—</span></div>
+                <div class="flex justify-between py-1"><span class="text-slate-400">Subscription Tier</span><span class="text-emerald-400 font-bold" id="dossier-field-plan">$20/mo Starter (60 min incl.)</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. AI PROMPT & PERSONA TAB -->
+        <div id="dossier-content-prompt" class="hidden space-y-4">
+          <div class="bg-[#0e111a] border border-[#1a1d26] rounded-2xl p-4 space-y-3">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#161922] pb-3">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-white">Persona: <span id="dossier-prompt-persona" class="text-purple-400">Riley</span></span>
+                <span class="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300 font-mono" id="dossier-prompt-voice">TTS: flux-heather-en</span>
+                <span class="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300 font-mono">LLM: Gemini 3.1 Flash Lite</span>
+              </div>
+              <div class="flex items-center gap-2 text-xs text-slate-400">
+                <span id="dossier-prompt-chars">0 chars</span> &bull; <span id="dossier-prompt-tokens">~0 tokens</span>
+              </div>
+            </div>
+
+            <!-- First Greeting Message -->
+            <div>
+              <label class="block text-[11px] font-bold text-slate-300 mb-1">🎙️ Spoken First Greeting (Answer Sentence)</label>
+              <textarea id="dossier-input-greeting" rows="2" class="w-full bg-[#07080b] border border-[#1a1d26] rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-purple-500 font-sans"></textarea>
+            </div>
+
+            <!-- Full System Prompt -->
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="text-[11px] font-bold text-slate-300">🧠 Full System Prompt (Live AI Receptionist Instructions)</label>
+                <button onclick="copyDossierPrompt()" class="text-[10px] text-purple-400 hover:text-purple-300">Copy Full Prompt</button>
+              </div>
+              <textarea id="dossier-input-prompt" rows="14" class="w-full bg-[#07080b] border border-[#1a1d26] rounded-xl p-3 text-[11px] text-slate-300 focus:outline-none focus:border-purple-500 font-mono leading-relaxed custom-scrollbar"></textarea>
+            </div>
+
+            <div class="flex items-center justify-between pt-2">
+              <span id="dossier-save-status" class="text-xs text-slate-400"></span>
+              <button onclick="saveDossierPrompt()" id="dossier-save-prompt-btn" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+                <span>💾</span> Save & Recompile Prompt
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. CALL HISTORY & TRANSCRIPTS TAB -->
+        <div id="dossier-content-calls" class="hidden space-y-3">
+          <div id="dossier-calls-container" class="space-y-3">
+            <div class="text-slate-500 text-xs p-4 text-center">Loading calls...</div>
+          </div>
+        </div>
+
+        <!-- 4. USAGE & COST ANALYTICS TAB -->
+        <div id="dossier-content-cost" class="hidden space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="bg-[#0e111a] border border-[#1a1d26] rounded-2xl p-4">
+              <div class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Current Month Bill</div>
+              <div class="text-2xl font-extrabold text-emerald-400 mt-1" id="dossier-cost-total">$20.00</div>
+              <div class="text-xs text-slate-400 mt-1" id="dossier-cost-breakdown">$20.00 base + $0.00 overage</div>
+            </div>
+            <div class="bg-[#0e111a] border border-[#1a1d26] rounded-2xl p-4">
+              <div class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Speech Usage & Minutes</div>
+              <div class="text-2xl font-extrabold text-white mt-1" id="dossier-cost-minutes">0.0m</div>
+              <div class="text-xs text-slate-400 mt-1" id="dossier-cost-min-detail">60 free minutes included (60m left)</div>
+            </div>
+            <div class="bg-[#0e111a] border border-[#1a1d26] rounded-2xl p-4">
+              <div class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Estimated Profit Margin</div>
+              <div class="text-2xl font-extrabold text-sky-400 mt-1" id="dossier-cost-margin">~95%</div>
+              <div class="text-xs text-slate-400 mt-1" id="dossier-cost-margin-sub">Wholesale API cost: ~$0.00</div>
+            </div>
+          </div>
+
+          <!-- Pricing Transparency Table -->
+          <div class="bg-[#0e111a] border border-[#1a1d26] rounded-2xl p-4 space-y-3">
+            <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider">Client Billing Model ($20/mo + Overage)</h4>
+            <div class="divide-y divide-[#161922] text-xs">
+              <div class="flex justify-between py-2"><span class="text-slate-400">Monthly Base Plan</span><span class="text-white font-medium">$20.00 / month</span></div>
+              <div class="flex justify-between py-2"><span class="text-slate-400">Included Spoken Minutes</span><span class="text-emerald-400 font-medium">60 minutes included free</span></div>
+              <div class="flex justify-between py-2"><span class="text-slate-400">Cost After Free Minutes (Overage)</span><span class="text-white font-medium">$0.25 / minute</span></div>
+              <div class="flex justify-between py-2"><span class="text-slate-400">Wholesale AI Execution Cost (Gemini 3.1 Flash Lite + Deepgram + TTS)</span><span class="text-slate-400 font-mono">~$0.035 / minute</span></div>
+              <div class="flex justify-between py-2 font-bold"><span class="text-emerald-400">Net Operator Gross Profit</span><span class="text-emerald-400" id="dossier-cost-gross-profit">~$20.00 / client</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. APPOINTMENTS TAB -->
+        <div id="dossier-content-appointments" class="hidden space-y-3">
+          <div id="dossier-appointments-container" class="space-y-3">
+            <div class="text-slate-500 text-xs p-4 text-center">Loading appointments...</div>
+          </div>
+        </div>
+
+        <!-- 6. TEST CHAT TURN TAB -->
+        <div id="dossier-content-testchat" class="hidden space-y-3">
+          <div class="bg-[#0e111a] border border-[#1a1d26] rounded-2xl p-4 space-y-3">
+            <div class="text-xs text-slate-300">Simulate a customer turn directly against this client's compiled prompt:</div>
+            <div id="dossier-chat-history" class="bg-[#07080b] border border-[#1a1d26] rounded-xl p-3 min-h-[140px] max-h-[220px] overflow-y-auto space-y-2 text-xs">
+              <div class="text-slate-500 italic">No turns simulated yet. Send a test message below.</div>
+            </div>
+            <div class="flex gap-2">
+              <input type="text" id="dossier-chat-input" onkeydown="if(event.key==='Enter') sendDossierChat()" placeholder="Type caller message (e.g. My AC stopped blowing cold air)..." class="flex-1 bg-[#07080b] border border-[#1a1d26] rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500">
+              <button onclick="sendDossierChat()" id="dossier-chat-send-btn" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition cursor-pointer">
+                Send Turn
+              </button>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>

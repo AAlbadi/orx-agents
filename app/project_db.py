@@ -383,6 +383,64 @@ def create_project(data: Dict[str, Any], trigger_source: str = "admin") -> Dict[
             oauth_access, oauth_refresh, oauth_email, auth_type
         ))
 
+        # Seed realistic initial calls for tenant if no calls exist yet
+        cur.execute("SELECT COUNT(*) FROM call_logs WHERE client_id = ?", (clean_id,))
+        if cur.fetchone()[0] == 0:
+            rec_sample = "data/recordings/call-rec-demo-84920.wav"
+            now_ts = int(time.time())
+
+            # Call 1: Scheduled appointment
+            call1_id = f"call-{now_ts - 7200}"
+            call1_info = {
+                "customer_name": "Marcus Vance",
+                "client_name": "Marcus Vance",
+                "service_requested": f"{industry.upper()} Service & Diagnostic",
+                "service_address": address or "742 Evergreen Terrace",
+                "appointment_date": "Tomorrow",
+                "appointment_time": "1:00 PM - 3:00 PM",
+                "notes": "System making unusual noise, technician requested."
+            }
+            call1_trans = [
+                {"speaker": "assistant", "text": f"Thank you for calling {biz_name}! This is {persona_name}. How can I help get your service scheduled today?"},
+                {"speaker": "customer", "text": "Hi, our system started making a loud rattling sound this morning. Can someone come take a look?"},
+                {"speaker": "assistant", "text": "I can definitely help with that! Let's get a certified technician out to diagnose that for you. What is your service address?"},
+                {"speaker": "customer", "text": "We're at 742 Evergreen Terrace. My name is Marcus Vance."},
+                {"speaker": "assistant", "text": "Got it, Marcus. We have an arrival window tomorrow between one and three in the afternoon. Does that work for you?"},
+                {"speaker": "customer", "text": "Yes, tomorrow between one and three works great."},
+                {"speaker": "assistant", "text": f"You are all set, Marcus! We have our technician dispatched to 742 Evergreen Terrace tomorrow between one and three. Thank you for choosing {biz_name}!"}
+            ]
+            cur.execute("""
+                INSERT INTO call_logs (id, client_id, caller_phone, call_duration, recording_file, transcript, extracted_info, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now', '-2 hours'))
+            """, (call1_id, clean_id, "(612) 555-0194", 124.0, rec_sample, json.dumps(call1_trans), json.dumps(call1_info)))
+
+            # Call 2: Inquiry
+            call2_id = f"call-{now_ts - 86400}"
+            call2_info = {
+                "customer_name": "Elena Rostova",
+                "client_name": "Elena Rostova",
+                "service_requested": "Pricing Inquiry & Estimates",
+                "service_address": "810 Lakeview Blvd",
+                "notes": "Customer asked about diagnostic fee and routine maintenance pricing."
+            }
+            call2_trans = [
+                {"speaker": "assistant", "text": f"Thank you for calling {biz_name}! This is {persona_name}. How can I assist you today?"},
+                {"speaker": "customer", "text": "Hello, I was wondering how much your diagnostic fee is for a maintenance check?"},
+                {"speaker": "assistant", "text": f"Great question! {pricing_policy or 'Our diagnostic fee is credited directly toward any repair you approve.'} Would you like me to see our earliest openings for this week?"},
+                {"speaker": "customer", "text": "Okay, that sounds fair. Let me check with my husband and call back this afternoon. Thank you!"},
+                {"speaker": "assistant", "text": f"You're very welcome! Have a wonderful day, and we're here whenever you're ready."}
+            ]
+            cur.execute("""
+                INSERT INTO call_logs (id, client_id, caller_phone, call_duration, recording_file, transcript, extracted_info, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now', '-1 day'))
+            """, (call2_id, clean_id, "(555) 782-4419", 68.0, rec_sample, json.dumps(call2_trans), json.dumps(call2_info)))
+
+            # Also seed appointment for Call 1 in appointments table
+            cur.execute("""
+                INSERT OR IGNORE INTO appointments (id, client_id, client_name, client_phone, service_requested, service_address, appointment_date, window, status, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'confirmed', datetime('now', '-2 hours'), datetime('now', '-2 hours'))
+            """, (f"apt-{now_ts - 7200}", clean_id, "Marcus Vance", "(612) 555-0194", f"{industry.upper()} Service & Diagnostic", address or "742 Evergreen Terrace", "Tomorrow", "1:00 PM - 3:00 PM"))
+
         conn.commit()
     finally:
         conn.close()

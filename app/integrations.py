@@ -984,6 +984,129 @@ def _log_email_record(result: Dict[str, Any], extracted_info: Dict[str, Any]):
         logger.warning(f"Could not append to email log: {e}")
 
 
+async def send_activation_email(
+    profile: Dict[str, Any],
+    recipient: str,
+    public_url: str = ""
+) -> Dict[str, Any]:
+    """Sends business client activation and phone forwarding instructions to owner's email."""
+    cfg = get_integrations_settings()
+    recipient = recipient.strip()
+    if not recipient:
+        return {"success": False, "message": "No email provided"}
+
+    biz_name = profile.get("business_name") or "Your Business"
+    assigned_phone = profile.get("assigned_phone") or "+1 (833) 420-5227"
+    clean_digits = re.sub(r'[^0-9]', '', assigned_phone)
+    client_id = profile.get("id") or ""
+    portal_url = f"{public_url}/portal?client_id={client_id}" if public_url else f"/portal?client_id={client_id}"
+
+    subject = f"🎉 Welcome to ORX Agents! Line Setup & Portal Link for {biz_name}"
+
+    html_body = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:24px;background-color:#FAF9F5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,sans-serif;color:#171715;">
+  <div style="max-width:580px;margin:0 auto;background:#ffffff;border:1px solid #E5E3D8;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+    <div style="background:#1C3326;padding:28px 32px;color:#ffffff;">
+      <h1 style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.02em;">Welcome to ORX Agents</h1>
+      <p style="margin:6px 0 0;font-size:14px;color:#A8BDB1;">Your AI Voice Receptionist is ready for {biz_name}</p>
+    </div>
+    <div style="padding:28px 32px;">
+      <p style="font-size:15px;line-height:1.5;margin-bottom:20px;">
+        Here are your dedicated phone line credentials and 1-tap forwarding instructions.
+      </p>
+
+      <div style="background:#F3F2EB;border:1px solid #E5E3D8;border-radius:12px;padding:18px;margin-bottom:22px;">
+        <div style="font-size:12px;color:#5E5B52;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">Your Dedicated AI Receptionist Number</div>
+        <div style="font-size:24px;font-weight:800;color:#1C3326;margin-top:4px;font-family:monospace;">{assigned_phone}</div>
+      </div>
+
+      <h3 style="font-size:15px;font-weight:700;margin-bottom:12px;color:#171715;">How to Connect Your Existing Phone Line</h3>
+      <p style="font-size:13.5px;color:#5E5B52;line-height:1.5;margin-bottom:14px;">
+        Dial the carrier code below from your cell. Your phone will still ring first — our receptionist only answers when you're busy or don't pick up:
+      </p>
+
+      <table style="width:100%;border-collapse:collapse;margin-bottom:24px;font-size:13px;">
+        <tr style="border-bottom:1px solid #E5E3D8;">
+          <td style="padding:8px 0;font-weight:600;">Verizon:</td>
+          <td style="padding:8px 0;font-family:monospace;color:#1C3326;font-weight:700;">*71{clean_digits}</td>
+          <td style="padding:8px 0;color:#8C887E;font-size:11px;">(Turn off: *73)</td>
+        </tr>
+        <tr style="border-bottom:1px solid #E5E3D8;">
+          <td style="padding:8px 0;font-weight:600;">AT&T:</td>
+          <td style="padding:8px 0;font-family:monospace;color:#1C3326;font-weight:700;">*61*{clean_digits}#</td>
+          <td style="padding:8px 0;color:#8C887E;font-size:11px;">(Turn off: #61#)</td>
+        </tr>
+        <tr style="border-bottom:1px solid #E5E3D8;">
+          <td style="padding:8px 0;font-weight:600;">T-Mobile:</td>
+          <td style="padding:8px 0;font-family:monospace;color:#1C3326;font-weight:700;">**61*{clean_digits}#</td>
+          <td style="padding:8px 0;color:#8C887E;font-size:11px;">(Turn off: ##61#)</td>
+        </tr>
+        <tr>
+          <td style="padding:8px 0;font-weight:600;">Office Phone / VoIP:</td>
+          <td style="padding:8px 0;font-family:monospace;color:#1C3326;font-weight:700;">*72{clean_digits}</td>
+          <td style="padding:8px 0;color:#8C887E;font-size:11px;">(Or forward in app settings)</td>
+        </tr>
+      </table>
+
+      <div style="text-align:center;margin-top:28px;margin-bottom:20px;">
+        <a href="{portal_url}" style="display:inline-block;background:#1C3326;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;">Access Client Portal →</a>
+      </div>
+
+      <div style="border-top:1px solid #E5E3D8;padding-top:16px;font-size:12px;color:#8C887E;text-align:center;">
+        Need video guidance? Watch our 60-second YouTube walkthrough: <a href="https://www.youtube.com/watch?v=kYJvM9lZJ0w" target="_blank" style="color:#1C3326;">Watch Tutorial</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>"""
+
+    text_body = (
+        f"Welcome to ORX Agents!\n\n"
+        f"Your AI Voice Receptionist is ready for {biz_name}.\n"
+        f"Assigned Dedicated Number: {assigned_phone}\n\n"
+        f"1-Tap Carrier Forwarding Codes:\n"
+        f"- Verizon: *71{clean_digits} (turn off: *73)\n"
+        f"- AT&T: *61*{clean_digits}# (turn off: #61#)\n"
+        f"- T-Mobile: **61*{clean_digits}# (turn off: ##61#)\n"
+        f"- Landline/VoIP: *72{clean_digits}\n\n"
+        f"Access Your Client Portal:\n{portal_url}\n\n"
+        f"YouTube Video Tutorial: https://www.youtube.com/watch?v=kYJvM9lZJ0w\n"
+    )
+
+    result = {"success": True, "recipient": recipient, "subject": subject, "status": "sent"}
+
+    # Resend API check
+    resend_key = cfg.get("resend_api_key", "").strip()
+    if resend_key:
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                res = await client.post(
+                    "https://api.resend.com/emails",
+                    headers={"Authorization": f"Bearer {resend_key}", "Content-Type": "application/json"},
+                    json={
+                        "from": cfg.get("from_email", "notifications@ariavoice.ai"),
+                        "to": [recipient],
+                        "subject": subject,
+                        "html": html_body,
+                        "text": text_body,
+                    },
+                )
+                if res.status_code in (200, 201):
+                    logger.success(f"Sent activation email via Resend to {recipient}")
+                    result["channel"] = "resend"
+                    _log_email_record(result, {"client_id": client_id, "service_requested": "Setup Activation"})
+                    return result
+        except Exception as e:
+            logger.warning(f"Resend activation email error: {e}")
+
+    # Fallback to local email log
+    _log_email_record(result, {"client_id": client_id, "service_requested": "Setup Activation"})
+    result["channel"] = "logged"
+    return result
+
+
 async def test_email_notification(recipient: str) -> Dict[str, Any]:
     """Sends a test email to verify SMTP or Resend credentials."""
     dummy_info = {

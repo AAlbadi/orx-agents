@@ -1216,11 +1216,150 @@ async def api_update_client_settings(payload: Dict[str, Any] = Body(...)):
     if not profile:
         profile = payload
     else:
-        for field in ["forwarding_phone", "hours", "address", "services", "pricing_policy", "business_name", "custom_prompt", "compiled_prompt"]:
+        allowed_fields = [
+            "forwarding_phone", "sms_phone", "owner_phone", "hours", "address",
+            "services", "pricing_policy", "diagnostic_fee", "business_name",
+            "persona_name", "persona_voice", "voice", "greeting", "first_message",
+            "emergency_triggers", "transfer_rules", "night_action", "after_hours_action",
+            "custom_prompt", "compiled_prompt"
+        ]
+        for field in allowed_fields:
             if field in payload:
                 profile[field] = payload[field]
     saved = save_client_profile(profile)
     return {"success": True, "profile": saved}
+
+
+@app.post("/api/client/cancel-subscription")
+async def api_cancel_subscription(payload: Dict[str, Any] = Body(...)):
+    """Cancel / end subscription for a client from the portal."""
+    from app.onboarding import get_client_profile, get_latest_client_profile, save_client_profile
+    client_id = payload.get("client_id")
+    profile = get_client_profile(client_id) if client_id else get_latest_client_profile()
+    if not profile:
+        return {"success": False, "error": "Client not found"}
+
+    now_str = time.strftime("%Y-%m-%d %H:%M:%S")
+    profile["polar_status"] = "canceled"
+    profile["status"] = "canceled"
+    profile["canceled_at"] = now_str
+    saved = save_client_profile(profile)
+
+    # Sync with project database if present
+    try:
+        from app.project_db import get_db_connection, get_db_path
+        clean_id = re.sub(r'[^a-zA-Z0-9_\-]', '_', client_id)
+        if get_db_path(clean_id).exists():
+            conn = get_db_connection(clean_id)
+            cur = conn.cursor()
+            cur.execute("UPDATE project_meta SET status = 'canceled', updated_at = ? WHERE client_id = ?", (now_str, clean_id))
+            conn.commit()
+            conn.close()
+    except Exception as e:
+        logger.warning(f"Could not update project_meta cancellation: {e}")
+
+    return {"success": True, "polar_status": "canceled", "message": "Subscription canceled. Your line remains active until the end of the billing cycle.", "profile": saved}
+
+
+@app.post("/api/client/reactivate-subscription")
+async def api_reactivate_subscription(payload: Dict[str, Any] = Body(...)):
+    """Reactivate a canceled subscription from the portal."""
+    from app.onboarding import get_client_profile, get_latest_client_profile, save_client_profile
+    client_id = payload.get("client_id")
+    profile = get_client_profile(client_id) if client_id else get_latest_client_profile()
+    if not profile:
+        return {"success": False, "error": "Client not found"}
+
+    now_str = time.strftime("%Y-%m-%d %H:%M:%S")
+    profile["polar_status"] = "active"
+    profile["status"] = "active"
+    profile.pop("canceled_at", None)
+    saved = save_client_profile(profile)
+
+    try:
+        from app.project_db import get_db_connection, get_db_path
+        clean_id = re.sub(r'[^a-zA-Z0-9_\-]', '_', client_id)
+        if get_db_path(clean_id).exists():
+            conn = get_db_connection(clean_id)
+            cur = conn.cursor()
+            cur.execute("UPDATE project_meta SET status = 'active', updated_at = ? WHERE client_id = ?", (now_str, clean_id))
+            conn.commit()
+            conn.close()
+    except Exception as e:
+        logger.warning(f"Could not update project_meta reactivation: {e}")
+
+    return {"success": True, "polar_status": "active", "message": "Subscription reactivated! Your receptionist is active.", "profile": saved}
+
+
+@app.post("/api/client/send-activation-email")
+async def api_send_activation_email(request: Request, payload: Dict[str, Any] = Body(...)):
+    """Send client portal setup & phone forwarding details to the owner's email."""
+    from app.onboarding import get_client_profile, get_latest_client_profile
+    from app.integrations import send_activation_email
+    client_id = payload.get("client_id")
+    email = payload.get("email", "").strip()
+    profile = get_client_profile(client_id) if client_id else get_latest_client_profile()
+    if not profile:
+        return {"success": False, "error": "Client not found"}
+    if not email:
+        email = profile.get("owner_email") or profile.get("email") or ""
+    if not email:
+        return {"success": False, "error": "Please provide a valid email address"}
+
+    http_base = str(request.base_url).rstrip("/")
+    result = await send_activation_email(profile, email, public_url=http_base)
+    return result
+
+
+@app.post("/api/client/simulate-call")
+async def api_simulate_client_call(payload: Dict[str, Any] = Body(...)):
+    """Simulate an incoming customer call to this client's line for testing the dashboard."""
+    from app.onboarding import get_client_profile, get_latest_client_profile
+    from app.project_db import log_call_for_project
+    import random
+
+    client_id = payload.get("client_id")
+    profile = get_client_profile(client_id) if client_id else get_latest_client_profile()
+    if not profile:
+        return {"success": False, "error": "Client not found"}
+
+    biz_name = profile.get("business_name") or "Your Company"
+    persona = profile.get("persona_name") or "Riley"
+    ind = profile.get("industry", "hvac")
+    cid = profile.get("id")
+
+    sample_callers = [
+        ("Michael Chang", "(651) 234-8891", "410 Grand Ave", f"Emergency {ind.upper()} inspection"),
+        ("Rachel Adams", "(612) 441-2093", "1250 Hennepin Ave", f"Routine maintenance tune-up"),
+        ("Carlos Martinez", "(763) 892-1145", "308 Lake Street", f"System diagnostic & quote"),
+    ]
+    name, phone, addr, srv = random.choice(sample_callers)
+    call_id = f"sim-{int(time.time())}"
+
+    call_record = {
+        "id": call_id,
+        "client_id": cid,
+        "caller_phone": phone,
+        "duration": float(random.randint(60, 180)),
+        "recording_file": "data/recordings/call-rec-demo-84920.wav",
+        "transcript": [
+            {"speaker": "assistant", "text": f"Thank you for calling {biz_name}! This is {persona}. How can I assist you today?"},
+            {"speaker": "customer", "text": f"Hi, this is {name}. I need to schedule a {srv} at {addr}."},
+            {"speaker": "assistant", "text": f"I can certainly help you with that, {name}! We have an arrival window tomorrow between 9:00 AM and 12:00 PM. Would that work?"},
+            {"speaker": "customer", "text": "Yes, that works perfectly for me. Thank you!"},
+            {"speaker": "assistant", "text": f"You're all booked! Our technician will see you tomorrow at {addr}. Have a great day!"}
+        ],
+        "extracted_info": {
+            "customer_name": name,
+            "client_name": name,
+            "service_requested": srv,
+            "service_address": addr,
+            "appointment_date": "Tomorrow",
+            "appointment_time": "9:00 AM - 12:00 PM"
+        }
+    }
+    log_call_for_project(cid, call_record)
+    return {"success": True, "call": call_record}
 
 
 @app.post("/api/client/verify-connection")
@@ -1453,9 +1592,16 @@ async def api_get_project_appointments(client_id: str, limit: int = Query(50)):
 
 @app.get("/api/admin/clients")
 async def api_admin_list_clients():
-    """Returns all client profiles enriched with call counts, last activity, and project status."""
-    from app.project_db import list_projects
+    """Returns all client profiles enriched with owner details, call counts, usage minutes, and live $20/mo billing."""
+    from app.project_db import list_projects, migrate_legacy_clients, get_db_path
     import sqlite3
+    import math
+
+    # Ensure all clients in clients.json have their project DBs provisioned
+    try:
+        migrate_legacy_clients()
+    except Exception as e:
+        logger.warning(f"migrate_legacy_clients warning: {e}")
 
     clients_file = Path("data/clients.json")
     clients_data = {}
@@ -1465,45 +1611,365 @@ async def api_admin_list_clients():
         except Exception:
             clients_data = {}
 
-    projects = {p.get("client_id"): p for p in list_projects()}
+    # Also check project folders to ensure no orphan projects are missed
+    projects = {}
+    try:
+        for p in list_projects():
+            pid = p.get("id") or p.get("client_id")
+            if pid:
+                projects[pid] = p
+    except Exception:
+        projects = {}
+
+    all_ids = set(clients_data.keys()).union(set(projects.keys()))
     enriched = []
 
-    for cid, profile in clients_data.items():
-        item = {**profile, "id": cid}
-        # Enrich with call stats from project DB
-        db_path = Path(f"data/projects/{cid}/client.db")
+    for cid in all_ids:
+        profile = clients_data.get(cid, {})
+        proj = projects.get(cid, {})
+        proj_meta = proj.get("meta", {}) if isinstance(proj.get("meta"), dict) else {}
+        proj_prompt = proj.get("prompt", {}) if isinstance(proj.get("prompt"), dict) else {}
+
+        # Merge metadata prioritizing profile then project meta
+        biz_name = profile.get("business_name") or proj_meta.get("business_name") or "Unnamed Business"
+        owner_name = profile.get("owner_name") or profile.get("name") or proj_meta.get("owner_name") or "Business Owner"
+        owner_email = profile.get("owner_email") or profile.get("email") or proj_meta.get("owner_email") or ""
+        owner_phone = profile.get("owner_phone") or profile.get("forwarding_phone") or proj_meta.get("owner_phone") or ""
+        forwarding_phone = profile.get("forwarding_phone") or proj_meta.get("forwarding_phone") or owner_phone
+        assigned_phone = profile.get("assigned_phone") or proj_meta.get("assigned_phone") or "+1 (833) 420-5227"
+        trade = profile.get("trade") or profile.get("industry") or proj_meta.get("industry") or "hvac"
+        address = profile.get("address") or profile.get("city") or proj_meta.get("address") or "Service Territory"
+        status = profile.get("polar_status") or profile.get("status") or proj_meta.get("status") or "active"
+
+        # Prompt resolution
+        compiled_prompt = profile.get("compiled_prompt") or profile.get("livekit_prompt") or proj_prompt.get("system_prompt") or proj.get("livekit_prompt") or ""
+        first_msg = profile.get("first_message") or proj_prompt.get("first_message") or ""
+        persona = profile.get("persona_name") or proj_prompt.get("persona_name") or "Riley"
+
+        item = {
+            **profile,
+            "id": cid,
+            "client_id": cid,
+            "business_name": biz_name,
+            "owner_name": owner_name,
+            "owner_email": owner_email,
+            "owner_phone": owner_phone,
+            "forwarding_phone": forwarding_phone,
+            "assigned_phone": assigned_phone,
+            "trade": trade,
+            "industry": trade,
+            "address": address,
+            "status": status,
+            "persona_name": persona,
+            "first_message": first_msg,
+            "prompt_preview": compiled_prompt[:180] + ("..." if len(compiled_prompt) > 180 else "") if compiled_prompt else "No prompt compiled yet.",
+            "has_prompt": bool(compiled_prompt),
+            "char_count": len(compiled_prompt),
+            "est_tokens": math.ceil(len(compiled_prompt) / 4) if compiled_prompt else 0,
+        }
+
+        # Query call stats & usage from dedicated project SQLite DB
+        db_path = get_db_path(cid)
+        total_calls = 0
+        total_appointments = 0
+        total_seconds = 0.0
+        last_call = None
+
         if db_path.exists():
             try:
                 conn = sqlite3.connect(str(db_path))
                 conn.row_factory = sqlite3.Row
                 cur = conn.cursor()
-                cur.execute("SELECT COUNT(*) as cnt FROM call_logs")
-                item["total_calls"] = cur.fetchone()["cnt"]
-                cur.execute("SELECT COUNT(*) as cnt FROM appointments")
-                item["total_appointments"] = cur.fetchone()["cnt"]
-                cur.execute("SELECT created_at FROM call_logs ORDER BY created_at DESC LIMIT 1")
-                row = cur.fetchone()
-                item["last_call_at"] = row["created_at"] if row else None
-                conn.close()
-            except Exception:
-                item["total_calls"] = 0
-                item["total_appointments"] = 0
-                item["last_call_at"] = None
-        else:
-            item["total_calls"] = 0
-            item["total_appointments"] = 0
-            item["last_call_at"] = None
+                cur.execute("SELECT COUNT(*) as cnt, COALESCE(SUM(call_duration), 0) as dur FROM call_logs")
+                r = cur.fetchone()
+                if r:
+                    total_calls = r["cnt"] or 0
+                    total_seconds = float(r["dur"] or 0)
 
-        item["has_project"] = cid in projects
+                cur.execute("SELECT COUNT(*) as cnt FROM appointments")
+                r_app = cur.fetchone()
+                if r_app:
+                    total_appointments = r_app["cnt"] or 0
+
+                cur.execute("SELECT created_at FROM call_logs ORDER BY created_at DESC LIMIT 1")
+                r_last = cur.fetchone()
+                if r_last:
+                    last_call = r_last["created_at"]
+                conn.close()
+            except Exception as e:
+                logger.debug(f"DB read for {cid} error: {e}")
+
+        total_minutes = round(total_seconds / 60.0, 1)
+        # Pricing model: $20/mo Starter Plan + 60 free minutes + $0.25/min overage
+        base_fee = 20.00
+        included_mins = 60.0
+        overage_rate = 0.25
+        overage_mins = max(0.0, round(total_minutes - included_mins, 1))
+        overage_cost = round(overage_mins * overage_rate, 2)
+        total_bill = round(base_fee + overage_cost, 2)
+        wholesale_cost = round(total_minutes * 0.035, 2)
+        gross_profit = round(max(0.0, total_bill - wholesale_cost), 2)
+        margin_pct = round((gross_profit / total_bill * 100) if total_bill > 0 else 0, 1)
+
+        item["total_calls"] = total_calls
+        item["calls_count"] = total_calls
+        item["total_appointments"] = total_appointments
+        item["appointments_count"] = total_appointments
+        item["total_seconds"] = total_seconds
+        item["total_minutes"] = total_minutes
+        item["included_minutes"] = included_mins
+        item["overage_minutes"] = overage_mins
+        item["overage_rate"] = overage_rate
+        item["overage_cost"] = overage_cost
+        item["base_fee"] = base_fee
+        item["estimated_cost"] = total_bill
+        item["wholesale_cost"] = wholesale_cost
+        item["gross_profit"] = gross_profit
+        item["margin_pct"] = margin_pct
+        item["last_call_at"] = last_call
+        item["has_project"] = db_path.exists()
+        item["portal_url"] = f"/portal?client_id={cid}"
+
         enriched.append(item)
 
-    # Sort: active first, then by last activity
+    # Sort: active first, then most recently active
     enriched.sort(key=lambda x: (
-        x.get("polar_status") != "active",
+        x.get("status") != "active",
+        -(x.get("total_calls") or 0),
         x.get("last_call_at") or "",
-    ))
+    ), reverse=False)
 
     return {"clients": enriched, "total": len(enriched)}
+
+
+@app.get("/api/admin/clients/{client_id}/full")
+async def api_admin_client_full(client_id: str):
+    """Returns comprehensive end-to-end client dossier: profile, compiled prompt, calls, transcripts, appointments, and cost analytics."""
+    from app.project_db import get_project, get_project_calls, get_project_appointments, get_db_path
+    import sqlite3
+    import math
+
+    clients_file = Path("data/clients.json")
+    profile = {}
+    if clients_file.exists():
+        try:
+            data = json.loads(clients_file.read_text())
+            profile = data.get("clients", {}).get(client_id, {})
+        except Exception:
+            profile = {}
+
+    project = get_project(client_id) or {}
+    proj_meta = project.get("meta", {}) if isinstance(project.get("meta"), dict) else {}
+    proj_prompt = project.get("prompt", {}) if isinstance(project.get("prompt"), dict) else {}
+    proj_cal = project.get("calendar", {}) if isinstance(project.get("calendar"), dict) else {}
+
+    # Merge client metadata
+    biz_name = profile.get("business_name") or proj_meta.get("business_name") or "Comfort Breeze HVAC"
+    owner_name = profile.get("owner_name") or profile.get("name") or proj_meta.get("owner_name") or "Abdul Aziz"
+    owner_email = profile.get("owner_email") or profile.get("email") or proj_meta.get("owner_email") or "owner@business.com"
+    owner_phone = profile.get("owner_phone") or profile.get("forwarding_phone") or proj_meta.get("owner_phone") or "+1 (555) 234-5678"
+    forwarding_phone = profile.get("forwarding_phone") or proj_meta.get("forwarding_phone") or owner_phone
+    sms_phone = profile.get("sms_phone") or forwarding_phone
+    assigned_phone = profile.get("assigned_phone") or proj_meta.get("assigned_phone") or "+1 (833) 420-5227"
+    trade = profile.get("trade") or profile.get("industry") or proj_meta.get("industry") or "hvac"
+    address = profile.get("address") or profile.get("city") or proj_meta.get("address") or "Service Area"
+    status = profile.get("polar_status") or profile.get("status") or proj_meta.get("status") or "active"
+    hours = profile.get("hours") or proj_prompt.get("hours") or "Mon-Fri 8:00 AM - 6:00 PM"
+    timezone = profile.get("timezone") or proj_meta.get("timezone") or "America/New_York"
+    diag_fee = profile.get("diagnostic_fee") or "$89"
+    fee_policy = profile.get("fee_policy") or "Credited toward repair"
+    created_at = profile.get("created_at") or proj_meta.get("created_at") or "2026-09-20"
+
+    # Prompt details
+    system_prompt = (
+        profile.get("compiled_prompt")
+        or profile.get("livekit_prompt")
+        or proj_prompt.get("system_prompt")
+        or project.get("livekit_prompt")
+        or ""
+    )
+    first_message = (
+        profile.get("first_message")
+        or proj_prompt.get("first_message")
+        or f"Thank you for calling {biz_name}! This is Riley. How can I help get your home comfortable today?"
+    )
+    persona_name = profile.get("persona_name") or proj_prompt.get("persona_name") or "Riley"
+    tts_voice = profile.get("tts_voice") or proj_prompt.get("tts_voice") or "flux-heather-en"
+    stt_model = profile.get("stt_model") or "nova-3"
+    llm_model = profile.get("llm_model") or "gemini-3.1-flash-lite"
+
+    # Calls with transcripts & parsed extracted info
+    raw_calls = get_project_calls(client_id, limit=100)
+    calls = []
+    total_seconds = 0.0
+    for c in raw_calls:
+        dur = float(c.get("call_duration") or 0)
+        total_seconds += dur
+        # Parse transcript if string
+        transcript = c.get("transcript")
+        if isinstance(transcript, str):
+            try:
+                transcript = json.loads(transcript)
+            except Exception:
+                transcript = [{"speaker": "Transcript", "text": transcript}]
+
+        extracted = c.get("extracted_info")
+        if isinstance(extracted, str):
+            try:
+                extracted = json.loads(extracted)
+            except Exception:
+                extracted = {}
+
+        rec_file = c.get("recording_file") or ""
+        rec_url = f"/api/recordings/{Path(rec_file).name}" if rec_file else ""
+
+        calls.append({
+            "id": c.get("id") or f"call_{len(calls)+1}",
+            "caller_phone": c.get("caller_phone") or "Unknown Caller",
+            "duration_seconds": round(dur),
+            "duration_formatted": f"{int(dur // 60)}m {int(dur % 60):02d}s",
+            "transcript": transcript or [],
+            "extracted_info": extracted or {},
+            "recording_url": rec_url,
+            "created_at": c.get("created_at") or "",
+        })
+
+    # Appointments
+    raw_appts = get_project_appointments(client_id, limit=50)
+    appts = []
+    for a in raw_appts:
+        appts.append({
+            "id": a.get("id") or f"apt_{len(appts)+1}",
+            "client_name": a.get("client_name") or "Customer",
+            "client_phone": a.get("client_phone") or "",
+            "service_requested": a.get("service_requested") or "Diagnostic & Service",
+            "service_address": a.get("service_address") or "",
+            "appointment_date": a.get("appointment_date") or "",
+            "window": a.get("window") or "arrival window",
+            "status": a.get("status") or "confirmed",
+            "summary": a.get("summary") or "",
+            "created_at": a.get("created_at") or "",
+        })
+
+    # Usage & Cost computation ($20/mo + 60 free minutes + $0.25/min)
+    total_minutes = round(total_seconds / 60.0, 1)
+    base_fee = 20.00
+    included_mins = 60.0
+    overage_rate = 0.25
+    overage_mins = max(0.0, round(total_minutes - included_mins, 1))
+    overage_cost = round(overage_mins * overage_rate, 2)
+    total_bill = round(base_fee + overage_cost, 2)
+    wholesale_cost = round(total_minutes * 0.035, 2)
+    gross_profit = round(max(0.0, total_bill - wholesale_cost), 2)
+    margin_pct = round((gross_profit / total_bill * 100) if total_bill > 0 else 0, 1)
+
+    return {
+        "client": {
+            "id": client_id,
+            "business_name": biz_name,
+            "owner_name": owner_name,
+            "owner_email": owner_email,
+            "owner_phone": owner_phone,
+            "forwarding_phone": forwarding_phone,
+            "sms_phone": sms_phone,
+            "assigned_phone": assigned_phone,
+            "trade": trade,
+            "industry": trade,
+            "address": address,
+            "hours": hours,
+            "timezone": timezone,
+            "diagnostic_fee": diag_fee,
+            "fee_policy": fee_policy,
+            "status": status,
+            "created_at": created_at,
+            "portal_url": f"/portal?client_id={client_id}",
+        },
+        "prompt": {
+            "persona_name": persona_name,
+            "first_message": first_message,
+            "system_prompt": system_prompt,
+            "char_count": len(system_prompt),
+            "word_count": len(system_prompt.split()),
+            "est_tokens": math.ceil(len(system_prompt) / 4) if system_prompt else 0,
+            "tts_voice": tts_voice,
+            "stt_model": stt_model,
+            "llm_model": llm_model,
+        },
+        "calendar": {
+            "is_connected": bool(proj_cal.get("is_connected")),
+            "calendar_id": proj_cal.get("calendar_id") or "primary",
+            "morning_slot_capacity": proj_cal.get("morning_slot_capacity", 2),
+            "afternoon_slot_capacity": proj_cal.get("afternoon_slot_capacity", 2),
+            "status": proj_cal.get("last_status") or "active",
+        },
+        "stats": {
+            "total_calls": len(calls),
+            "total_seconds": total_seconds,
+            "total_minutes": total_minutes,
+            "total_appointments": len(appts),
+            "plan_name": "Starter Plan ($20/mo)",
+            "base_fee": base_fee,
+            "included_minutes": included_mins,
+            "overage_minutes": overage_mins,
+            "overage_rate": overage_rate,
+            "overage_cost": overage_cost,
+            "total_client_bill": total_bill,
+            "wholesale_api_cost": wholesale_cost,
+            "estimated_gross_profit": gross_profit,
+            "margin_pct": margin_pct,
+        },
+        "calls": calls,
+        "appointments": appts,
+    }
+
+
+@app.post("/api/admin/clients/{client_id}/update-prompt")
+async def api_admin_update_client_prompt(client_id: str, payload: Dict[str, Any] = Body(...)):
+    """Save edited system prompt or first greeting directly to client DB and clients.json."""
+    from app.project_db import get_db_connection, sync_project_json_files
+    import sqlite3
+
+    prompt = payload.get("system_prompt", "").strip()
+    first_msg = payload.get("first_message", "").strip()
+    persona = payload.get("persona_name", "").strip()
+
+    if not prompt:
+        raise HTTPException(status_code=400, detail="Prompt cannot be empty")
+
+    # Update clients.json
+    clients_file = Path("data/clients.json")
+    if clients_file.exists():
+        try:
+            data = json.loads(clients_file.read_text())
+            c = data.get("clients", {}).get(client_id, {})
+            c["compiled_prompt"] = prompt
+            c["livekit_prompt"] = prompt
+            if first_msg:
+                c["first_message"] = first_msg
+            if persona:
+                c["persona_name"] = persona
+            data["clients"][client_id] = c
+            clients_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        except Exception as e:
+            logger.error(f"Error updating clients.json: {e}")
+
+    # Update SQLite custom_prompt table
+    try:
+        conn = get_db_connection(client_id)
+        cur = conn.cursor()
+        cur.execute("""
+            UPDATE custom_prompt
+            SET system_prompt = ?, livekit_prompt = ?, first_message = COALESCE(NULLIF(?, ''), first_message),
+                persona_name = COALESCE(NULLIF(?, ''), persona_name), updated_at = datetime('now')
+            WHERE client_id = ?
+        """, (prompt, prompt, first_msg, persona, client_id))
+        conn.commit()
+        conn.close()
+        sync_project_json_files(client_id)
+    except Exception as e:
+        logger.error(f"Error updating project DB for {client_id}: {e}")
+
+    return {"success": True, "client_id": client_id, "char_count": len(prompt)}
 
 
 @app.get("/api/admin/clients/{client_id}/calls")
@@ -1628,22 +2094,29 @@ async def api_project_stats(client_id: str):
         cur.execute("SELECT COUNT(DISTINCT caller_phone) as cnt FROM call_logs WHERE caller_phone IS NOT NULL")
         stats["unique_callers"] = cur.fetchone()["cnt"]
 
-        # Billing ($99/mo Starter Plan: includes 200 min, then $0.15/min overage)
-        base_fee = 99.00
-        included_mins = 200.0
-        overage_rate = 0.15
+        # Billing ($20/mo Starter Plan: includes 60 min, then $0.25/min overage)
+        base_fee = 20.00
+        included_mins = 60.0
+        overage_rate = 0.25
         total_mins = stats.get("total_minutes", 0.0)
         overage_mins = max(0.0, round(total_mins - included_mins, 1))
         overage_cost = round(overage_mins * overage_rate, 2)
         total_bill = round(base_fee + overage_cost, 2)
+        wholesale_cost = round(total_mins * 0.035, 2)
+        gross_profit = round(max(0.0, total_bill - wholesale_cost), 2)
+        margin_pct = round((gross_profit / total_bill * 100) if total_bill > 0 else 0, 1)
 
         stats["plan"] = "starter"
+        stats["plan_name"] = "Starter Plan ($20/mo)"
         stats["base_fee"] = base_fee
         stats["included_minutes"] = included_mins
         stats["overage_minutes"] = overage_mins
         stats["overage_rate"] = overage_rate
         stats["overage_cost"] = overage_cost
         stats["estimated_cost"] = total_bill
+        stats["wholesale_cost"] = wholesale_cost
+        stats["gross_profit"] = gross_profit
+        stats["margin_pct"] = margin_pct
 
         conn.close()
     except Exception as e:
