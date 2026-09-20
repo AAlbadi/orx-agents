@@ -2293,6 +2293,62 @@
         btn.innerHTML = '<span>🚀 Run Full End-to-End Test</span>';
       }
     }
+
+    // ─── Dashboard Test Mode ────────────────────────────────────────────────
+    // When opened from the admin dashboard via the 🎙️ Test Call button,
+    // pre-fill all fields with the current agent's prompt & voice settings.
+    (function initDashboardTestMode() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('mode') !== 'dashboard_test') return;
+
+      const tryFill = () => {
+        try {
+          const instructions = sessionStorage.getItem('orx_test_instructions');
+          const greeting = sessionStorage.getItem('orx_test_greeting');
+          const ttsVoice = sessionStorage.getItem('orx_test_tts_voice');
+          const sttModel = sessionStorage.getItem('orx_test_stt_model');
+          const agentName = sessionStorage.getItem('orx_test_agent_name') || 'Agent';
+
+          if (instructions) {
+            const el = document.getElementById('txt-instructions');
+            if (el) { el.value = instructions; if (typeof updatePromptMetrics === 'function') updatePromptMetrics(); }
+          }
+          if (greeting) {
+            const el = document.getElementById('txt-greeting');
+            if (el) el.value = greeting;
+          }
+          if (ttsVoice) {
+            const sel = document.getElementById('sel-tts');
+            if (sel) { for (let opt of sel.options) { if (opt.value === ttsVoice) { sel.value = ttsVoice; break; } } }
+          }
+          if (sttModel) {
+            const sel = document.getElementById('sel-stt');
+            if (sel) {
+              const normalized = (sttModel || '').replace('deepgram-','').replace('deepgram_','');
+              for (let opt of sel.options) {
+                if (opt.value === sttModel || opt.value === normalized || opt.value.includes(normalized)) { sel.value = opt.value; break; }
+              }
+            }
+          }
+
+          // Show purple banner
+          const banner = document.createElement('div');
+          banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:rgba(88,28,135,0.97);border-bottom:1px solid rgba(168,85,247,0.5);padding:10px 24px;display:flex;align-items:center;justify-content:space-between;font-size:13px;font-family:sans-serif;';
+          banner.innerHTML = '<span style="display:flex;align-items:center;gap:8px;color:#e9d5ff;">' +
+            '\uD83C\uDF99\uFE0F <strong style="color:white;">Dashboard Test Mode</strong> &mdash; Testing <code style="color:#c4b5fd;">' + agentName + '</code> &mdash; prompt pre-filled from your editor.' +
+            '</span>' +
+            '<button onclick="this.parentElement.remove()" style="color:#a78bfa;font-size:11px;font-weight:600;padding:4px 12px;border-radius:6px;background:rgba(109,40,217,0.5);border:none;cursor:pointer;">&times; Dismiss</button>';
+          document.body.prepend(banner);
+
+          // Clean sessionStorage (single-use)
+          ['orx_test_instructions','orx_test_greeting','orx_test_tts_voice','orx_test_stt_model','orx_test_llm','orx_test_agent_name'].forEach(k => sessionStorage.removeItem(k));
+        } catch (e) { console.warn('Dashboard test mode init error:', e); }
+      };
+
+      if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', tryFill); }
+      else { tryFill(); }
+    })();
+    // ────────────────────────────────────────────────────────────────────────
   </script>
 </body>
 </html>

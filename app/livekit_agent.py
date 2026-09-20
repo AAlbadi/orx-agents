@@ -19,8 +19,13 @@ import shutil
 import socket
 import subprocess
 import time
+from datetime import datetime
 from typing import Any, AsyncGenerator, Dict, List, Optional
 import httpx
+try:
+    import pytz as _pytz
+except ImportError:
+    _pytz = None
 from loguru import logger
 
 from livekit import rtc
@@ -877,6 +882,31 @@ async def _agent_room_worker(
                 or _STAGED_ROOM_PROMPTS.get(room_name)
                 or _DEFAULT_AGENT_INSTRUCTIONS
             )
+
+            # ── LIVE TIME INJECTION ─────────────────────────────────────────
+            # Pull business timezone from config (defaults to America/Chicago = Minneapolis)
+            biz_tz_name = config.get("timezone") or "America/Chicago"
+            try:
+                if _pytz:
+                    biz_tz = _pytz.timezone(biz_tz_name)
+                    now_local = datetime.now(biz_tz)
+                else:
+                    # stdlib fallback (Python 3.9+)
+                    from zoneinfo import ZoneInfo
+                    now_local = datetime.now(ZoneInfo(biz_tz_name))
+                time_block = (
+                    f"\n<live_context>\n"
+                    f"Current local business time: {now_local.strftime('%A, %B %d, %Y at %I:%M %p')} "
+                    f"({biz_tz_name.split('/')[-1].replace('_',' ')} Time). "
+                    f"Use this for all scheduling references — 'today', 'tomorrow', 'this morning', etc. "
+                    f"Never say a day or time that contradicts this live timestamp.\n"
+                    f"</live_context>\n"
+                )
+                instructions = time_block + instructions
+                logger.debug(f"[LiveKit Agent] Live time injected: {now_local.strftime('%A %b %d %I:%M %p %Z')}")
+            except Exception as _tz_err:
+                logger.warning(f"[LiveKit Agent] Time injection skipped: {_tz_err}")
+            # ───────────────────────────────────────────────────────────────
 
             turn_handling = TurnHandlingOptions(
                 endpointing=EndpointingOptions(mode="fixed", min_delay=0.8, max_delay=2.5),

@@ -51,7 +51,8 @@
     <div class="flex items-center gap-3">
       <div class="w-2 h-2 rounded-full bg-[#10b981] animate-pulse" title="System Healthy"></div>
       <a href="/livekit" class="px-3 py-1.5 text-xs text-[#10b981] hover:text-[#059669] font-semibold transition">LiveKit Lab</a>
-      <button onclick="saveAndApplyAssistant()" class="px-4 py-1.5 rounded-lg bg-[#10b981] hover:bg-[#059669] text-[#08090c] font-bold text-xs transition">Save & Apply</button>
+      <button onclick="testLiveCallFromDashboard()" id="dashboard-test-call-btn" class="px-4 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition flex items-center gap-1.5">🎙️ Test Call</button>
+      <button onclick="saveAndApplyAssistant()" id="save-agent-btn" class="px-4 py-1.5 rounded-lg bg-[#10b981] hover:bg-[#059669] text-[#08090c] font-bold text-xs transition">Save & Apply</button>
     </div>
   </header>
 <!-- Live Call Floating Banner (Only appears during an active call) -->
@@ -1832,6 +1833,48 @@
         }
       }, 600);
     }
+
+    // ─── Test Live Call From Dashboard ───────────────────────────────────────
+    // Opens /livekit in a new tab with current prompt pre-loaded for instant testing.
+    async function testLiveCallFromDashboard() {
+      const btn = document.getElementById('dashboard-test-call-btn');
+      if (!currentAssistant) {
+        if (typeof showNotification === 'function') showNotification('⚠️ Select an agent first', 'warning');
+        return;
+      }
+
+      // Read current prompt from editor (may have unsaved edits)
+      const currentPrompt = (document.getElementById('agent-system-prompt-input')?.value || '').trim()
+                         || currentAssistant.system_prompt || '';
+      const firstName = (document.getElementById('agent-first-message-input')?.value || '').trim()
+                     || currentAssistant.first_message || '';
+      const voice = currentAssistant.tts_voice || 'flux-heather-en';
+      const stt = currentAssistant.stt_model || 'nova-3';
+      const llm = currentAssistant.llm_model || 'gemini-3.1-flash-lite';
+
+      // Stash into sessionStorage so livekit.html can pick it up
+      try {
+        sessionStorage.setItem('orx_test_instructions', currentPrompt);
+        sessionStorage.setItem('orx_test_greeting', firstName);
+        sessionStorage.setItem('orx_test_tts_voice', voice);
+        sessionStorage.setItem('orx_test_stt_model', stt);
+        sessionStorage.setItem('orx_test_llm', llm);
+        sessionStorage.setItem('orx_test_agent_name', currentAssistant.name || 'Agent');
+      } catch (e) {}
+
+      if (btn) {
+        btn.innerHTML = '⟳ Opening...';
+        btn.disabled = true;
+        setTimeout(() => {
+          btn.innerHTML = '🎙️ Test Call';
+          btn.disabled = false;
+        }, 2500);
+      }
+
+      // Open LiveKit Lab in new tab — it reads sessionStorage on load
+      window.open('/livekit?mode=dashboard_test', '_blank');
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
     async function saveAndApplyAssistant() {
       if (!currentAssistant) return;
