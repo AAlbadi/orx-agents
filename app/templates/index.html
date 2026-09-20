@@ -4435,7 +4435,7 @@
       const lastChild = box.lastElementChild;
       if (lastChild && lastChild.dataset.speaker === speaker) {
         const txtEl = lastChild.querySelector('.bubble-text');
-        if (txtEl && txtEl.textContent.trim() === text.trim()) return; // Deduplicate
+        if (txtEl && txtEl.textContent.trim().toLowerCase() === text.trim().toLowerCase()) return; // Deduplicate
       }
 
       const isUser = speaker.toLowerCase().includes('user');

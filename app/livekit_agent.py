@@ -724,7 +724,14 @@ async def _finalize_session(room_name: str, status: str = "completed") -> Option
         logger.success(f"[LiveKit Agent] Saved session '{call_id}' with intelligence extraction & calendar URL.")
 
         # Persist to Client Project SQLite Database
-        client_project_id = config.get("client_id") or config.get("assistant_id") or "riley_hvac"
+        client_project_id = config.get("client_id") or config.get("assistant_id")
+        if not client_project_id or client_project_id in ("aria-livekit", "riley_hvac", "default"):
+            if room_name.startswith("aria-"):
+                sub = room_name[5:]
+                if sub and not sub.startswith("room-"):
+                    client_project_id = sub
+        if not client_project_id:
+            client_project_id = "riley_hvac"
         try:
             from app.project_db import save_project_call, save_project_appointment
             save_project_call(client_project_id, {
@@ -792,7 +799,7 @@ async def _finalize_session(room_name: str, status: str = "completed") -> Option
                     meta = proj.get("meta", {})
                     biz_name = meta.get("business_name") or config.get("assistant_name") or "Comfort Breeze HVAC"
                     owner_email = meta.get("owner_email") or config.get("owner_email")
-                    owner_phone = meta.get("owner_phone") or config.get("owner_phone")
+                    owner_phone = meta.get("sms_phone") or meta.get("owner_phone") or config.get("sms_phone") or config.get("owner_phone")
 
                     cal_cfg = get_project_calendar_config(client_project_id)
                     cal_id = cal_cfg.get("calendar_id", "primary")
@@ -854,6 +861,69 @@ async def _agent_room_worker(
         audio_buffer = bytearray()
 
         try:
+            # ── DYNAMIC CLIENT BINDING & ONBOARDING RULES RESOLUTION ──────────
+            resolved_client = None
+            cand_id = config.get("client_id") or config.get("assistant_id")
+            if not cand_id or cand_id in ("aria-livekit", "riley_hvac", "default"):
+                if room_name.startswith("aria-"):
+                    sub = room_name[5:]
+                    if sub and not sub.startswith("room-"):
+                        cand_id = sub
+
+            try:
+                from app.onboarding import get_client_profile, get_client_by_assigned_phone, compile_agent_prompt
+                from app.project_db import get_project
+                if cand_id:
+                    resolved_client = get_client_profile(cand_id)
+                    if not resolved_client:
+                        p_proj = get_project(cand_id)
+                        if p_proj:
+                            resolved_client = {**p_proj.get("meta", {}), **p_proj.get("prompt", {}), "id": cand_id, "client_id": cand_id}
+                if not resolved_client:
+                    phone_lookup = config.get("to") or config.get("called") or config.get("phone") or config.get("assigned_phone")
+                    if phone_lookup:
+                        resolved_client = get_client_by_assigned_phone(phone_lookup)
+            except Exception as _cl_err:
+                logger.debug(f"[LiveKit Agent] Client lookup note: {_cl_err}")
+
+            if resolved_client:
+                cid = resolved_client.get("id") or resolved_client.get("client_id") or cand_id
+                biz_name = resolved_client.get("business_name") or "Our Company"
+                persona = resolved_client.get("persona_name") or "Riley"
+                config["client_id"] = cid
+                config["assistant_id"] = cid
+                config["assistant_name"] = f"{persona} ({biz_name})"
+
+                # Auto-load client compiled prompt with mirrored onboarding rules
+                if not config.get("instructions") and not _STAGED_ROOM_PROMPTS.get(room_name):
+                    compiled = resolved_client.get("livekit_prompt") or resolved_client.get("compiled_prompt")
+                    if not compiled or len(compiled) < 250:
+                        try:
+                            compiled = compile_agent_prompt(resolved_client)
+                        except Exception:
+                            compiled = None
+                    if compiled:
+                        config["instructions"] = compiled
+
+                # Auto-load client greeting
+                if not config.get("greeting"):
+                    config["greeting"] = (
+                        resolved_client.get("first_message")
+                        or resolved_client.get("greeting")
+                        or f"Thank you for calling {biz_name}! This is {persona}. How can I help get your home taken care of today?"
+                    )
+
+                # Auto-load voice
+                if not config.get("tts_voice") and (resolved_client.get("tts_voice") or resolved_client.get("voice")):
+                    config["tts_voice"] = resolved_client.get("tts_voice") or resolved_client.get("voice")
+
+                # Auto-load timezone
+                if not config.get("timezone") and (resolved_client.get("timezone") or (resolved_client.get("schedule_config") or {}).get("timezone")):
+                    config["timezone"] = resolved_client.get("timezone") or (resolved_client.get("schedule_config") or {}).get("timezone")
+
+                logger.info(f"[LiveKit Agent] Room '{room_name}' automatically bound to client '{cid}' ({biz_name}) - Voice: {config.get('tts_voice', 'default')}")
+            # ─────────────────────────────────────────────────────────────────
+
             logger.info(f"[LiveKit Agent] Connecting agent to room: {room_name} at {ws_url}")
             await room.connect(ws_url, agent_token)
             logger.info(f"[LiveKit Agent] Agent connected to {room_name}. Initializing models...")
@@ -1122,23 +1192,15 @@ async def _agent_room_worker(
                 "greeting",
                 "Hi there! I'm Aria, running on LiveKit with Groq and Deepgram. How can I help you today?"
             )
-            # Wait up to 3.0s for the browser participant to connect so greeting audio isn't missed
+            # Fast-poll for the browser participant to connect so greeting audio isn't delayed
             wait_deadline = time.time() + 3.0
             while len(room.remote_participants) == 0 and time.time() < wait_deadline and room.isconnected():
-                await asyncio.sleep(0.25)
+                await asyncio.sleep(0.05)
 
-            await asyncio.sleep(0.2)
             try:
                 session.say(greeting)
                 logger.info(f"[LiveKit Agent] Greeting sent to room: {room_name}")
-                transcript_turns.append({
-                    "speaker": "assistant",
-                    "text": greeting,
-                    "timestamp": time.strftime("%H:%M:%S"),
-                    "timestamp_epoch": time.time(),
-                    "created_at": time.time(),
-                })
-                # Note: conversation_item_added event will broadcast transcript synchronously as audio streams
+                # conversation_item_added event will append to transcript_turns, record turn, and broadcast synchronously
             except Exception as e:
                 logger.warning(f"Could not say initial greeting: {e}")
 

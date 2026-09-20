@@ -176,6 +176,14 @@
     "created_at": "2026-09-19 15:32:52"
   },
   {
+    "id": "cli_e2e_prod_1789911464",
+    "business_name": "Lone Star Heating & Air",
+    "industry": "hvac",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-20 17:37:44"
+  },
+  {
     "id": "cli_demo",
     "business_name": "Apex Climate & Air",
     "industry": "hvac",
@@ -190,6 +198,14 @@
     "status": "active",
     "assigned_phone": "+1 (833) 420-5227",
     "created_at": "2026-09-19 17:15:27"
+  },
+  {
+    "id": "cli_d070bfcff5",
+    "business_name": "Summit Peak Roofing & Gutters",
+    "industry": "roofing",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-20 17:13:03"
   },
   {
     "id": "cli_unit_test_hvac_99",
@@ -222,6 +238,14 @@
     "status": "active",
     "assigned_phone": "+1 (833) 420-5227",
     "created_at": "2026-09-18 15:25:49"
+  },
+  {
+    "id": "cli_3c42c8b780",
+    "business_name": "Summit Peak Roofing & Gutters",
+    "industry": "roofing",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-20 17:12:05"
   },
   {
     "id": "cli_e2e_prod_1789898020",
@@ -270,6 +294,14 @@
     "status": "active",
     "assigned_phone": "+1 (833) 420-5227",
     "created_at": "2026-09-18 15:25:49"
+  },
+  {
+    "id": "cli_e2e_prod_1789911600",
+    "business_name": "Lone Star Heating & Air",
+    "industry": "hvac",
+    "status": "active",
+    "assigned_phone": "+18334205227",
+    "created_at": "2026-09-20 17:40:00"
   },
   {
     "id": "cli_nkdmwts",

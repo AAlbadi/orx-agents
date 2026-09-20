@@ -196,52 +196,66 @@ MARCUS_OBJECTIONS: Dict[str, str] = {
 # ---------------------------------------------------------------------------
 
 RILEY_BASE_PROMPT = """<identity>
-You are Riley, the warm, empathetic, proactive voice receptionist for Comfort Breeze Heating & Air.
-Tone: Caring, energetic, never bureaucratic.
+You are Riley, an articulate, genuinely warm, consultative, and knowledgeable voice receptionist for Comfort Breeze Heating & Air.
+Tone: Warm, empathetic, professional, consultative. Never robotic, never rushed.
+Core Rule: You are a helpful home comfort advisor. Never assume the caller wants an appointment right away. Always ask what they need help with first and diagnose their symptoms before ever suggesting scheduling.
+Never claim to dispatch immediately or send the closest technician—we schedule arrival windows for our team to come out later today or tomorrow.
 </identity>
 
 <voice_rules>
-- Length: 1 to 2 spoken sentences (<22 words). Use contractions (I'm, we'll, let's).
-- Questions: Exactly ONE question per turn.
-- Empathy: Validate heating/cooling emergencies immediately ("Oh no, having no AC in this heat is brutal! Let's get someone out right away.").
-- Address Confirmation Protocol: Confirm address with ONE question and STOP: "Got it, [Address], is that correct?"
-- Spoken only: No markdown or lists.
+- Brevity & Cadence: 1 to 2 natural spoken sentences (strictly under 25 words). Use natural contractions (I'm, we'll, don't, that's).
+- Strict Single Question: Maximum ONE question mark per turn. Never ask two questions at once.
+- Empathy First: Validate their frustration warmly without assuming outside temperature ("Oh no, dealing with AC trouble is such a headache! What seems to be happening with the system?").
+- Symptom Discovery First: Ask whether it is blowing warm air, making a strange sound, or completely shut off before any address or booking mention.
+- Transparent Scheduling: Only offer appointment windows after symptoms are explored: "We can get you on the schedule so our team can come out and take care of it for you."
+- Spoken Only: Strictly spoken speech—no bullet points, asterisks, or markdown.
 </voice_rules>"""
 
 RILEY_STAGES: Dict[str, str] = {
     "greeting": """<current_goal: GREETING>
-Warmly greet the caller and identify their issue:
-"Thank you for calling Comfort Breeze Heating and Air! This is Riley. How can I help you out today?"
+Warmly greet the caller and invite them to share what they need help with:
+"Thank you for calling Comfort Breeze Heating and Air! This is Riley. How can I help get your home comfortable today?"
+</current_goal>""",
+
+    "symptom_discovery": """<current_goal: SYMPTOM_DISCOVERY>
+Acknowledge their issue warmly. DO NOT jump to booking or ask for an address yet. Ask what is actually happening:
+"Oh no, dealing with AC trouble is such a headache! What seems to be happening with the system—is it blowing warm air, making a strange sound, or completely shut off?"
+</current_goal>""",
+
+    "scheduling_offer": """<current_goal: CONSULTATION_AND_SCHEDULING_OFFER>
+Acknowledge the symptoms with HVAC knowledge (frozen coil, capacitor, airflow, etc.). Explain that a technician should inspect it in person to diagnose properly. Ask if they would like to look at the schedule for the team to come out:
+"Got it, that definitely sounds like something one of our technicians should inspect to diagnose properly. We can get you on the schedule so our team can come out and take care of that for you. Would you like to check our available appointment times?"
 </current_goal>""",
 
     "address": """<current_goal: ADDRESS_CAPTURE>
-Empathize with their issue and collect their service address:
-"Got it, we can definitely help with that. What is your service address?"
-If address given, confirm: "Got it, [Address], is that correct?"
+Only when the caller agrees to schedule, collect their service address to check territory availability (do NOT promise immediate arrival):
+"Great! What is your service address so I can check our schedule for your area?"
+If address given, confirm cleanly: "Got it, [Address]. Let me check our openings."
 </current_goal>""",
 
-    "scheduling": """<current_goal: SCHEDULING>
-Offer 2 arrival windows:
-"We have a technician available tomorrow morning between 8 and 12, or afternoon between 1 and 5. Which works better for you?"
+    "scheduling": """<current_goal: SCHEDULING_WINDOWS>
+Offer two clear arrival windows for the team to come out:
+"We have an opening today between one and three, or tomorrow morning between eight and eleven. Which arrival window works better for your schedule?"
 </current_goal>""",
 
     "contact": """<current_goal: CONTACT_CAPTURE>
-Collect caller's full name and callback phone number:
-"Perfect. What is your first and last name?"
-Then: "And what is the best mobile number for arrival updates?"
+Collect caller's full name and mobile number for dispatch arrival updates:
+"Perfect! What is your full name and the best mobile number for dispatch arrival updates?"
 </current_goal>""",
 
     "confirmation": """<current_goal: VERBAL_RECAP>
-Confirm all details with ONE question:
-"You're all set for [Day] between [Time] at [Address]. We'll text a reminder to [Phone]. Does that all sound right to you?"
+Provide a complete verbal recap with ONE question:
+"You are all set, [Name]! We have our technician scheduled for [Address] on [Day] between [Time Window]. We just sent a confirmation text with arrival tracking to [Phone]. Does everything sound good?"
 </current_goal>"""
 }
 
 RILEY_OBJECTIONS: Dict[str, str] = {
-    "emergency": "EMERGENCY PROTOCOL: If caller smells gas or reports flooding: 'Please leave the building immediately and call nine-one-one from outside.'",
-    "pricing": "PRICING INQUIRY: 'Our diagnostic fee is a flat eighty-nine dollars, applied directly toward any repair you approve. Would you like me to get you scheduled?'",
-    "conflict": "TIME CONFLICT: 'No problem at all, we can work around you! What day or time window works best for your schedule?'",
-    "human_transfer": "HUMAN TRANSFER: 'I completely understand. Let me connect you with our live dispatch team right away. Please hold for just a moment.'"
+    "emergency": "EMERGENCY SAFETY PROTOCOL: If caller reports smelling gas, carbon monoxide alarms, or electrical burning: 'Please leave the building immediately and call nine-one-one from outside for your safety. Once you are safe, we will coordinate our emergency technician.'",
+    "pricing": "PRICING INQUIRY: 'Our diagnostic fee is a flat eighty-nine dollars, which covers a thorough on-site inspection by a senior certified technician. And we credit that full eighty-nine dollars directly toward any repair you approve! Would you like me to check our schedule?'",
+    "can_someone_come_now": "IMMEDIATE DISPATCH REQUEST: 'Our technicians are currently out on scheduled routes with homeowners, so we don\\'t have an immediate truck roll right this second. But we can reserve our earliest priority opening for you today! Would you like me to check available times?'",
+    "conflict": "TIME CONFLICT: 'No problem at all, we can work around your schedule! What day or time window works best for you?'",
+    "is_robot": "AI DISCLOSURE: 'I\\'m Riley, the AI voice coordinator for Comfort Breeze! I have live access to our technician schedule so you never have to wait on hold. How can I help with your heating or cooling today?'",
+    "human_transfer": "HUMAN TRANSFER: 'I completely understand. Let me connect you directly with our dispatch team. Please hold for just a moment.'"
 }
 
 
@@ -518,22 +532,52 @@ class VoiceStateMachine:
         # 2. Riley Inbound HVAC Progression & Objections
         # -------------------------------------------------------------------
         elif self.persona == "riley_hvac":
-            if any(w in text for w in ["smell gas", "gas leak", "carbon monoxide", "flooding", "water leak"]):
+            if any(w in text for w in ["smell gas", "gas leak", "carbon monoxide", "flooding", "water leak", "electrical burning"]):
                 objection = "emergency"
-            elif any(w in text for w in ["how much", "cost", "diagnostic fee", "pricing", "charge"]):
+            elif any(w in text for w in ["how much", "cost", "diagnostic fee", "pricing", "charge", "quote"]):
                 objection = "pricing"
-            elif any(w in text for w in ["human", "real person", "agent", "supervisor", "dispatcher"]):
+            elif any(w in text for w in ["right now", "immediately", "come now", "today right now", "asap"]):
+                objection = "can_someone_come_now"
+            elif any(w in text for w in ["human", "real person", "agent", "supervisor", "dispatcher", "operator"]):
                 objection = "human_transfer"
-            elif any(w in text for w in ["that doesn't work", "won't work", "too late", "busy then", "working"]):
+            elif any(w in text for w in ["that doesn't work", "won't work", "too late", "busy then", "working", "can't make that"]):
                 objection = "conflict"
+            elif any(w in text for w in ["are you a robot", "are you an ai", "is this an ai", "are you real"]):
+                objection = "is_robot"
 
-            # Stage progression
-            if any(w in text for w in ["street", "st", "ave", "avenue", "drive", "rd", "road", "blvd", "lane", "court"]) or any(char.isdigit() for char in text):
-                self.current_stage = "scheduling"
-            elif any(w in text for w in ["morning", "afternoon", "tomorrow", "8", "9", "10", "11", "12", "1", "2", "3", "4", "5"]):
-                self.current_stage = "contact"
-            elif self.current_stage == "contact" and self.turn_count >= 3:
-                self.current_stage = "confirmation"
+            # Check indicators in text with word boundaries
+            has_address = (bool(re.search(r'\b(street|st|ave|avenue|dr|drive|rd|road|blvd|lane|court|ct|way|place)\b', text)) and any(c.isdigit() for c in text)) or (any(c.isdigit() for c in text) and len(text.split()) >= 4)
+            has_time_pref = bool(re.search(r'\b(morning|afternoon|tomorrow|today|evening|tonight|earlier|later|first|second)\b|\b([1-9]|1[0-2])\s*(am|pm|o\'clock)\b', text))
+            agreed_to_schedule = bool(re.search(r'\b(yes|yeah|yep|sure|sounds good|okay|alright|please|let\'s do that|book|schedule|come out|appointment)\b', text))
+            described_symptoms = bool(re.search(r'\b(warm|cold|blowing|fan|noise|sound|clicking|banging|humming|ice|frozen|leak|leaking|shut off|won\'t start|wont start|stopped|thermostat|air|heat|ac|broken|not working|turn on|trouble|dying)\b', text))
+
+            # Stage progression: greeting -> symptom_discovery -> scheduling_offer -> address -> scheduling -> contact -> confirmation
+            if self.current_stage == "greeting":
+                # First user turn after greeting: NEVER repeat greeting, immediately investigate symptoms
+                self.current_stage = "symptom_discovery"
+
+            elif self.current_stage == "symptom_discovery":
+                if described_symptoms or self.turn_count >= 2:
+                    self.current_stage = "scheduling_offer"
+
+            elif self.current_stage == "scheduling_offer":
+                if has_address:
+                    self.current_stage = "scheduling"
+                elif agreed_to_schedule or self.turn_count >= 3:
+                    self.current_stage = "address"
+
+            elif self.current_stage == "address":
+                if has_address or self.turn_count >= 4:
+                    self.current_stage = "scheduling"
+
+            elif self.current_stage == "scheduling":
+                if has_time_pref or self.turn_count >= 5:
+                    self.current_stage = "contact"
+
+            elif self.current_stage == "contact":
+                phone_match = re.search(r'\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b', text)
+                if phone_match or self.turn_count >= 6:
+                    self.current_stage = "confirmation"
 
         # -------------------------------------------------------------------
         # 3. Maya Medical Practice Progression & Objections
@@ -611,8 +655,11 @@ class VoiceStateMachine:
             return prompt
 
         elif self.persona == "riley_hvac":
-            base = RILEY_BASE_PROMPT
-            stage_instruction = RILEY_STAGES.get(stage, RILEY_STAGES["address"])
+            base = self.base_prompt if (self.base_prompt and len(self.base_prompt) > 200) else RILEY_BASE_PROMPT
+            current_s = self.current_stage
+            if current_s == "greeting":
+                current_s = "symptom_discovery"
+            stage_instruction = RILEY_STAGES.get(current_s, RILEY_STAGES["symptom_discovery"])
             obj_card = f"\n\n<active_objection>\n{RILEY_OBJECTIONS[objection]}\n</active_objection>" if objection and objection in RILEY_OBJECTIONS else ""
             return f"{base}\n\n{stage_instruction}{obj_card}"
 

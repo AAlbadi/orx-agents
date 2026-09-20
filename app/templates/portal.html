@@ -573,7 +573,30 @@
             <button type="button" class="carrier-pill active" data-carrier="verizon" data-prefix="*71" style="background: var(--brand); color: #FFF; border: none; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">Verizon (*71)</button>
             <button type="button" class="carrier-pill" data-carrier="att" data-prefix="*61*" data-suffix="%23" style="background: #FFF; color: var(--text-main); border: 1px solid var(--border); padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">AT&T (*61*)</button>
             <button type="button" class="carrier-pill" data-carrier="tmobile" data-prefix="**61*" data-suffix="%23" style="background: #FFF; color: var(--text-main); border: 1px solid var(--border); padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">T-Mobile (**61*)</button>
-            <button type="button" class="carrier-pill" data-carrier="other" data-prefix="" style="background: #FFF; color: var(--text-main); border: 1px solid var(--border); padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">VoIP / Landline</button>
+            <button type="button" class="carrier-pill" data-carrier="other" data-prefix="*72" style="background: #FFF; color: var(--text-main); border: 1px solid var(--border); padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">Landline / VoIP (*72)</button>
+          </div>
+
+          <!-- Ready-to-copy Full Dial Code & Assigned Number Card -->
+          <div style="background: #FFFFFF; border: 1.5px solid var(--border); border-radius: 10px; padding: 14px 18px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Carrier Dialing Code:</span>
+                <span id="carrierTagVal" style="font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: var(--brand-soft); color: var(--brand);">Verizon (*71)</span>
+              </div>
+              <div style="display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;">
+                <span id="fullDialCodeVal" style="font-family: var(--font-mono); font-size: 21px; font-weight: 800; color: var(--brand); letter-spacing: 0.03em;">*718334205227</span>
+                <span id="dedicatedNumberHint" style="font-size: 12.5px; color: var(--text-tertiary); font-weight: 500;">(Dedicated Line: <strong id="assignedNumberSubVal" style="color: var(--text-main); font-family: var(--font-mono);">+1 (833) 420-5227</strong>)</span>
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <button type="button" id="btnCopyFullCode" style="display: inline-flex; align-items: center; gap: 6px; background: var(--brand); color: #FFF; border: none; padding: 8px 14px; border-radius: 7px; font-size: 12.5px; font-weight: 600; cursor: pointer; box-shadow: var(--shadow-sm); transition: all 0.15s;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                <span id="btnCopyFullCodeText">Copy Full Code</span>
+              </button>
+              <button type="button" id="btnCopyJustNumber" style="display: inline-flex; align-items: center; gap: 6px; background: #FFF; color: var(--text-main); border: 1px solid var(--border); padding: 8px 12px; border-radius: 7px; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all 0.15s;">
+                <span id="btnCopyJustNumberText">Copy Number Only</span>
+              </button>
+            </div>
           </div>
 
           <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
@@ -1577,20 +1600,73 @@
 
     function updateDialLink(cleanPhone) {
       const btnTap = document.getElementById("btnTapToConnect");
+      const fullCodeEl = document.getElementById("fullDialCodeVal");
+      const carrierTagEl = document.getElementById("carrierTagVal");
+      const assignedSubEl = document.getElementById("assignedNumberSubVal");
+
+      const rawPhone = currentClient?.assigned_phone || document.getElementById("assignedPhoneVal")?.textContent?.trim() || "+1 (833) 420-5227";
+      if (assignedSubEl) assignedSubEl.textContent = rawPhone;
+
+      let fullCode = `*71${cleanPhone}`;
+      let carrierLabel = "Verizon (*71)";
+
       if (selectedCarrier === "verizon") {
-        btnTap.href = `tel:*71${cleanPhone}`;
-        btnTap.querySelector("span").textContent = `1-Tap Connect on Verizon (*71)`;
+        fullCode = `*71${cleanPhone}`;
+        carrierLabel = "Verizon (*71)";
+        if (btnTap) {
+          btnTap.href = `tel:*71${cleanPhone}`;
+          btnTap.querySelector("span").textContent = `1-Tap Connect on Verizon (*71)`;
+        }
       } else if (selectedCarrier === "att") {
-        btnTap.href = `tel:*61*${cleanPhone}%23`;
-        btnTap.querySelector("span").textContent = `1-Tap Connect on AT&T (*61*)`;
+        fullCode = `*61*${cleanPhone}#`;
+        carrierLabel = "AT&T (*61*)";
+        if (btnTap) {
+          btnTap.href = `tel:*61*${cleanPhone}%23`;
+          btnTap.querySelector("span").textContent = `1-Tap Connect on AT&T (*61*)`;
+        }
       } else if (selectedCarrier === "tmobile") {
-        btnTap.href = `tel:**61*${cleanPhone}%23`;
-        btnTap.querySelector("span").textContent = `1-Tap Connect on T-Mobile (**61*)`;
+        fullCode = `**61*${cleanPhone}#`;
+        carrierLabel = "T-Mobile (**61*)";
+        if (btnTap) {
+          btnTap.href = `tel:**61*${cleanPhone}%23`;
+          btnTap.querySelector("span").textContent = `1-Tap Connect on T-Mobile (**61*)`;
+        }
       } else {
-        btnTap.href = `tel:${cleanPhone}`;
-        btnTap.querySelector("span").textContent = `View Forwarding Number`;
+        fullCode = `*72${cleanPhone}`;
+        carrierLabel = "Landline / VoIP (*72)";
+        if (btnTap) {
+          btnTap.href = `tel:*72${cleanPhone}`;
+          btnTap.querySelector("span").textContent = `1-Tap Connect on Desk Phone (*72)`;
+        }
       }
+
+      if (fullCodeEl) fullCodeEl.textContent = fullCode;
+      if (carrierTagEl) carrierTagEl.textContent = carrierLabel;
     }
+
+    // Copy Full Dial Code Button
+    document.getElementById("btnCopyFullCode")?.addEventListener("click", () => {
+      const codeText = document.getElementById("fullDialCodeVal")?.textContent?.trim() || "";
+      if (codeText) {
+        navigator.clipboard.writeText(codeText);
+        const textSpan = document.getElementById("btnCopyFullCodeText");
+        const orig = textSpan.textContent;
+        textSpan.textContent = "Copied ✓";
+        setTimeout(() => { textSpan.textContent = orig; }, 2000);
+      }
+    });
+
+    // Copy Just Number Button
+    document.getElementById("btnCopyJustNumber")?.addEventListener("click", () => {
+      const numText = currentClient?.assigned_phone || document.getElementById("assignedPhoneVal")?.textContent?.trim() || "+1 (833) 420-5227";
+      if (numText) {
+        navigator.clipboard.writeText(numText);
+        const textSpan = document.getElementById("btnCopyJustNumberText");
+        const orig = textSpan.textContent;
+        textSpan.textContent = "Copied ✓";
+        setTimeout(() => { textSpan.textContent = orig; }, 2000);
+      }
+    });
 
     // Carrier Selector Pills
     document.querySelectorAll(".carrier-pill").forEach(pill => {
@@ -1688,56 +1764,244 @@
       }
     });
 
+    // Voice Selector Pills
+    document.querySelectorAll(".voice-pill").forEach(pill => {
+      pill.addEventListener("click", () => {
+        document.querySelectorAll(".voice-pill").forEach(p => {
+          p.style.background = "#FFF";
+          p.style.color = "var(--text-main)";
+          p.style.border = "1px solid var(--border)";
+        });
+        pill.style.background = "var(--brand)";
+        pill.style.color = "#FFF";
+        pill.style.border = "none";
+        selectedVoice = pill.dataset.voice;
+        const nameInput = document.getElementById("editPersonaName");
+        if (nameInput) nameInput.value = pill.dataset.name;
+        const badge = document.getElementById("activeVoiceBadge");
+        if (badge) badge.textContent = `${pill.dataset.name} Active`;
+      });
+    });
+
+    // Save Receptionist Settings
     document.getElementById("btnSaveSettings").addEventListener("click", async () => {
-      const forwardPhone = document.getElementById("editForwardPhone").value;
-      const hours = document.getElementById("editHours").value;
-      const address = document.getElementById("editAddress") ? document.getElementById("editAddress").value : "";
-      const services = document.getElementById("editServices") ? document.getElementById("editServices").value : "";
       const btn = document.getElementById("btnSaveSettings");
+      const fb = document.getElementById("saveFeedback");
       btn.textContent = "Saving...";
+      btn.disabled = true;
+
+      const payload = {
+        client_id: clientId || currentClient?.id,
+        persona_name: document.getElementById("editPersonaName")?.value || "Riley",
+        voice: selectedVoice,
+        persona_voice: selectedVoice,
+        greeting: document.getElementById("editGreeting")?.value || "",
+        forwarding_phone: document.getElementById("editForwardPhone")?.value || "",
+        sms_phone: document.getElementById("editSmsPhone")?.value || "",
+        hours: document.getElementById("editHours")?.value || "",
+        after_hours_action: document.getElementById("editNightAction")?.value || "book_morning",
+        pricing_policy: document.getElementById("editPricing")?.value || "",
+        address: document.getElementById("editAddress")?.value || "",
+        services: document.getElementById("editServices")?.value || "",
+        emergency_triggers: document.getElementById("editEmergency")?.value || ""
+      };
 
       try {
-        await fetch("/api/client/update", {
+        const res = await fetch("/api/client/update", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            client_id: clientId,
-            forwarding_phone: forwardPhone,
-            hours: hours,
-            address: address,
-            services: services
-          })
+          body: JSON.stringify(payload)
         });
-        document.getElementById("forwardPhoneVal").textContent = forwardPhone;
-        btn.textContent = "Saved ✓";
-        setTimeout(() => { btn.textContent = "Save Profile Changes"; }, 2000);
+        const data = await res.json();
+        if (data.success) {
+          if (payload.forwarding_phone) {
+            document.getElementById("forwardPhoneVal").textContent = payload.forwarding_phone;
+          }
+          btn.textContent = "Settings Saved ✓";
+          if (fb) {
+            fb.style.display = "block";
+            fb.textContent = "✓ Receptionist voice and logic updated successfully!";
+            setTimeout(() => { fb.style.display = "none"; }, 3500);
+          }
+        }
       } catch (err) {
-        btn.textContent = "Save Profile Changes";
+        btn.textContent = "Save Receptionist Settings";
+      } finally {
+        btn.disabled = false;
+        setTimeout(() => { btn.textContent = "Save Receptionist Settings"; }, 2500);
       }
     });
 
-    const btnSavePrompt = document.getElementById("btnSavePrompt");
-    if (btnSavePrompt) {
-      btnSavePrompt.addEventListener("click", async () => {
-        const promptVal = document.getElementById("editPrompt").value;
-        btnSavePrompt.textContent = "Saving Prompt...";
-        try {
-          await fetch("/api/client/update", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              client_id: clientId,
-              compiled_prompt: promptVal,
-              custom_prompt: promptVal
-            })
-          });
-          btnSavePrompt.textContent = "Prompt Saved ✓";
-          setTimeout(() => { btnSavePrompt.textContent = "Save Custom Prompt"; }, 2000);
-        } catch (err) {
-          btnSavePrompt.textContent = "Save Custom Prompt";
+    // Cancel Subscription
+    document.getElementById("btnCancelSubscription")?.addEventListener("click", async () => {
+      const num = currentClient?.assigned_phone || "dedicated line";
+      if (!confirm(`Are you sure you want to end your AI Receptionist subscription? Your ${num} will stop answering customer calls at the end of the billing period.`)) {
+        return;
+      }
+      const btn = document.getElementById("btnCancelSubscription");
+      btn.textContent = "Canceling...";
+      btn.disabled = true;
+      try {
+        const res = await fetch("/api/client/cancel-subscription", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ client_id: clientId || currentClient?.id })
+        });
+        const data = await res.json();
+        if (data.success) {
+          const subBadge = document.getElementById("subStatusBadge");
+          if (subBadge) {
+            subBadge.textContent = "Canceled";
+            subBadge.style.background = "#FEE2E2";
+            subBadge.style.color = "#DC2626";
+            subBadge.style.borderColor = "#FCA5A5";
+          }
+          btn.style.display = "none";
+          const reactivateBtn = document.getElementById("btnReactivateSubscription");
+          if (reactivateBtn) reactivateBtn.style.display = "inline-block";
+          const fb = document.getElementById("cancelFeedback");
+          if (fb) {
+            fb.style.display = "block";
+            fb.textContent = "Subscription ended. Your line remains active until the end of your billing month.";
+          }
         }
-      });
-    }
+      } catch (err) {
+        alert("Could not process cancellation. Please try again.");
+      } finally {
+        btn.textContent = "End / Cancel Subscription";
+        btn.disabled = false;
+      }
+    });
+
+    // Reactivate Subscription
+    document.getElementById("btnReactivateSubscription")?.addEventListener("click", async () => {
+      const btn = document.getElementById("btnReactivateSubscription");
+      btn.textContent = "Reactivating...";
+      btn.disabled = true;
+      try {
+        const res = await fetch("/api/client/reactivate-subscription", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ client_id: clientId || currentClient?.id })
+        });
+        const data = await res.json();
+        if (data.success) {
+          const subBadge = document.getElementById("subStatusBadge");
+          if (subBadge) {
+            subBadge.textContent = "Active";
+            subBadge.style.background = "rgba(16,185,129,0.1)";
+            subBadge.style.color = "#10b981";
+            subBadge.style.borderColor = "rgba(16,185,129,0.2)";
+          }
+          btn.style.display = "none";
+          const cancelBtn = document.getElementById("btnCancelSubscription");
+          if (cancelBtn) cancelBtn.style.display = "inline-block";
+          const fb = document.getElementById("cancelFeedback");
+          if (fb) {
+            fb.style.display = "block";
+            fb.style.background = "#ECFDF5";
+            fb.style.color = "#065F46";
+            fb.style.borderColor = "#6EE7B7";
+            fb.textContent = "✓ Receptionist subscription successfully reactivated!";
+            setTimeout(() => { fb.style.display = "none"; }, 4000);
+          }
+        }
+      } catch (err) {
+        alert("Could not reactivate line.");
+      } finally {
+        btn.textContent = "Reactivate Line";
+        btn.disabled = false;
+      }
+    });
+
+    // Send Setup & Forwarding info via Email
+    document.getElementById("btnSendActivationEmail")?.addEventListener("click", async () => {
+      const emailInput = document.getElementById("inputActivationEmail");
+      const emailVal = (emailInput?.value || "").trim();
+      const fb = document.getElementById("emailSendResult");
+      const btn = document.getElementById("btnSendActivationEmail");
+
+      if (!emailVal || !emailVal.includes("@")) {
+        alert("Please enter a valid email address.");
+        emailInput?.focus();
+        return;
+      }
+
+      btn.textContent = "Sending...";
+      btn.disabled = true;
+
+      try {
+        const res = await fetch("/api/client/send-activation-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            client_id: clientId || currentClient?.id,
+            email: emailVal
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          if (fb) {
+            fb.style.display = "block";
+            fb.textContent = `✓ Setup & carrier dialing codes sent to ${emailVal}!`;
+          }
+          btn.textContent = "Sent ✓";
+          setTimeout(() => { btn.textContent = "Email Me Info"; }, 3000);
+        } else {
+          alert(data.error || "Failed to send email. Please verify your address.");
+          btn.textContent = "Email Me Info";
+        }
+      } catch (e) {
+        alert("Network error sending email.");
+        btn.textContent = "Email Me Info";
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    // Video Modal Handlers
+    const videoModal = document.getElementById("videoGuideModal");
+    document.getElementById("btnWatchVideoGuide")?.addEventListener("click", () => {
+      if (videoModal) videoModal.style.display = "flex";
+    });
+    document.getElementById("btnCloseVideoModal")?.addEventListener("click", () => {
+      if (videoModal) videoModal.style.display = "none";
+    });
+    document.getElementById("btnDismissVideoModal")?.addEventListener("click", () => {
+      if (videoModal) videoModal.style.display = "none";
+    });
+    videoModal?.addEventListener("click", (e) => {
+      if (e.target === videoModal) videoModal.style.display = "none";
+    });
+
+    // Simulate Incoming Inbound Call
+    document.getElementById("btnSimulateCall")?.addEventListener("click", async () => {
+      const btn = document.getElementById("btnSimulateCall");
+      const origText = btn.innerHTML;
+      btn.innerHTML = `<span>Simulating... ⏳</span>`;
+      btn.disabled = true;
+
+      try {
+        const res = await fetch("/api/client/simulate-call", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ client_id: clientId || currentClient?.id })
+        });
+        const data = await res.json();
+        if (data.success) {
+          const cid = clientId || currentClient?.id;
+          if (cid) {
+            await loadProjectCalls(cid);
+            await loadProjectStats(cid);
+          }
+        }
+      } catch (err) {
+        console.error("Simulation error:", err);
+      } finally {
+        btn.innerHTML = origText;
+        btn.disabled = false;
+      }
+    });
 
     // Quick Test Agent
     const quickTestInput = document.getElementById("quickTestInput");

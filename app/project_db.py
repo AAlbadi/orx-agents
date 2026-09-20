@@ -166,6 +166,30 @@ def init_project_db(client_id: str):
             except Exception:
                 pass
 
+        for col_name, col_def in [
+            ("connection_status", "TEXT DEFAULT 'pending'"),
+            ("carrier", "TEXT DEFAULT 'Verizon'"),
+            ("verified_at", "TEXT DEFAULT ''"),
+            ("sms_phone", "TEXT DEFAULT ''"),
+            ("after_hours_action", "TEXT DEFAULT 'book_morning'"),
+            ("answering_coverage", "TEXT DEFAULT 'always_24_7'"),
+        ]:
+            if col_name not in pm_cols:
+                try:
+                    cur.execute(f"ALTER TABLE project_meta ADD COLUMN {col_name} {col_def}")
+                except Exception:
+                    pass
+
+        for col_name, col_def in [
+            ("after_hours_action", "TEXT DEFAULT 'book_morning'"),
+            ("answering_coverage", "TEXT DEFAULT 'always_24_7'"),
+        ]:
+            if col_name not in cp_cols:
+                try:
+                    cur.execute(f"ALTER TABLE custom_prompt ADD COLUMN {col_name} {col_def}")
+                except Exception:
+                    pass
+
         cur.execute("PRAGMA table_info(google_calendar_config)")
         gcc_cols = [c[1] for c in cur.fetchall()]
         for col_name, col_def in [
@@ -261,14 +285,22 @@ def create_project(data: Dict[str, Any], trigger_source: str = "admin") -> Dict[
         timezone = data.get("timezone") or "America/New_York"
         status = data.get("status") or "active"
         sms_enabled = 1 if data.get("sms_notifications_enabled", True) else 0
+        connection_status = data.get("connection_status") or "pending"
+        carrier = data.get("carrier") or "Verizon"
+        verified_at = data.get("verified_at") or data.get("forwarding_setup_at") or ""
+        sms_phone = data.get("sms_phone") or forwarding or owner_phone
+        after_hours_action = data.get("after_hours_action") or data.get("night_action") or "book_morning"
+        answering_coverage = data.get("answering_coverage") or data.get("schedule_mode") or "always_24_7"
 
         cur.execute("""
             INSERT INTO project_meta (
                 client_id, project_name, business_name, industry, address,
                 forwarding_phone, assigned_phone, owner_phone, owner_email,
                 timezone, status, trigger_source, sms_notifications_enabled,
+                connection_status, carrier, verified_at, sms_phone,
+                after_hours_action, answering_coverage,
                 created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(client_id) DO UPDATE SET
                 project_name=excluded.project_name,
                 business_name=excluded.business_name,
@@ -281,11 +313,20 @@ def create_project(data: Dict[str, Any], trigger_source: str = "admin") -> Dict[
                 timezone=excluded.timezone,
                 status=excluded.status,
                 sms_notifications_enabled=excluded.sms_notifications_enabled,
+                connection_status=excluded.connection_status,
+                carrier=excluded.carrier,
+                verified_at=excluded.verified_at,
+                sms_phone=excluded.sms_phone,
+                after_hours_action=excluded.after_hours_action,
+                answering_coverage=excluded.answering_coverage,
                 updated_at=excluded.updated_at
         """, (
             clean_id, project_name, biz_name, industry, address,
             forwarding, assigned, owner_phone, owner_email,
-            timezone, status, trigger_source, sms_enabled, now_str, now_str
+            timezone, status, trigger_source, sms_enabled,
+            connection_status, carrier, verified_at, sms_phone,
+            after_hours_action, answering_coverage,
+            now_str, now_str
         ))
 
         # 2. Custom Prompt & Character-Optimized LiveKit Voice Instructions
@@ -318,8 +359,9 @@ def create_project(data: Dict[str, Any], trigger_source: str = "admin") -> Dict[
             INSERT INTO custom_prompt (
                 client_id, persona_name, system_prompt, livekit_prompt, first_message,
                 tts_voice, voice_speed, services, emergency_triggers,
-                hours, pricing_policy, booking_action, custom_qa, tone_preset, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                hours, pricing_policy, booking_action, custom_qa, tone_preset,
+                after_hours_action, answering_coverage, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(client_id) DO UPDATE SET
                 persona_name=excluded.persona_name,
                 system_prompt=excluded.system_prompt,
@@ -334,11 +376,14 @@ def create_project(data: Dict[str, Any], trigger_source: str = "admin") -> Dict[
                 booking_action=excluded.booking_action,
                 custom_qa=excluded.custom_qa,
                 tone_preset=excluded.tone_preset,
+                after_hours_action=excluded.after_hours_action,
+                answering_coverage=excluded.answering_coverage,
                 updated_at=excluded.updated_at
         """, (
             clean_id, persona_name, system_prompt, livekit_prompt, first_message,
             tts_voice, voice_speed, services, emergency_triggers,
-            hours, pricing_policy, booking_action, qa_str, tone_preset, now_str
+            hours, pricing_policy, booking_action, qa_str, tone_preset,
+            after_hours_action, answering_coverage, now_str
         ))
 
         # 3. Google Calendar Config
@@ -869,6 +914,9 @@ def save_project_call(client_id: str, call_data: Dict[str, Any]) -> Dict[str, An
 
     logger.info(f"Recorded call #{call_id} in dedicated DB for '{clean_id}'")
     return call_data
+
+
+log_call_for_project = save_project_call
 
 
 def get_project_calls(client_id: str, limit: int = 50) -> List[Dict[str, Any]]:

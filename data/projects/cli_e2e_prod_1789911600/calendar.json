@@ -1,0 +1,19 @@
+{
+  "client_id": "cli_e2e_prod_1789911600",
+  "calendar_id": "primary",
+  "service_account_json": "",
+  "calendar_webhook_url": "",
+  "sync_enabled": 1,
+  "morning_slot_capacity": 2,
+  "afternoon_slot_capacity": 2,
+  "evening_slot_capacity": 2,
+  "is_connected": 1,
+  "last_tested_at": "2026-09-20 17:40:00",
+  "last_status": "oauth_active",
+  "last_error": "",
+  "oauth_access_token": "sandbox_oauth_token_verified",
+  "oauth_refresh_token": "sandbox_refresh_token_verified",
+  "oauth_token_expiry": 1792503600,
+  "oauth_user_email": "owner@lonestarair.com",
+  "auth_type": "oauth"
+}

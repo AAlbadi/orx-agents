@@ -372,8 +372,8 @@ async def run_e2e_suite():
             r_stats2 = await client.get(f"/api/projects/{test_client_id}/stats")
             s2 = r_stats2.json()
             
-            # 142.5s = 2.4 min (covered by 200 min base = $99.00)
-            cost_tracked = s2.get("total_calls") >= 1 and s2.get("total_minutes") > 2.0 and s2.get("estimated_cost") >= 99.0
+            # 142.5s = 2.4 min (covered by 60 min base = $20.00 starter plan)
+            cost_tracked = s2.get("total_calls") >= 1 and s2.get("total_minutes") > 2.0 and s2.get("estimated_cost") >= 20.0
             
             # Query client calls
             r_calls = await client.get(f"/api/admin/clients/{test_client_id}/calls")

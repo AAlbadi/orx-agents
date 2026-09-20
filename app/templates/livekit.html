@@ -1141,11 +1141,11 @@
       const isUser = speaker.toLowerCase().includes('user');
       const isSystem = speaker.toLowerCase().includes('system');
 
-      // Check if last element is an interim/streaming message from the same speaker
+      // Check if last element is duplicate from the same speaker
       const lastChild = box.lastElementChild;
-      if (lastChild && lastChild.dataset.speaker === speaker && isFinal) {
+      if (lastChild && lastChild.dataset.speaker === speaker) {
         const existingBubble = lastChild.querySelector('.bubble-text');
-        if (existingBubble && existingBubble.textContent.trim() === text.trim()) {
+        if (existingBubble && existingBubble.textContent.trim().toLowerCase() === text.trim().toLowerCase()) {
           return; // Suppress duplicate bubble
         }
       }

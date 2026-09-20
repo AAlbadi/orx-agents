@@ -1477,8 +1477,12 @@ def get_latest_client_profile() -> Optional[Dict[str, Any]]:
             "address": "742 Evergreen Terrace, Springfield",
             "forwarding_phone": "+1 (555) 234-5678",
             "assigned_phone": settings.PLIVO_PHONE_NUMBER or "+1 (833) 420-5227",
+            "sms_phone": "+1 (555) 234-5678",
             "hours": "Mon-Fri 7:30 AM to 6:00 PM, 24/7 Emergency Dispatch",
             "transfer_rules": "Transfer immediately for gas smell, water leak, or caller asking for owner.",
+            "emergency_triggers": "Gas smell, water leak, carbon monoxide, furnace breakdown",
+            "after_hours_action": "book_morning",
+            "pricing_policy": "$89 diagnostic fee credited toward repair",
             "services": "AC Repair, Furnace Maintenance, Heat Pump Installs, Duct Cleaning.",
             "custom_qa": [
                 {"question": "Do you offer financing?", "answer": "Yes, zero percent interest financing for up to 24 months on new installations."}
@@ -1490,6 +1494,44 @@ def get_latest_client_profile() -> Optional[Dict[str, Any]]:
         return save_client_profile(default_profile)
     clients.sort(key=lambda x: x.get("updated_at", ""), reverse=True)
     return clients[0]
+
+
+def get_client_by_assigned_phone(phone_number: str) -> Optional[Dict[str, Any]]:
+    """Finds client profile by assigned_phone, forwarding_phone, owner_phone, or sms_phone digits."""
+    if not phone_number:
+        return None
+    digits = "".join(filter(str.isdigit, str(phone_number)))
+    if not digits:
+        return None
+    digits_10 = digits[-10:] if len(digits) >= 10 else digits
+
+    storage = _ensure_clients_storage()
+    for cid, profile in storage.get("clients", {}).items():
+        for field in ("assigned_phone", "forwarding_phone", "owner_phone", "sms_phone", "phone"):
+            val = profile.get(field) or ""
+            c_digits = "".join(filter(str.isdigit, str(val)))
+            c_10 = c_digits[-10:] if len(c_digits) >= 10 else c_digits
+            if c_10 and c_10 == digits_10:
+                return profile
+
+    # Check project directories as fallback
+    try:
+        from app.project_db import list_projects, get_project
+        for proj in list_projects():
+            meta = proj.get("meta", {})
+            for field in ("assigned_phone", "forwarding_phone", "owner_phone", "sms_phone"):
+                val = meta.get(field) or ""
+                c_digits = "".join(filter(str.isdigit, str(val)))
+                c_10 = c_digits[-10:] if len(c_digits) >= 10 else c_digits
+                if c_10 and c_10 == digits_10:
+                    cid = proj.get("id") or proj.get("client_id")
+                    p = get_client_profile(cid)
+                    if p:
+                        return p
+                    return {**meta, "id": cid, "client_id": cid}
+    except Exception:
+        pass
+    return None
 
 
 def verify_client_connection(client_id: Optional[str] = None, carrier: str = "verizon") -> Dict[str, Any]:
@@ -1504,8 +1546,17 @@ def verify_client_connection(client_id: Optional[str] = None, carrier: str = "ve
     profile["connection_status"] = "verified"
     profile["carrier"] = carrier.capitalize()
     profile["verified_at"] = now_str
+    profile["forwarding_setup_at"] = now_str
     save_client_profile(profile)
-    logger.info(f"Verified connection for client '{profile.get('id')}' ({profile.get('business_name')}) via {carrier}")
+
+    # Sync to project DB
+    try:
+        from app.project_db import create_project
+        create_project(profile, trigger_source="carrier_verified")
+    except Exception as ex:
+        logger.warning(f"Project DB sync error during carrier verification: {ex}")
+
+    logger.info(f"Verified connection for client '{profile.get('id')}' ({profile.get('business_name')}) via {carrier} at {now_str}")
     return {
         "success": True,
         "connection_status": "verified",
@@ -1513,6 +1564,7 @@ def verify_client_connection(client_id: Optional[str] = None, carrier: str = "ve
         "verified_at": now_str,
         "assigned_phone": profile.get("assigned_phone"),
         "forwarding_phone": profile.get("forwarding_phone"),
+        "sms_phone": profile.get("sms_phone") or profile.get("forwarding_phone"),
         "business_name": profile.get("business_name"),
     }
 
@@ -1523,11 +1575,19 @@ def disconnect_client_connection(client_id: Optional[str] = None) -> Dict[str, A
     if not profile:
         return {"success": False, "message": "Client not found"}
 
+    now_str = time.strftime("%Y-%m-%d %H:%M:%S")
     profile["connection_status"] = "paused"
-    profile["disconnected_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
+    profile["disconnected_at"] = now_str
     save_client_profile(profile)
-    logger.info(f"Paused connection for client '{profile.get('id')}'")
-    return {"success": True, "connection_status": "paused"}
+
+    try:
+        from app.project_db import create_project
+        create_project(profile, trigger_source="carrier_paused")
+    except Exception as ex:
+        logger.warning(f"Project DB sync error during disconnect: {ex}")
+
+    logger.info(f"Paused connection for client '{profile.get('id')}' at {now_str}")
+    return {"success": True, "connection_status": "paused", "disconnected_at": now_str}
 
 # ---------------------------------------------------------------------------
 # Marcus-Smart Master Prompt Compiler for Onboarded Clients
@@ -1708,12 +1768,50 @@ def compile_agent_prompt(profile: Dict[str, Any]) -> str:
     else:
         services_text = "full diagnostics, repairs, preventive maintenance, system upgrades, and installations"
 
+    # After-Hours & Coverage Policy Configuration
+    after_action = (profile.get("after_hours_action") or profile.get("night_action") or profile.get("afterpolicy") or "book_morning").lower().strip()
+    forwarding_line_text = f"at {forwarding_phone}" if forwarding_phone else "on our on-call line"
+    
+    if "transfer" in after_action or "tech" in after_action or "emergency_transfer" in after_action:
+        night_rule_title = "WARM TRANSFER EMERGENCIES; BOOK MORNING FOR ROUTINE"
+        night_rule_instructions = (
+            f"Outside normal operating hours: If the caller reports an urgent emergency (active leak, gas odor, no heat in freezing temperatures, sparks), "
+            f"warmly transfer them immediately to our on-call technician {forwarding_line_text}. "
+            f"For routine non-emergency requests, reassure them and lock in our earliest arrival window for tomorrow morning between eight and eleven."
+        )
+    elif "sms" in after_action or "alert" in after_action or "lead_capture" in after_action:
+        night_rule_title = "CAPTURE CALLER DETAILS & SEND INSTANT PRIORITY SMS ALERT"
+        night_rule_instructions = (
+            f"Outside normal operating hours: Warmly inform the caller that our dispatch office is closed for the evening. "
+            f"Collect their full name, cell number, service address, and issue. "
+            f"Tell them: 'I have logged your request and sent a priority text alert to our on-call manager. Someone will follow up first thing in the morning.'"
+        )
+    else:
+        night_rule_title = "LOCK IN EARLIEST MORNING ARRIVAL WINDOW"
+        night_rule_instructions = (
+            f"Outside normal operating hours: Warmly let the caller know our office is closed for the evening, but reassure them: "
+            f"'Don\\'t worry, I can reserve our very first priority arrival window tomorrow morning between eight and eleven so you are first on our technician\\'s schedule!' "
+            f"Then smoothly gather their address and full name to confirm the morning reservation."
+        )
+
+    # Emergency Triggers Configuration
+    emergency_raw = profile.get("emergency_triggers") or profile.get("transfer_rules")
+    if isinstance(emergency_raw, list):
+        emergency_triggers_str = ", ".join(emergency_raw)
+    elif isinstance(emergency_raw, str) and emergency_raw.strip():
+        emergency_triggers_str = emergency_raw.strip()
+    else:
+        emergency_triggers_str = metrics.get("emergency_label", "Gas odor, carbon monoxide, active flooding, burst pipes, electrical sparks or fire")
+
     # Pricing & Diagnostic Fee Policy
     raw_fee = profile.get("diagnostic_fee") or profile.get("pricing_preset") or profile.get("pricing_policy") or "$89"
+    raw_fee_str = str(raw_fee).lower().strip()
     spoken_fee = fee_to_spoken(str(raw_fee))
 
-    if spoken_fee == "complimentary" or "free" in str(raw_fee).lower():
+    if "free" in raw_fee_str or "complimentary" in raw_fee_str or "$0" in raw_fee_str:
         fee_objection_answer = "We provide a 100% complimentary on-site inspection and estimate with zero obligation! Does that sound fair?"
+    elif "upfront" in raw_fee_str or "inspection after" in raw_fee_str:
+        fee_objection_answer = f"Our {metrics['tech_title']} evaluates the system in person and gives you a guaranteed upfront flat-rate price before any work begins! Does that sound fair?"
     else:
         fee_objection_answer = (
             f"Our diagnostic fee is a flat {spoken_fee}, which covers a comprehensive inspection by a {metrics['tech_title']}. "
@@ -1744,7 +1842,8 @@ def compile_agent_prompt(profile: Dict[str, Any]) -> str:
 
     prompt = f"""<identity>
 You are {persona_name}, an articulate, genuinely warm, confident, and consultative voice receptionist for {biz_name}. You are an AI—transparent, warm, and proud of it if asked. Never pretend to be human, but never sound robotic.{location_line}
-Core mindset: You are a peer-level {metrics['trade_title']} consultant. You understand {metrics['pain_points']} and busy property owners who want an honest, fast, expert solution without high-pressure sales or being put on hold. Build genuine human connection first. Answer questions and objections directly with zero evasion. Lead the call proactively to triage their issue and book a certified technician directly into the schedule.
+Core mindset: You are a peer-level {metrics['trade_title']} consultant. You understand {metrics['pain_points']} and busy property owners who want an honest, fast, expert solution without high-pressure sales or being put on hold. Build genuine human connection first. Answer questions and objections directly with zero evasion.
+Core Rule: You are a consultative home comfort advisor. Never assume the caller wants an appointment right away. Always explore and diagnose their symptoms first before offering to schedule. Never claim immediate dispatch or sending the closest technician—we schedule arrival windows for our team to come out later today or tomorrow.
 Operating schedule: {hours_str} ({timezone_name}).
 Calendar integration: {calendar_note}
 Authorized services: {services_text}.
@@ -1761,20 +1860,33 @@ Authorized services: {services_text}.
 - FORMATTING: Spoken voice only—never use markdown, asterisks, bullet points, or lists.
 </conversational_rules>
 
+<after_hours_policy>
+Active Mode: {night_rule_title}
+Schedule: {hours_str} ({timezone_name})
+Night-Call Rule: {night_rule_instructions}
+</after_hours_policy>
+
+<emergency_triage_rules>
+Recognized Emergency Triggers: {emergency_triggers_str}
+Immediate Action: Express priority empathy, provide safety instructions, and escalate without asking non-critical questions.{transfer_addon}
+</emergency_triage_rules>
+
 <booking_flow_state_machine>
-1. Warm Greeting & Empathy: '{first_msg}'
-2. Triage & Validate: Acknowledge the specific issue with real warmth, determine if it\\'s completely down or acting up, and transition: 'Got it. Let\\'s get a certified technician out to diagnose that for you. What is your service address so I can check our earliest openings for your area?'
-3. Address Capture & Instant Confirmation: Confirm address declaratively: 'Got it, [Address]. We have an opening today between one and three, or tomorrow morning between eight and eleven. Which works better for you?'
-4. Scheduling Conflict Handling: If caller rejects proposed times, immediately adapt: 'No problem at all! What day or time window works best for your schedule?'
-5. Caller Name & Cell Capture: 'And what is your full name and the best cell number for dispatch arrival updates?'
-6. Complete 5-Point Recap & Confirmation: 'You are all set, [Name]! We have our technician dispatched to [Address] for your [Issue] on [Day] between [Time Window]. We just sent a confirmation text with live tracking to [Phone]. Does everything sound good?'
-7. Clean Sign-Off: 'Thank you for choosing {biz_name}. Stay comfortable, and have a wonderful day!'
+1. Warm Greeting: '{first_msg}'
+2. Symptom Discovery & Triage First: When caller shares a problem, react with warm empathy, but do NOT jump to booking or ask for an address yet. Ask what symptoms they are experiencing: 'Oh no, dealing with {metrics["trade_short"]} trouble is such a headache! What seems to be happening with the system—is it blowing warm air, making a strange sound, or completely shut off?'
+3. Consultative Scheduling Offer: Once they describe the symptoms, acknowledge with expert knowledge. Explain that a technician should inspect it in person to diagnose properly. Transparently propose looking at arrival windows for the team to come out later today or tomorrow: 'Got it, that definitely sounds like something one of our technicians should inspect to diagnose properly. We can get you on the schedule so our team can come out and take care of that for you. Would you like to check our available appointment times?'
+4. Service Address Capture: Only when caller agrees to check times or schedule, collect their address to check route openings (never claim immediate dispatch or closest technician): 'Great! What is your service address so I can check our schedule for your area?'
+5. Arrival Window Selection: Offer two clear arrival windows for the team to come out: 'Got it, [Address]. We have an opening today between one and three, or tomorrow morning between eight and eleven. Which arrival window works better for your schedule?'
+6. Scheduling Conflict Handling: If caller rejects proposed times, immediately adapt: 'No problem at all! What day or time window works best for your schedule?'
+7. Caller Name & Cell Capture: 'And what is your full name and the best cell number for dispatch arrival updates?'
+8. Complete 5-Point Recap & Confirmation: 'You are all set, [Name]! We have our technician scheduled for [Address] for your [Issue] on [Day] between [Time Window]. We just sent a confirmation text with arrival tracking to [Phone]. Does everything sound good?'
+9. Clean Sign-Off: 'Thank you for choosing {biz_name}. Stay comfortable, and have a wonderful day!'
 </booking_flow_state_machine>
 
 <objection_playbook>
 - 'How much is your diagnostic fee?' / 'Pricing': '{fee_objection_answer}'
 - 'Can you quote me a price over the phone?': 'I wish I could give you an exact price over the phone! But {metrics['trade_noun']} issues could be as simple as a small component or something deeper in the system. Our technician gives you a guaranteed flat-rate price on site before starting any work. Would afternoon or tomorrow morning work better?'
-- 'Can someone come out right now / immediately?': 'We treat active {metrics["trade_noun"]} emergencies as high priority! What is your service address so I can check our earliest opening for your area?'
+- 'Can someone come out right now / immediately?': 'Our technicians are currently out on scheduled routes with homeowners, so we don\\'t have an immediate truck roll right this second. But we can reserve our earliest priority opening for you today or tomorrow! Would you like me to check available arrival windows?'
 - 'Why are you more expensive than other companies?': 'Great question! We only send certified master technicians with fully stocked trucks, use factory-original parts, and back every repair with our comprehensive warranty. Would you like me to reserve our next opening for you?'
 - '{metrics["diy_question"]}': '{metrics["diy_answer"]}'
 - 'Are you an AI or a real person?': 'I\\'m {persona_name}, the AI voice coordinator for {biz_name}! I have live access to our technician dispatch board so you never have to wait on hold. How can I help with your {metrics["trade_short"]} today?'
@@ -1791,20 +1903,32 @@ Authorized services: {services_text}.
 
 def simulate_agent_turn(client_profile: Dict[str, Any], user_message: str, history: Optional[List[Dict[str, str]]] = None) -> Dict[str, Any]:
     """Generates a real-time conversational response from the client's tailored voice agent.
-    Uses Groq LLM if configured; otherwise uses smart prompt-aware heuristics.
+    Uses Groq LLM if configured; otherwise uses smart prompt-aware heuristics that faithfully
+    mirror all onboarding rules (after-hours action, emergency triggers, pricing policy).
     """
     biz_name = client_profile.get("business_name", "Apex Services")
+    persona_name = client_profile.get("persona_name", "Riley")
     system_prompt = client_profile.get("compiled_prompt") or compile_agent_prompt(client_profile)
 
     msg_lower = user_message.lower()
     is_transfer = False
     telemetry_badge = "STANDARD INQUIRY"
 
-    # 1. Emergency Detection
+    # 1. Emergency Detection (Default + Custom Onboarding Triggers)
     emergency_keywords = [
         "gas", "carbon monoxide", "burst pipe", "leak", "flood", "flooding", "spark", "sparking",
-        "burning", "fire", "emergency", "shut off", "bleeding", "smoke", "explosion", "hazard"
+        "burning", "fire", "emergency", "shut off", "bleeding", "smoke", "explosion", "hazard", "freezing", "no heat"
     ]
+    custom_triggers = client_profile.get("emergency_triggers") or client_profile.get("transfer_rules")
+    if isinstance(custom_triggers, list):
+        for ct in custom_triggers:
+            if isinstance(ct, str) and ct.strip():
+                emergency_keywords.append(ct.strip().lower())
+    elif isinstance(custom_triggers, str) and custom_triggers.strip():
+        for ct in custom_triggers.split(","):
+            if ct.strip():
+                emergency_keywords.append(ct.strip().lower())
+
     if any(k in msg_lower for k in emergency_keywords):
         is_transfer = True
         telemetry_badge = "EMERGENCY TRIAGE"
@@ -1813,7 +1937,7 @@ def simulate_agent_turn(client_profile: Dict[str, Any], user_message: str, histo
         telemetry_badge = "OPERATOR TRANSFER"
     elif any(k in msg_lower for k in ["diy", "myself", "how to wire", "rewire", "which wire", "bypass", "diagnose my", "prescribe", "legal opinion", "do it myself", "fix it myself", "tell me how to fix"]):
         telemetry_badge = "GUARDRAIL ENFORCED"
-    elif any(k in msg_lower for k in ["after hours", "midnight", "night", "11:45", "open now", "closed", "2 am", "sunday"]):
+    elif any(k in msg_lower for k in ["after hours", "midnight", "night", "11:45", "open now", "closed", "2 am", "sunday", "outside hours", "emergency line"]):
         telemetry_badge = "SCHEDULE VERIFICATION"
 
     groq_key = settings.GROQ_API_KEY
@@ -1891,29 +2015,43 @@ def simulate_agent_turn(client_profile: Dict[str, Any], user_message: str, histo
         except Exception as e:
             logger.warning(f"Gemini turn simulation fallback: {e}")
 
-    # Fallback Responses
+    # Heuristic Fallback Responses Faithfully Mirroring Onboarding Rules
+    forwarding = client_profile.get("forwarding_phone") or client_profile.get("owner_phone") or "our on-call line"
+    after_hours_action = (client_profile.get("after_hours_action") or client_profile.get("night_action") or "book_morning").lower()
+
     if is_transfer:
         if "gas" in msg_lower:
-            reply = f"For your safety, please step outside the building immediately. I am transferring you directly to our on-call emergency team at {client_profile.get('forwarding_phone', 'our main line')} right now."
-        elif "water" in msg_lower or "pipe" in msg_lower:
-            reply = f"Please shut off your main water valve right away to prevent further damage. I am transferring you to our emergency plumber at {client_profile.get('forwarding_phone', 'our main line')}."
+            reply = f"For your safety, please step outside immediately. I am transferring you directly to our on-call emergency team at {forwarding} right now."
+        elif "water" in msg_lower or "pipe" in msg_lower or "flood" in msg_lower:
+            reply = f"Please shut off your main water valve right away to prevent property damage! I am transferring you directly to our emergency technician at {forwarding}."
         else:
-            reply = f"I understand completely. I am transferring you directly to our on-call team at {client_profile.get('forwarding_phone', 'our main line')} right now. Please hold for one second."
+            reply = f"I understand completely. I am transferring you directly to our on-call emergency team at {forwarding} right now. Please stay on the line."
     elif telemetry_badge == "GUARDRAIL ENFORCED":
-        reply = f"For safety, warranty, and code compliance, our certified technicians cannot provide DIY repair instructions over the phone. We would be glad to send a technician out to inspect and fix this safely for you. Would you like me to check our schedule?"
+        reply = f"For your safety and warranty protection, our certified technicians cannot give DIY repair instructions over the phone. We\\'d be glad to send a technician out to inspect and fix this safely for you. Shall we get a visit scheduled?"
     elif telemetry_badge == "SCHEDULE VERIFICATION":
         hours = client_profile.get("hours", "Monday through Friday from 8:00 AM to 6:00 PM")
-        reply = f"Our standard office hours are {hours}. For after-hours emergencies, our on-call technicians are available, or I can book you the first priority slot for tomorrow morning. How can I help?"
+        if "transfer" in after_hours_action or "tech" in after_hours_action:
+            reply = f"Our standard office hours are {hours}. For urgent emergencies, I can connect you directly to our on-call technician at {forwarding}, or schedule a regular visit for tomorrow morning. Is this an active emergency?"
+        elif "sms" in after_hours_action or "alert" in after_hours_action:
+            reply = f"Our standard office hours are {hours}. I can take your name, phone, and issue right now, and our on-call dispatch manager will be alerted via text to follow up with you first thing in the morning."
+        else:
+            reply = f"Our standard office hours are {hours}. Since we are currently closed, I can reserve our very first priority arrival window for tomorrow morning between eight and eleven for you! Would that work?"
     elif any(k in msg_lower for k in ["price", "cost", "fee", "rate", "quote"]):
-        pricing = client_profile.get("pricing_policy", "Our diagnostic fee is applied directly toward your repair if approved.")
-        reply = f"{pricing} What type of service are you looking to have done?"
+        pricing_rule = client_profile.get("pricing_policy") or client_profile.get("diagnostic_fee") or "$89 diagnostic fee credited toward repair"
+        if "free" in pricing_rule.lower() or "complimentary" in pricing_rule.lower():
+            reply = f"We provide a 100% complimentary on-site inspection and estimate with zero obligation! What service are you looking to have done?"
+        elif "upfront" in pricing_rule.lower():
+            reply = f"Our certified technician inspects everything on-site first and provides an upfront guaranteed flat-rate price before starting any work. What service do you need help with?"
+        else:
+            fee_num = "".join(filter(str.isdigit, pricing_rule)) or "89"
+            reply = f"Our diagnostic fee is ${fee_num}, which covers a complete on-site inspection by our certified technician, and we credit that full fee toward any repair you approve! What issue are you experiencing?"
     elif any(k in msg_lower for k in ["where", "address", "location"]):
         addr = client_profile.get("address", "")
-        reply = f"We are based at {addr or 'our main office'} and dispatch our fully equipped mobile service vans directly to your location. What is your street address?"
+        reply = f"We are based at {addr or 'our central office'} and dispatch our fully equipped mobile service vans directly to your location. What is your street address?"
     elif any(k in msg_lower for k in ["book", "schedule", "appointment", "come over", "visit"]):
-        reply = f"I can get an arrival window scheduled for you right away for {biz_name}! What day works best for you?"
+        reply = f"I can get an arrival window scheduled for you right away for {biz_name}! We have openings today between one and three, or tomorrow morning between eight and eleven. Which works better for you?"
     else:
-        reply = f"Thanks for checking with {biz_name}. We can certainly take care of that for you. Would you like me to book a technician or answer any other questions?"
+        reply = f"Thanks for calling {biz_name}, this is {persona_name}! We can certainly take care of that for you. Would you like me to book our next available technician or answer any questions?"
 
     return {
         "response": reply,

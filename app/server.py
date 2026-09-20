@@ -1315,7 +1315,7 @@ async def api_send_activation_email(request: Request, payload: Dict[str, Any] = 
 async def api_simulate_client_call(payload: Dict[str, Any] = Body(...)):
     """Simulate an incoming customer call to this client's line for testing the dashboard."""
     from app.onboarding import get_client_profile, get_latest_client_profile
-    from app.project_db import log_call_for_project
+    from app.project_db import save_project_call
     import random
 
     client_id = payload.get("client_id")
@@ -1358,7 +1358,7 @@ async def api_simulate_client_call(payload: Dict[str, Any] = Body(...)):
             "appointment_time": "9:00 AM - 12:00 PM"
         }
     }
-    log_call_for_project(cid, call_record)
+    save_project_call(cid, call_record)
     return {"success": True, "call": call_record}
 
 
@@ -1630,13 +1630,20 @@ async def api_admin_list_clients():
         proj_meta = proj.get("meta", {}) if isinstance(proj.get("meta"), dict) else {}
         proj_prompt = proj.get("prompt", {}) if isinstance(proj.get("prompt"), dict) else {}
 
-        # Merge metadata prioritizing profile then project meta
         biz_name = profile.get("business_name") or proj_meta.get("business_name") or "Unnamed Business"
         owner_name = profile.get("owner_name") or profile.get("name") or proj_meta.get("owner_name") or "Business Owner"
         owner_email = profile.get("owner_email") or profile.get("email") or proj_meta.get("owner_email") or ""
         owner_phone = profile.get("owner_phone") or profile.get("forwarding_phone") or proj_meta.get("owner_phone") or ""
         forwarding_phone = profile.get("forwarding_phone") or proj_meta.get("forwarding_phone") or owner_phone
         assigned_phone = profile.get("assigned_phone") or proj_meta.get("assigned_phone") or "+1 (833) 420-5227"
+        sms_phone = profile.get("sms_phone") or proj_meta.get("sms_phone") or forwarding_phone
+        connection_status = profile.get("connection_status") or proj_meta.get("connection_status") or "pending"
+        carrier = profile.get("carrier") or proj_meta.get("carrier") or "Verizon"
+        verified_at = profile.get("verified_at") or proj_meta.get("verified_at") or profile.get("forwarding_setup_at") or ""
+        after_hours_action = profile.get("after_hours_action") or profile.get("night_action") or proj_meta.get("after_hours_action") or "book_morning"
+        pricing_policy = profile.get("pricing_policy") or profile.get("diagnostic_fee") or proj_meta.get("pricing_policy") or "$89 diagnostic fee credited toward repair"
+        emergency_triggers = profile.get("emergency_triggers") or profile.get("transfer_rules") or proj_meta.get("emergency_triggers") or "Gas leak, carbon monoxide, water flooding, burst pipes, electrical sparks"
+        answering_coverage = profile.get("answering_coverage") or profile.get("schedule_mode") or proj_meta.get("answering_coverage") or "always_24_7"
         trade = profile.get("trade") or profile.get("industry") or proj_meta.get("industry") or "hvac"
         address = profile.get("address") or profile.get("city") or proj_meta.get("address") or "Service Territory"
         status = profile.get("polar_status") or profile.get("status") or proj_meta.get("status") or "active"
@@ -1656,6 +1663,15 @@ async def api_admin_list_clients():
             "owner_phone": owner_phone,
             "forwarding_phone": forwarding_phone,
             "assigned_phone": assigned_phone,
+            "sms_phone": sms_phone,
+            "connection_status": connection_status,
+            "carrier": carrier,
+            "verified_at": verified_at,
+            "forwarding_setup_at": verified_at,
+            "after_hours_action": after_hours_action,
+            "pricing_policy": pricing_policy,
+            "emergency_triggers": emergency_triggers,
+            "answering_coverage": answering_coverage,
             "trade": trade,
             "industry": trade,
             "address": address,
