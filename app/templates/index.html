@@ -1065,6 +1065,9 @@
         const appts = c.total_appointments || c.appointments_count || 0;
         const mins = c.total_minutes || 0;
         const isActive = c.status === 'active';
+        const isVerified = c.connection_status === 'verified';
+        const carrierName = (c.carrier || 'Carrier').toUpperCase();
+        const dateStr = c.verified_at ? new Date(c.verified_at).toLocaleDateString(undefined, {month:'short', day:'numeric'}) : '';
 
         return `
           <div class="bg-[#111318] border border-[#1a1d26] hover:border-emerald-500/50 rounded-2xl p-4 transition duration-200 flex flex-col justify-between group shadow-lg shadow-black/40">
@@ -1077,11 +1080,16 @@
                     <div class="text-[10px] text-slate-500 font-mono">ID: ${c.id}</div>
                   </div>
                 </div>
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${isActive ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800' : 'bg-amber-950/80 text-amber-300 border border-amber-800'}">${c.status || 'Active'}</span>
+                <div class="flex flex-col items-end gap-1">
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${isActive ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800' : 'bg-amber-950/80 text-amber-300 border border-amber-800'}">${c.status || 'Active'}</span>
+                  <span class="px-2 py-0.5 rounded-full text-[9px] font-bold ${isVerified ? 'bg-emerald-900/60 text-emerald-300 border border-emerald-700' : 'bg-slate-800 text-slate-400 border border-slate-700'}" title="${isVerified ? 'Verified: ' + (c.verified_at || '') : 'Pending client setup'}">
+                    ${isVerified ? `🟢 ${carrierName} (${dateStr || 'Active'})` : '⚪ Pending Carrier'}
+                  </span>
+                </div>
               </div>
 
               <!-- Owner & Contact Info -->
-              <div class="bg-[#07080b] border border-[#161922] rounded-xl p-2.5 space-y-1 text-[11px] mb-3">
+              <div class="bg-[#07080b] border border-[#161922] rounded-xl p-2.5 space-y-1 text-[11px] mb-2.5">
                 <div class="flex items-center justify-between text-slate-400">
                   <span>👤 Owner</span>
                   <span class="text-slate-200 font-medium">${c.owner_name || 'Business Owner'}</span>
@@ -1094,6 +1102,17 @@
                   <span>📲 Forwarding</span>
                   <span class="text-slate-300 font-mono">${c.forwarding_phone || c.owner_phone || 'None'}</span>
                 </div>
+                <div class="flex items-center justify-between text-slate-400">
+                  <span>💬 SMS Alerts</span>
+                  <span class="text-emerald-300 font-mono font-medium">${c.sms_phone || c.forwarding_phone || c.owner_phone || 'None'}</span>
+                </div>
+              </div>
+
+              <!-- Onboarding Rules Summary Chips -->
+              <div class="flex items-center gap-1.5 flex-wrap text-[10px] mb-3">
+                <span class="px-2 py-0.5 rounded bg-[#161922] border border-[#232735] text-slate-300" title="After-Hours Rule">🌙 ${c.after_hours_action || 'Book morning'}</span>
+                <span class="px-2 py-0.5 rounded bg-[#161922] border border-[#232735] text-slate-300" title="Pricing Policy">💰 ${c.pricing_policy || 'Diagnostic fee'}</span>
+                <span class="px-2 py-0.5 rounded bg-purple-950/70 border border-purple-800/60 text-purple-300" title="Voice Persona">🎙️ ${c.persona_name || 'Riley'}</span>
               </div>
 
               <!-- Metrics Row (Calls, Usage, Appts, Cost) -->
@@ -1176,8 +1195,24 @@
         if (el('dossier-field-address')) el('dossier-field-address').textContent = c.address || 'Standard Service Area';
         if (el('dossier-field-hours')) el('dossier-field-hours').textContent = c.hours || 'Mon-Fri 8:00 AM - 6:00 PM';
         if (el('dossier-field-timezone')) el('dossier-field-timezone').textContent = c.timezone || 'America/New_York';
-        if (el('dossier-field-diag-fee')) el('dossier-field-diag-fee').textContent = c.diagnostic_fee || '$89';
         if (el('dossier-field-fee-policy')) el('dossier-field-fee-policy').textContent = c.fee_policy || 'Credited towards approved repair';
+        if (el('dossier-field-carrier-status')) {
+          const isVer = c.connection_status === 'verified';
+          const car = (c.carrier || 'Carrier').toUpperCase();
+          const verAt = c.verified_at ? ` on ${new Date(c.verified_at).toLocaleDateString()}` : '';
+          el('dossier-field-carrier-status').innerHTML = isVer
+            ? `<span class="text-emerald-400 font-bold">🟢 Connected (${car}${verAt})</span>`
+            : `<span class="text-amber-400 font-semibold">⚪ Pending Carrier Forwarding</span>`;
+        }
+        if (el('dossier-field-cal-sync')) {
+          const cal = c.google_calendar_id || c.google_calendar_email;
+          el('dossier-field-cal-sync').textContent = (cal && cal !== 'primary') ? `✓ FreeBusy Active (${cal})` : 'Not linked';
+        }
+        if (el('dossier-field-after-hours')) el('dossier-field-after-hours').textContent = c.after_hours_action || 'Book earliest morning slot';
+        if (el('dossier-field-emergency-triggers')) {
+          const triggers = Array.isArray(c.emergency_triggers) ? c.emergency_triggers.join(', ') : (c.emergency_triggers || 'Gas smell, active water leak, burst pipe, electrical sparks');
+          el('dossier-field-emergency-triggers').textContent = triggers;
+        }
 
         // Prompt tab
         if (el('dossier-prompt-persona')) el('dossier-prompt-persona').textContent = p.persona_name || 'Riley';
@@ -1332,6 +1367,45 @@
     function closeClientDossier() {
       const modal = document.getElementById('modal-client-dossier');
       if (modal) modal.classList.add('hidden');
+    }
+
+    async function testRoutingForClientFromDrawer() {
+      if (!currentDossierClient || !currentDossierClient.client) {
+        alert("No client loaded in dossier");
+        return;
+      }
+      const cid = currentDossierClient.client.id;
+      const btn = document.getElementById("dossier-test-routing-btn");
+      if (btn) btn.innerHTML = "<span>⏳ Testing Routing...</span>";
+
+      try {
+        const res = await fetch(`/api/admin/clients/${encodeURIComponent(cid)}/test-routing`, {
+          method: "POST"
+        });
+        const data = await res.json();
+        if (res.ok && data.status === "ok") {
+          const alertMsg = 
+            `🟢 LIVE INBOUND ROUTING VERIFIED!\n\n` +
+            `• Client: ${data.business_name} (${data.client_id})\n` +
+            `• LiveKit Dispatch Room: ${data.room_name}\n` +
+            `• Dialing Status: ${(data.connection_status || 'verified').toUpperCase()} (${data.carrier || 'Carrier'})\n` +
+            `• System Prompt: ${data.system_prompt_length} characters loaded\n` +
+            `• Voice Persona: ${data.voice_persona}\n` +
+            `• Opening Greeting: "${data.greeting}"\n` +
+            `• Instant SMS Alert: ${data.sms_phone}\n` +
+            `• Operating Hours: ${data.hours}\n` +
+            `• After-Hours Policy: ${data.after_hours_action}\n` +
+            `• Pricing Fee Policy: ${data.pricing_policy}\n\n` +
+            `Inbound carrier line automatically maps to this dedicated room & database!`;
+          alert(alertMsg);
+        } else {
+          alert("Routing test failed: " + (data.detail || JSON.stringify(data)));
+        }
+      } catch (err) {
+        alert("Error testing inbound routing: " + err.message);
+      } finally {
+        if (btn) btn.innerHTML = "<span>⚡</span> Test Live Routing";
+      }
     }
 
     async function saveDossierPrompt() {
@@ -4382,9 +4456,11 @@
         });
 
         inpageRoom.on(LiveKit.RoomEvent.TrackSubscribed, (track) => {
-          if (track.kind === 'audio' || track.kind === LiveKit.TrackKind.KindAudio) {
-            track.attach(inpageAudioEl);
-            inpageAudioEl.play().catch(e => console.warn('Autoplay audio:', e));
+          if (track.kind === 'audio' || (LiveKit.TrackKind && track.kind === LiveKit.TrackKind.KindAudio)) {
+            if (inpageAudioEl && inpageAudioEl.srcObject !== track.mediaStream) {
+              track.attach(inpageAudioEl);
+              inpageAudioEl.play().catch(e => console.warn('Autoplay audio:', e));
+            }
           }
         });
 
@@ -4468,6 +4544,12 @@
 
     async function endInPageVoiceTest() {
       clearInterval(inpageTimerInterval);
+      if (inpageAudioEl) {
+        try {
+          inpageAudioEl.pause();
+          inpageAudioEl.srcObject = null;
+        } catch (_) {}
+      }
       if (inpageRoom) {
         try { await inpageRoom.disconnect(); } catch (_) {}
         inpageRoom = null;
@@ -4597,6 +4679,9 @@
           <a id="dossier-portal-link" href="#" target="_blank" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition flex items-center gap-1">
             <span>↗</span> Open Client Portal
           </a>
+          <button onclick="testRoutingForClientFromDrawer()" id="dossier-test-routing-btn" class="px-3.5 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold transition shadow-lg shadow-sky-950 flex items-center gap-1 cursor-pointer">
+            <span>⚡</span> Test Live Routing
+          </button>
           <button onclick="testVoiceForClientFromDrawer()" id="dossier-test-voice-btn" class="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition shadow-lg shadow-purple-950 flex items-center gap-1 cursor-pointer">
             <span>🎙️</span> Test Agent Voice
           </button>
@@ -4633,7 +4718,9 @@
                 <div class="flex justify-between py-1 border-b border-[#161922]"><span class="text-slate-400">Owner Cell Phone</span><span class="text-emerald-400 font-mono font-medium" id="dossier-field-owner-phone">—</span></div>
                 <div class="flex justify-between py-1 border-b border-[#161922]"><span class="text-slate-400">Assigned Inbound Line</span><span class="text-sky-400 font-mono font-bold" id="dossier-field-assigned-phone">—</span></div>
                 <div class="flex justify-between py-1 border-b border-[#161922]"><span class="text-slate-400">Carrier Forwarding Line</span><span class="text-slate-200 font-mono" id="dossier-field-forwarding-phone">—</span></div>
-                <div class="flex justify-between py-1"><span class="text-slate-400">Instant SMS Alert Mobile</span><span class="text-slate-200 font-mono" id="dossier-field-sms-phone">—</span></div>
+                <div class="flex justify-between py-1 border-b border-[#161922]"><span class="text-slate-400">Carrier Dialing Status</span><span id="dossier-field-carrier-status" class="text-slate-200 font-medium">—</span></div>
+                <div class="flex justify-between py-1 border-b border-[#161922]"><span class="text-slate-400">Google Calendar Sync</span><span class="text-slate-200" id="dossier-field-cal-sync">—</span></div>
+                <div class="flex justify-between py-1"><span class="text-slate-400">Instant SMS Alert Mobile</span><span class="text-emerald-400 font-mono font-medium" id="dossier-field-sms-phone">—</span></div>
               </div>
             </div>
 
@@ -4646,6 +4733,8 @@
                 <div class="flex justify-between py-1 border-b border-[#161922]"><span class="text-slate-400">Service Territory</span><span class="text-white font-medium" id="dossier-field-address">—</span></div>
                 <div class="flex justify-between py-1 border-b border-[#161922]"><span class="text-slate-400">Operating Schedule</span><span class="text-white font-medium" id="dossier-field-hours">—</span></div>
                 <div class="flex justify-between py-1 border-b border-[#161922]"><span class="text-slate-400">Timezone</span><span class="text-slate-300 font-mono" id="dossier-field-timezone">—</span></div>
+                <div class="flex justify-between py-1 border-b border-[#161922]"><span class="text-slate-400">After-Hours Policy</span><span class="text-purple-300 font-medium" id="dossier-field-after-hours">—</span></div>
+                <div class="flex justify-between py-1 border-b border-[#161922]"><span class="text-slate-400">Emergency Triggers</span><span class="text-amber-300 font-medium text-right max-w-[220px] truncate" id="dossier-field-emergency-triggers">—</span></div>
                 <div class="flex justify-between py-1 border-b border-[#161922]"><span class="text-slate-400">Diagnostic Fee</span><span class="text-emerald-400 font-bold" id="dossier-field-diag-fee">—</span></div>
                 <div class="flex justify-between py-1 border-b border-[#161922]"><span class="text-slate-400">Fee Credit Policy</span><span class="text-slate-300" id="dossier-field-fee-policy">—</span></div>
                 <div class="flex justify-between py-1"><span class="text-slate-400">Subscription Tier</span><span class="text-emerald-400 font-bold" id="dossier-field-plan">$20/mo Starter (60 min incl.)</span></div>

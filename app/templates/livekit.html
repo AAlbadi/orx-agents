@@ -1288,10 +1288,14 @@
         });
 
         currentRoom.on(LiveKit.RoomEvent.TrackSubscribed, (track, publication, participant) => {
-          if (track.kind === 'audio') {
+          if (track.kind === 'audio' || (LiveKit.TrackKind && track.kind === LiveKit.TrackKind.KindAudio)) {
             const audioEl = document.getElementById('livekit-audio');
-            track.attach(audioEl);
-            audioEl.play().catch(e => console.log('Audio autoplay prevented:', e));
+            if (audioEl) {
+              if (audioEl.srcObject !== track.mediaStream) {
+                track.attach(audioEl);
+                audioEl.play().catch(e => console.log('Audio autoplay note:', e));
+              }
+            }
             badge.textContent = 'Aria Speaking';
           }
         });
@@ -1351,6 +1355,14 @@
       isMuted = false;
       stopTimer();
       stopVisualizer();
+
+      const audioEl = document.getElementById('livekit-audio');
+      if (audioEl) {
+        try {
+          audioEl.pause();
+          audioEl.srcObject = null;
+        } catch (_) {}
+      }
 
       const btn = document.getElementById('btn-call-action');
       const lbl = document.getElementById('btn-call-label');

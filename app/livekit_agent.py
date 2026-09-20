@@ -566,55 +566,57 @@ async def _build_stt_service(model: str = "nova-3"):
 
 
 VOICE_FALLBACK_MAP: Dict[str, str] = {
-    # Kokoro voice mappings to Deepgram Flux voices
-    "af_heart": "flux-heather-en",
-    "af_sarah": "flux-sienna-en",
-    "af_bella": "flux-alexis-en",
-    "af_nicole": "flux-heather-en",
-    "af_sky": "flux-sienna-en",
-    "af_alloy": "flux-alexis-en",
-    "af_jessica": "flux-heather-en",
-    "am_adam": "flux-cliff-en",
-    "am_michael": "flux-bruce-en",
-    "am_george": "flux-colin-en",
-    "am_eric": "flux-wes-en",
-    "am_liam": "flux-miles-en",
-    "bf_emma": "flux-gemma-en",
-    "bf_isabella": "flux-sienna-en",
-    "bm_george": "flux-colin-en",
-    "bm_lewis": "flux-cliff-en",
+    # Kokoro voice mappings to stable Deepgram Aura models (v1 API)
+    "af_heart": "aura-2-asteria-en",
+    "af_sarah": "aura-2-luna-en",
+    "af_bella": "aura-2-stella-en",
+    "af_nicole": "aura-2-asteria-en",
+    "af_sky": "aura-2-luna-en",
+    "af_alloy": "aura-2-stella-en",
+    "af_jessica": "aura-2-asteria-en",
+    "am_adam": "aura-2-andromeda-en",
+    "am_michael": "aura-2-helios-en",
+    "am_george": "aura-2-orion-en",
+    "am_eric": "aura-2-arcas-en",
+    "am_liam": "aura-2-perseus-en",
+    "bf_emma": "aura-2-stella-en",
+    "bf_isabella": "aura-2-luna-en",
+    "bm_george": "aura-2-orion-en",
+    "bm_lewis": "aura-2-andromeda-en",
+    # Legacy flux aliases safely mapped to high-fidelity Aura models
+    "flux-heather-en": "aura-2-asteria-en",
+    "flux-sienna-en": "aura-2-luna-en",
+    "flux-alexis-en": "aura-2-stella-en",
+    "flux-cliff-en": "aura-2-andromeda-en",
+    "flux-bruce-en": "aura-2-helios-en",
+    "flux-colin-en": "aura-2-orion-en",
+    "flux-wes-en": "aura-2-arcas-en",
+    "flux-miles-en": "aura-2-perseus-en",
+    "flux-gemma-en": "aura-2-stella-en",
 }
 
 
-async def _build_tts_service(voice: str = "flux-heather-en"):
-    """Factory for LiveKit TTS service supporting Deepgram Flux (v2 API) and Deepgram Aura (v1 API)."""
-    raw_name = (voice or "flux-heather-en").strip()
+async def _build_tts_service(voice: str = "aura-2-asteria-en"):
+    """Factory for LiveKit TTS service using rock-solid Deepgram Aura models (v1 API)."""
+    raw_name = (voice or "aura-2-asteria-en").strip()
     model_name = VOICE_FALLBACK_MAP.get(raw_name, raw_name)
+    if model_name.startswith("flux-"):
+        model_name = VOICE_FALLBACK_MAP.get(model_name, "aura-2-asteria-en")
     sess = await get_shared_http_session()
 
     try:
-        # Deepgram Flux uses the /v2/speak endpoint
-        if model_name.startswith("flux-"):
-            logger.info(f"[LiveKit TTS] Initializing Deepgram Flux v2 voice: {model_name}")
-            return deepgram.TTS(
-                model=model_name,
-                base_url="https://api.deepgram.com/v2/speak",
-                api_key=settings.DEEPGRAM_API_KEY,
-                http_session=sess,
-            )
-        else:
-            logger.info(f"[LiveKit TTS] Initializing Deepgram Aura voice: {model_name}")
-            return deepgram.TTS(
-                model=model_name,
-                base_url="https://api.deepgram.com/v1/speak",
-                api_key=settings.DEEPGRAM_API_KEY,
-                http_session=sess,
-            )
-    except Exception as e:
-        logger.warning(f"[LiveKit TTS] Failed to initialize voice '{model_name}': {e}. Falling back to default flux-heather-en.")
+        logger.info(f"[LiveKit TTS] Initializing Deepgram Aura voice: {model_name}")
         return deepgram.TTS(
-            model="flux-heather-en",
-            base_url="https://api.deepgram.com/v2/speak",
+            model=model_name,
+            base_url="https://api.deepgram.com/v1/speak",
+            api_key=settings.DEEPGRAM_API_KEY,
+            http_session=sess,
+        )
+    except Exception as e:
+        logger.warning(f"[LiveKit TTS] Failed to initialize voice '{model_name}': {e}. Falling back to default aura-2-asteria-en.")
+        return deepgram.TTS(
+            model="aura-2-asteria-en",
+            base_url="https://api.deepgram.com/v1/speak",
             api_key=settings.DEEPGRAM_API_KEY,
             http_session=sess,
         )
@@ -982,15 +984,15 @@ async def _agent_room_worker(
                 endpointing=EndpointingOptions(mode="fixed", min_delay=0.8, max_delay=2.5),
                 interruption=InterruptionOptions(
                     enabled=True,
-                    min_duration=0.8,
+                    min_duration=0.6,
                     min_words=1,
-                    resume_false_interruption=True,
-                    false_interruption_timeout=1.5,
+                    resume_false_interruption=False,
+                    false_interruption_timeout=0.0,
                 ),
                 preemptive_generation=PreemptiveGenerationOptions(
                     enabled=True,
-                    preemptive_tts=True,
-                    max_retries=3,
+                    preemptive_tts=False,
+                    max_retries=2,
                 ),
             )
 
@@ -1202,12 +1204,15 @@ async def _agent_room_worker(
             while len(room.remote_participants) == 0 and time.time() < wait_deadline and room.isconnected():
                 await asyncio.sleep(0.05)
 
-            try:
-                session.say(greeting)
-                logger.info(f"[LiveKit Agent] Greeting sent to room: {room_name}")
-                # conversation_item_added event will append to transcript_turns, record turn, and broadcast synchronously
-            except Exception as e:
-                logger.warning(f"Could not say initial greeting: {e}")
+            session_info = _ACTIVE_SESSIONS.get(room_name)
+            if session_info and not session_info.get("greeting_sent", False):
+                session_info["greeting_sent"] = True
+                try:
+                    session.say(greeting)
+                    logger.info(f"[LiveKit Agent] Greeting sent to room: {room_name}")
+                    # conversation_item_added event will append to transcript_turns, record turn, and broadcast synchronously
+                except Exception as e:
+                    logger.warning(f"Could not say initial greeting: {e}")
 
             # Keep agent worker alive while room is connected (hard 15-minute watchdog limit)
             MAX_CALL_DURATION_SECONDS = 900  # 15 minutes hard timeout
