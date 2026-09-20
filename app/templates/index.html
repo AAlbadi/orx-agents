@@ -46,6 +46,7 @@
       <button onclick="switchMainTab('studio')" id="main-tab-studio" class="h-full px-4 border-b-2 border-[#10b981] text-[#10b981] transition">Studio</button>
       <button onclick="switchMainTab('clients')" id="main-tab-clients" class="h-full px-4 border-b-2 border-transparent text-slate-400 hover:text-white transition">Clients</button>
       <button onclick="switchMainTab('logs')" id="main-tab-logs" class="h-full px-4 border-b-2 border-transparent text-slate-400 hover:text-white transition">Logs</button>
+      <button onclick="switchMainTab('onboarding')" id="main-tab-onboarding" class="h-full px-4 border-b-2 border-transparent text-sky-400 hover:text-white transition flex items-center gap-1.5 font-bold"><span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>Onboarding Studio</button>
     </nav>
     
     <div class="flex items-center gap-3">
@@ -277,6 +278,142 @@
               <tr><td colspan="4" class="px-4 py-8 text-center text-slate-500">Loading logs...</td></tr>
             </tbody>
           </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ONBOARDING SCENARIO STUDIO TAB -->
+    <div id="tab-onboarding" class="hidden flex-1 overflow-y-auto p-6 bg-[#08090c] custom-scrollbar">
+      <div class="max-w-7xl mx-auto space-y-6">
+        <!-- Top header & Presets bar -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#1a1d26] pb-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-sky-400 animate-pulse"></span>
+              <h2 class="text-xl font-bold text-white tracking-tight">🏢 Client Onboarding Studio & Scenario Sandbox</h2>
+            </div>
+            <p class="text-xs text-slate-400 mt-1">
+              Customize client onboarding choices (industry, diagnostic fee, hours, timezone, tone) to see how the prompt morphs dynamically, and test live calls in real-time.
+            </p>
+          </div>
+          <!-- 1-Click Scenario Presets -->
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <span class="text-[11px] text-slate-500 font-mono mr-1">Presets:</span>
+            <button onclick="loadOnboardingPreset('hvac')" class="px-2.5 py-1 rounded-lg bg-sky-950/60 hover:bg-sky-900 border border-sky-500/30 text-sky-300 text-xs font-semibold transition">❄️ Comfort Breeze HVAC</button>
+            <button onclick="loadOnboardingPreset('plumbing')" class="px-2.5 py-1 rounded-lg bg-blue-950/60 hover:bg-blue-900 border border-blue-500/30 text-blue-300 text-xs font-semibold transition">🚰 Apex Plumbing</button>
+            <button onclick="loadOnboardingPreset('electrical')" class="px-2.5 py-1 rounded-lg bg-amber-950/60 hover:bg-amber-900 border border-amber-500/30 text-amber-300 text-xs font-semibold transition">⚡ VoltCraft Electrical</button>
+            <button onclick="loadOnboardingPreset('dental')" class="px-2.5 py-1 rounded-lg bg-teal-950/60 hover:bg-teal-900 border border-teal-500/30 text-teal-300 text-xs font-semibold transition">🦷 Metro Dental</button>
+          </div>
+        </div>
+
+        <!-- 2-Column Split: Onboarding Form (Left) vs Live Prompt (Right) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <!-- Left: Onboarding Settings -->
+          <div class="lg:col-span-5 space-y-4 bg-[#0d0f14] border border-[#1a1d26] rounded-2xl p-5 shadow-xl">
+            <div class="flex items-center justify-between border-b border-[#1a1d26] pb-3">
+              <span class="text-xs font-bold text-white uppercase tracking-wider">1. Client Onboarding Choices</span>
+              <span class="text-[10px] text-sky-400 font-mono bg-sky-950/60 px-2 py-0.5 rounded border border-sky-500/30">Live Dynamic Form</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-300 mb-1">Business Name</label>
+                <input type="text" id="onb-sim-name" value="Comfort Breeze Heating & Air" oninput="compileOnboardingPrompt()" class="w-full bg-[#07080b] border border-[#232733] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-sky-500">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-300 mb-1">Agent Name</label>
+                <input type="text" id="onb-sim-persona" value="Riley" oninput="compileOnboardingPrompt()" class="w-full bg-[#07080b] border border-[#232733] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-sky-500">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-300 mb-1">Trade / Industry</label>
+                <select id="onb-sim-industry" onchange="compileOnboardingPrompt()" class="w-full bg-[#07080b] border border-[#232733] rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-sky-500">
+                  <option value="hvac" selected>HVAC & Heating/Cooling</option>
+                  <option value="plumbing">Plumbing & Drain</option>
+                  <option value="electrical">Electrical & Lighting</option>
+                  <option value="dental_medical">Dental & Medical Clinic</option>
+                  <option value="roofing">Roofing & Exterior</option>
+                  <option value="general">General Home Services</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-300 mb-1">Diagnostic Fee</label>
+                <input type="text" id="onb-sim-fee" value="$89" oninput="compileOnboardingPrompt()" placeholder="$89 or Free" class="w-full bg-[#07080b] border border-[#232733] rounded-lg px-3 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-sky-500">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-300 mb-1">City & State</label>
+                <input type="text" id="onb-sim-address" value="Minneapolis, MN" oninput="compileOnboardingPrompt()" class="w-full bg-[#07080b] border border-[#232733] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-sky-500">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-300 mb-1">Timezone</label>
+                <select id="onb-sim-tz" onchange="compileOnboardingPrompt()" class="w-full bg-[#07080b] border border-[#232733] rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-sky-500">
+                  <option value="America/Chicago" selected>Central (Minneapolis/Chicago)</option>
+                  <option value="America/New_York">Eastern (New York/Miami)</option>
+                  <option value="America/Denver">Mountain (Denver/Phoenix)</option>
+                  <option value="America/Los_Angeles">Pacific (Los Angeles/Seattle)</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-300 mb-1">Operating Schedule</label>
+              <input type="text" id="onb-sim-hours" value="Mon-Fri from 8:00 AM to 6:00 PM" oninput="compileOnboardingPrompt()" class="w-full bg-[#07080b] border border-[#232733] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-sky-500">
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-300 mb-1">Core Services Offered</label>
+              <input type="text" id="onb-sim-services" value="AC repair, furnace tune-ups, heat pump service, emergency diagnostic" oninput="compileOnboardingPrompt()" class="w-full bg-[#07080b] border border-[#232733] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-sky-500">
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-300 mb-1">Emergency Dispatch Line</label>
+              <input type="text" id="onb-sim-phone" value="+1 (612) 555-0199" oninput="compileOnboardingPrompt()" class="w-full bg-[#07080b] border border-[#232733] rounded-lg px-3 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-sky-500">
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-300 mb-1">First Spoken Greeting</label>
+              <input type="text" id="onb-sim-firstmsg" value="Thank you for calling Comfort Breeze Heating and Air! This is Riley. How can I help get your home comfortable today?" class="w-full bg-[#07080b] border border-[#232733] rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-sky-500">
+            </div>
+          </div>
+
+          <!-- Right: Live Compiled Prompt & Test Actions -->
+          <div class="lg:col-span-7 space-y-4 bg-[#0d0f14] border border-[#1a1d26] rounded-2xl p-5 shadow-xl flex flex-col">
+            <div class="flex items-center justify-between border-b border-[#1a1d26] pb-3">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-white uppercase tracking-wider">2. Compiled State-of-the-Art Prompt</span>
+                <span id="onb-sim-metrics" class="text-[10px] text-emerald-400 font-mono bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30">Calculating...</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="compileOnboardingPrompt()" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition">⚡ Recompile</button>
+                <button onclick="copyOnboardingPrompt()" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition">📋 Copy</button>
+              </div>
+            </div>
+
+            <!-- Prompt Preview Box -->
+            <div class="flex-1 min-h-[380px] flex flex-col">
+              <textarea id="onb-sim-prompt" rows="18" class="w-full flex-1 bg-[#06070a] border border-[#1e222e] rounded-xl p-3.5 text-[11px] text-slate-200 font-mono leading-relaxed focus:outline-none focus:border-sky-500 resize-y custom-scrollbar" placeholder="Compiled prompt will appear here..."></textarea>
+            </div>
+
+            <!-- Actions Bar -->
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-[#1a1d26]">
+              <div class="text-[11px] text-slate-400">
+                <span>Direct test: launches LiveKit with this exact custom prompt</span>
+              </div>
+              <div class="flex items-center gap-2 w-full sm:w-auto">
+                <button onclick="applyOnboardingToStudio()" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition">
+                  📥 Apply to Studio
+                </button>
+                <button onclick="testLiveCallFromOnboardingStudio()" class="flex-1 sm:flex-none px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition shadow-lg shadow-purple-950 flex items-center justify-center gap-1.5">
+                  🎙️ Test Live Call
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -578,7 +715,7 @@
   <script>
     // Tab switching logic for new layout
     function switchMainTab(tab) {
-      ['studio', 'clients', 'logs'].forEach(t => {
+      ['studio', 'clients', 'logs', 'onboarding'].forEach(t => {
         const btn = document.getElementById('main-tab-'+t);
         const panel = document.getElementById('tab-'+t);
         if(!btn || !panel) return;
@@ -588,6 +725,9 @@
           panel.classList.remove('hidden');
           if(t === 'clients') fetchClientsTab();
           if(t === 'logs') loadCallHistory();
+          if(t === 'onboarding') {
+            if(!document.getElementById('onb-sim-prompt')?.value) compileOnboardingPrompt();
+          }
         } else {
           btn.classList.remove('border-[#10b981]', 'text-[#10b981]');
           btn.classList.add('border-transparent', 'text-slate-400');
@@ -597,6 +737,166 @@
     }
 
     // Clients tab functionality
+    
+    // ─── Onboarding Studio & Scenario Sandbox ─────────────────────────────────
+    const ONBOARDING_PRESETS = {
+      hvac: {
+        name: "Comfort Breeze Heating & Air",
+        persona: "Riley",
+        industry: "hvac",
+        fee: "$89",
+        address: "Minneapolis, MN",
+        tz: "America/Chicago",
+        hours: "Mon-Fri from 8:00 AM to 6:00 PM",
+        services: "AC diagnostics, furnace tune-ups, heat pump repair, emergency service",
+        phone: "+1 (612) 555-0199",
+        firstmsg: "Thank you for calling Comfort Breeze Heating and Air! This is Riley. How can I help get your home comfortable today?"
+      },
+      plumbing: {
+        name: "Apex Rapid Rooter Plumbing",
+        persona: "Jordan",
+        industry: "plumbing",
+        fee: "$79",
+        address: "Phoenix, AZ",
+        tz: "America/Phoenix",
+        hours: "24/7 Emergency Dispatch Available",
+        services: "drain cleaning, water heater repair, burst pipes, sewer line camera inspection",
+        phone: "+1 (480) 555-0144",
+        firstmsg: "Thank you for calling Apex Rapid Rooter! This is Jordan. What plumbing issue can we help you solve today?"
+      },
+      electrical: {
+        name: "VoltCraft Master Electricians",
+        persona: "Alex",
+        industry: "electrical",
+        fee: "$89",
+        address: "Austin, TX",
+        tz: "America/Chicago",
+        hours: "Mon-Sat from 7:30 AM to 7:00 PM",
+        services: "breaker panel upgrades, EV chargers, sparking outlets, electrical safety inspection",
+        phone: "+1 (512) 555-0188",
+        firstmsg: "Thank you for calling VoltCraft Electricians! This is Alex. How can we make your home safe and powered up today?"
+      },
+      dental: {
+        name: "Metro Family Dental Care",
+        persona: "Dr. Maya",
+        industry: "dental_medical",
+        fee: "Free",
+        address: "New York, NY",
+        tz: "America/New_York",
+        hours: "Mon-Fri 8:30 AM - 5:30 PM, Sat 9:00 AM - 2:00 PM",
+        services: "emergency toothache relief, cleanings, root canal consultations, gentle restorative care",
+        phone: "+1 (212) 555-0177",
+        firstmsg: "Thank you for calling Metro Family Dental! This is Maya. Are you experiencing any tooth discomfort or looking to schedule a visit?"
+      }
+    };
+
+    function loadOnboardingPreset(key) {
+      const p = ONBOARDING_PRESETS[key];
+      if (!p) return;
+      document.getElementById('onb-sim-name').value = p.name;
+      document.getElementById('onb-sim-persona').value = p.persona;
+      document.getElementById('onb-sim-industry').value = p.industry;
+      document.getElementById('onb-sim-fee').value = p.fee;
+      document.getElementById('onb-sim-address').value = p.address;
+      document.getElementById('onb-sim-tz').value = p.tz;
+      document.getElementById('onb-sim-hours').value = p.hours;
+      document.getElementById('onb-sim-services').value = p.services;
+      document.getElementById('onb-sim-phone').value = p.phone;
+      document.getElementById('onb-sim-firstmsg').value = p.firstmsg;
+      compileOnboardingPrompt();
+    }
+
+    async function compileOnboardingPrompt() {
+      const bizName = document.getElementById('onb-sim-name')?.value.trim() || 'Our Company';
+      const persona = document.getElementById('onb-sim-persona')?.value.trim() || 'Riley';
+      const industry = document.getElementById('onb-sim-industry')?.value || 'hvac';
+      const fee = document.getElementById('onb-sim-fee')?.value.trim() || '$89';
+      const address = document.getElementById('onb-sim-address')?.value.trim() || '';
+      const tz = document.getElementById('onb-sim-tz')?.value || 'America/Chicago';
+      const hours = document.getElementById('onb-sim-hours')?.value.trim() || 'Mon-Fri 8am-6pm';
+      const services = document.getElementById('onb-sim-services')?.value.trim() || 'repairs and maintenance';
+      const phone = document.getElementById('onb-sim-phone')?.value.trim() || '';
+      const firstmsg = document.getElementById('onb-sim-firstmsg')?.value.trim() || '';
+
+      const payload = {
+        business_name: bizName,
+        persona_name: persona,
+        industry: industry,
+        diagnostic_fee: fee,
+        address: address,
+        service_area: address,
+        timezone: tz,
+        hours: hours,
+        services: services,
+        owner_phone: phone,
+        forwarding_phone: phone,
+        first_message: firstmsg
+      };
+
+      try {
+        const res = await fetch('/api/onboarding/compile-prompt', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const txtArea = document.getElementById('onb-sim-prompt');
+          if (txtArea) txtArea.value = data.prompt;
+          const metrics = document.getElementById('onb-sim-metrics');
+          if (metrics) {
+            metrics.textContent = `${data.char_count} chars • ~${data.word_count} words • ~${Math.round(data.char_count/4)} tokens`;
+          }
+        }
+      } catch (e) {
+        console.warn('Compile prompt error:', e);
+      }
+    }
+
+    function testLiveCallFromOnboardingStudio() {
+      const prompt = document.getElementById('onb-sim-prompt')?.value.trim();
+      const firstmsg = document.getElementById('onb-sim-firstmsg')?.value.trim();
+      const name = document.getElementById('onb-sim-name')?.value.trim() || 'Custom Client';
+      if (!prompt) {
+        alert('Please compile a prompt first.');
+        return;
+      }
+      try {
+        sessionStorage.setItem('orx_test_instructions', prompt);
+        sessionStorage.setItem('orx_test_greeting', firstmsg);
+        sessionStorage.setItem('orx_test_tts_voice', 'flux-heather-en');
+        sessionStorage.setItem('orx_test_stt_model', 'nova-3');
+        sessionStorage.setItem('orx_test_agent_name', name);
+      } catch (e) {}
+      window.open('/livekit?mode=dashboard_test', '_blank');
+    }
+
+    function applyOnboardingToStudio() {
+      const prompt = document.getElementById('onb-sim-prompt')?.value.trim();
+      const firstmsg = document.getElementById('onb-sim-firstmsg')?.value.trim();
+      if (!prompt) return;
+      const promptInput = document.getElementById('agent-system-prompt-input');
+      const firstMsgInput = document.getElementById('agent-first-message-input');
+      if (promptInput) promptInput.value = prompt;
+      if (firstMsgInput) firstMsgInput.value = firstmsg;
+      switchMainTab('studio');
+      if (typeof showNotification === 'function') {
+        showNotification('✅ Applied onboarding scenario to Studio editor! Click Save & Apply to save.', 'success');
+      } else {
+        alert('✅ Applied to Studio! Remember to click Save & Apply.');
+      }
+    }
+
+    function copyOnboardingPrompt() {
+      const el = document.getElementById('onb-sim-prompt');
+      if (el) {
+        navigator.clipboard.writeText(el.value).then(() => {
+          if (typeof showNotification === 'function') showNotification('📋 Prompt copied to clipboard!', 'info');
+          else alert('Prompt copied!');
+        });
+      }
+    }
+
     async function fetchClientsTab() {
       const grid = document.getElementById('clients-grid');
       try {

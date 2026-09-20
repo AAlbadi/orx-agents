@@ -980,17 +980,28 @@ async def _agent_room_worker(
             await session.start(agent, room=room, session_host=False)
             logger.success(f"[LiveKit Agent] Session started in room: {room_name}")
 
-            # Real-time WebRTC live transcript broadcaster
+            # Real-time WebRTC live transcript broadcaster with deduplication
+            _last_broadcast = {"speaker": "", "text": "", "timestamp": 0.0}
+
             async def _broadcast_transcript(speaker: str, text: str, is_final: bool = True):
                 if not text or not room.isconnected():
                     return
+                clean = text.strip()
+                now_ts = time.time()
+                # Suppress identical transcript from same speaker within 3.5 seconds
+                if _last_broadcast["speaker"] == speaker and _last_broadcast["text"] == clean and (now_ts - _last_broadcast["timestamp"]) < 3.5:
+                    logger.debug(f"[LiveKit Transcript] Suppressed duplicate broadcast: {clean[:40]}...")
+                    return
+                _last_broadcast["speaker"] = speaker
+                _last_broadcast["text"] = clean
+                _last_broadcast["timestamp"] = now_ts
                 try:
                     payload = json.dumps({
                         "type": "transcript",
                         "speaker": speaker,
-                        "text": text.strip(),
+                        "text": clean,
                         "is_final": is_final,
-                        "timestamp": time.time(),
+                        "timestamp": now_ts,
                     })
                     await room.local_participant.publish_data(payload, reliable=True, topic="transcript")
                 except Exception as ex:
@@ -1127,7 +1138,7 @@ async def _agent_room_worker(
                     "timestamp_epoch": time.time(),
                     "created_at": time.time(),
                 })
-                asyncio.create_task(_broadcast_transcript("Aria", greeting, True))
+                # Note: conversation_item_added event will broadcast transcript synchronously as audio streams
             except Exception as e:
                 logger.warning(f"Could not say initial greeting: {e}")
 

@@ -1143,6 +1143,12 @@
 
       // Check if last element is an interim/streaming message from the same speaker
       const lastChild = box.lastElementChild;
+      if (lastChild && lastChild.dataset.speaker === speaker && isFinal) {
+        const existingBubble = lastChild.querySelector('.bubble-text');
+        if (existingBubble && existingBubble.textContent.trim() === text.trim()) {
+          return; // Suppress duplicate bubble
+        }
+      }
       if (lastChild && lastChild.dataset.speaker === speaker && lastChild.dataset.streaming === 'true') {
         const bubble = lastChild.querySelector('.bubble-text');
         if (bubble) bubble.textContent = text;

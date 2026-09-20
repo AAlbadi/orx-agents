@@ -783,6 +783,22 @@ async def api_save_client_profile(profile: Dict[str, Any] = Body(...)):
     return {"success": True, "profile": saved}
 
 
+@app.post("/api/onboarding/compile-prompt")
+async def api_compile_onboarding_prompt(profile: Dict[str, Any] = Body(...)):
+    """Compile a customized voice agent prompt from onboarding options in real-time."""
+    from app.onboarding import compile_agent_prompt
+    prompt = compile_agent_prompt(profile)
+    biz = profile.get("business_name") or "Comfort Breeze"
+    persona = profile.get("persona_name") or "Riley"
+    return {
+        "success": True,
+        "prompt": prompt,
+        "char_count": len(prompt),
+        "word_count": len(prompt.split()),
+        "first_message": profile.get("first_message") or f"Thank you for calling {biz}! This is {persona}. How can I help get your home comfortable today?",
+    }
+
+
 @app.post("/api/onboarding/complete")
 async def api_onboarding_complete(request: Request, payload: Dict[str, Any] = Body(...)):
     """Completes client onboarding, provisions dedicated project DB, tailored LiveKit prompt, and triggers SMS."""
