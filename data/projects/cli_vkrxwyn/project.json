@@ -1,0 +1,17 @@
+{
+  "client_id": "cli_vkrxwyn",
+  "project_name": "Seattle Heating & Cooling Project",
+  "business_name": "Seattle Heating & Cooling",
+  "industry": "hvac",
+  "address": "18640 68th Ave S, Kent, WA 98032",
+  "forwarding_phone": "(206) 848-8080",
+  "assigned_phone": "+1 (833) 420-5227",
+  "owner_phone": "(206) 848-8080",
+  "owner_email": "",
+  "timezone": "America/New_York",
+  "status": "active",
+  "trigger_source": "onboarding",
+  "created_at": "2026-09-18 19:47:27",
+  "updated_at": "2026-09-18 19:47:27",
+  "sms_notifications_enabled": 1
+}

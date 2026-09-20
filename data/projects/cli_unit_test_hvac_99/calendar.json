@@ -8,7 +8,12 @@
   "afternoon_slot_capacity": 6,
   "evening_slot_capacity": 3,
   "is_connected": 0,
-  "last_tested_at": "2026-09-18 15:31:48",
+  "last_tested_at": "2026-09-18 23:22:51",
   "last_status": "missing_credentials",
-  "last_error": "Google Service Account JSON is empty. Paste service account credentials or set file path."
+  "last_error": "Google Service Account JSON is empty. Paste service account credentials or set file path.",
+  "oauth_access_token": "",
+  "oauth_refresh_token": "",
+  "oauth_token_expiry": 0,
+  "oauth_user_email": "",
+  "auth_type": "oauth"
 }

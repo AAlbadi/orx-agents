@@ -1,0 +1,17 @@
+{
+  "client_id": "cli_49wtywt",
+  "project_name": "Evergreen Home Heating and Energy Project",
+  "business_name": "Evergreen Home Heating and Energy",
+  "industry": "hvac",
+  "address": "727 S Kenyon St Suite B, Seattle, WA 98108",
+  "forwarding_phone": "(206) 565-1455",
+  "assigned_phone": "+1 (833) 420-5227",
+  "owner_phone": "(206) 565-1455",
+  "owner_email": "",
+  "timezone": "America/New_York",
+  "status": "active",
+  "trigger_source": "onboarding_buy",
+  "sms_notifications_enabled": 1,
+  "created_at": "2026-09-19 13:43:16",
+  "updated_at": "2026-09-19 13:46:27"
+}

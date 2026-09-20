@@ -1,0 +1,17 @@
+{
+  "client_id": "test_client_orx_premier_hvac",
+  "project_name": "Premier Comfort HVAC & Air Project",
+  "business_name": "Premier Comfort HVAC & Air",
+  "industry": "hvac",
+  "address": "900 Industrial Parkway, Chicago, IL",
+  "forwarding_phone": "+1 (312) 555-0199",
+  "assigned_phone": "+1 (833) 420-5227",
+  "owner_phone": "+1 (312) 555-0199",
+  "owner_email": "dispatcher@premiercomfort.com",
+  "timezone": "America/New_York",
+  "status": "active",
+  "trigger_source": "onboarding_buy",
+  "sms_notifications_enabled": 1,
+  "created_at": "2026-09-18 23:25:33",
+  "updated_at": "2026-09-18 23:25:33"
+}

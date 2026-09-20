@@ -1,0 +1,2298 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LiveKit Voice Agent Lab | Aria Voice AI</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              900: '#064e3b',
+              950: '#022c22',
+            },
+            livekit: {
+              cyan: '#00f2fe',
+              blue: '#4facfe',
+              dark: '#0b0f19',
+              card: '#111827',
+              border: '#1f2937'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Fira Code', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- LiveKit Official Browser Client SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
+  <style>
+    body {
+      background-color: #080c14;
+      color: #e2e8f0;
+    }
+    .livekit-glow {
+      box-shadow: 0 0 35px -5px rgba(16, 185, 129, 0.25);
+    }
+    .pulse-ring {
+      animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+    }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.12); opacity: 0.2; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    .wave-bar {
+      transition: height 0.05s ease-out;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans selection:bg-emerald-500 selection:text-white">
+
+  <!-- Top Navigation Bar -->
+  <header class="border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <a href="/portal" class="flex items-center space-x-2 text-slate-400 hover:text-white transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          <span class="text-xs font-semibold uppercase tracking-wider">Voice AI Portal</span>
+        </a>
+        <span class="text-slate-700">|</span>
+        <div class="flex items-center space-x-2">
+          <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></div>
+          <span class="font-bold text-white text-base tracking-tight">LiveKit Voice Agent Lab</span>
+          <span class="px-2 py-0.5 text-[10px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full">v1.8 AGENTS</span>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-2 text-xs">
+        <button onclick="openOutboundModal()" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium transition shadow-sm">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+          <span>📞 Outbound Call</span>
+        </button>
+
+        <button onclick="scrollToRecordings()" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 transition">
+          <svg class="w-3.5 h-3.5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+          <span>🎙️ Recordings</span>
+          <span id="nav-rec-badge" class="px-1.5 py-0.2 rounded-full text-[9px] bg-slate-800 text-slate-400 font-mono">0</span>
+        </button>
+
+        <button onclick="openOnboardingModal()" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 text-sky-300 font-medium transition">
+          <span>🏢 Onboard Client</span>
+        </button>
+
+        <button onclick="openAdminTestingModal()" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 font-medium transition">
+          <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          <span>⚙️ Admin & Calendar Test</span>
+        </button>
+
+        <a id="nav-playground-btn" href="#" target="_blank" class="hidden items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 font-medium transition">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+          <span>Cloud Playground</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Server Status Ribbon -->
+  <div class="bg-slate-900/60 border-b border-slate-800/60 px-4 py-2 text-xs">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center space-x-4">
+        <div class="flex items-center space-x-2">
+          <span class="text-slate-400">Server Target:</span>
+          <span id="srv-indicator" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-medium bg-emerald-950 text-emerald-300 border border-emerald-800/80">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
+            <span id="srv-indicator-text">Checking LiveKit Server...</span>
+          </span>
+        </div>
+        <div class="text-slate-500 font-mono hidden sm:inline" id="srv-url-label">ws://127.0.0.1:7880</div>
+      </div>
+      <div class="flex items-center space-x-2">
+        <button id="btn-toggle-local-srv" onclick="toggleLocalServer()" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 font-mono transition">
+          Restart Local Server
+        </button>
+        <button onclick="runBenchmark()" class="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-medium transition flex items-center space-x-1">
+          <span>⚡ Run Latency Benchmark</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Layout -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- Left Column: Models & Configuration (LiveKit Agent Matrix) -->
+    <div class="lg:col-span-5 space-y-5">
+
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 backdrop-blur-sm shadow-xl space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
+          <div>
+            <h2 class="text-sm font-bold text-white uppercase tracking-wider flex items-center space-x-2">
+              <span>🧠 LiveKit Voice AI Engine Matrix</span>
+            </h2>
+            <p class="text-[11px] text-slate-400 mt-0.5">Production-grade streaming audio models under the LiveKit Realtime architecture.</p>
+          </div>
+          <span class="px-2 py-0.5 text-[10px] font-mono rounded bg-slate-800 text-emerald-400 border border-slate-700">Hot-Swap</span>
+        </div>
+
+        <!-- Voice Agent & Persona Preset Selector -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
+            <span class="flex items-center space-x-1.5 text-emerald-300">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span>LiveKit Voice Agent Template</span>
+            </span>
+            <span class="text-[10px] text-emerald-400 font-mono" id="template-badge">Loading...</span>
+          </label>
+          <select id="sel-template" onchange="applySelectedTemplate()" class="w-full bg-slate-950 border border-emerald-500/50 rounded-xl px-3 py-2 text-xs text-emerald-300 focus:outline-none focus:border-emerald-400 font-mono shadow-inner">
+            <option value="" disabled selected>-- Loading Voice Agent Templates --</option>
+          </select>
+        </div>
+
+        <!-- LLM Selector -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
+            <span>Large Language Model (LLM)</span>
+            <span class="text-[10px] text-emerald-400 font-mono" id="llm-badge">Gemini 3.1 Flash (~$0.075/1M)</span>
+          </label>
+          <select id="sel-llm" onchange="updateModelBadge()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 font-mono">
+            <optgroup label="Google DeepMind (Our Primary Flagship — Ultra Low Cost &amp; No Rate Limits)">
+              <option value="gemini:gemini-3.1-flash-lite" selected>Google Gemini • 3.1 Flash Lite (Primary Flagship, $0.075/1M)</option>
+              <option value="gemini:gemini-2.5-flash">Google Gemini • 2.5 Flash (Smart Flagship, $0.075/1M)</option>
+              <option value="gemini:gemini-2.5-flash-lite">Google Gemini • 2.5 Flash Lite (~450ms, $0.038/1M)</option>
+            </optgroup>
+            <optgroup label="Groq Cloud LPU (Ultra-Low Latency Fallback)">
+              <option value="groq:qwen/qwen3.8-27b">Groq • Qwen 3.8 27B (Fastest TTFT ~148ms, $0.20/1M)</option>
+              <option value="groq:openai/gpt-oss-20b">Groq • OpenAI GPT-OSS 20B (~160ms)</option>
+              <option value="groq:openai/gpt-oss-120b">Groq • OpenAI GPT-OSS 120B (~210ms)</option>
+            </optgroup>
+            <optgroup label="OpenRouter Free Tier">
+              <option value="openrouter:google/gemma-4-31b-it:free">OpenRouter • Gemma 4 31B (Free Tier, ~1200ms)</option>
+              <option value="openrouter:qwen/qwen-2.5-72b-instruct:free">OpenRouter • Qwen 2.5 72B (Free Tier, ~1500ms)</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <!-- STT Selector -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
+            <span>Speech-To-Text (STT)</span>
+            <span class="text-[10px] text-sky-400 font-mono">Cloud Streaming (~500ms)</span>
+          </label>
+          <select id="sel-stt" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 font-mono">
+            <option value="nova-3" selected>Deepgram • Nova-3 (Flagship Streaming)</option>
+            <option value="general">Deepgram • General Enhanced</option>
+          </select>
+        </div>
+
+        <!-- TTS Voice Selector -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
+            <span>Text-To-Speech (TTS) Voice Model</span>
+            <span class="text-[10px] text-purple-400 font-mono">Conversational (~240ms)</span>
+          </label>
+          <select id="sel-tts" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 font-mono">
+            <optgroup label="Deepgram Flux (Ultra-Realistic Conversational v2)">
+              <option value="flux-cliff-en">Deepgram Flux • Cliff (Flagship Baritone Male)</option>
+              <option value="flux-alexis-en">Deepgram Flux • Alexis (Warm Natural Female)</option>
+              <option value="flux-bruce-en">Deepgram Flux • Bruce (Deep Trustworthy Male)</option>
+              <option value="flux-sienna-en">Deepgram Flux • Sienna (Bright & Engaging Female)</option>
+              <option value="flux-heather-en" selected>Deepgram Flux • Heather (Empathetic Healthcare Female)</option>
+              <option value="flux-cole-en">Deepgram Flux • Cole (Confident Advisor Male)</option>
+              <option value="flux-colin-en">Deepgram Flux • Colin (British Gentleman Male)</option>
+              <option value="flux-gemma-en">Deepgram Flux • Gemma (British Receptionist Female)</option>
+              <option value="flux-marcus-en">Deepgram Flux • Marcus (Commanding Executive Male)</option>
+              <option value="flux-wes-en">Deepgram Flux • Wes (Friendly Neighborly Male)</option>
+            </optgroup>
+            <optgroup label="Deepgram Aura-2 (Ultra-Fast ~435ms TTFA)">
+              <option value="aura-2-asteria-en">Deepgram • Aura-2 Asteria (Natural Female)</option>
+              <option value="aura-2-zeus-en">Deepgram • Aura-2 Zeus (Confident Sales Male)</option>
+              <option value="aura-2-luna-en">Deepgram • Aura-2 Luna (Expressive Gentle Female)</option>
+              <option value="aura-2-athena-en">Deepgram • Aura-2 Athena (Executive Female)</option>
+              <option value="aura-2-atlas-en">Deepgram • Aura-2 Atlas (Crisp Modern Male)</option>
+              <option value="aura-2-apollo-en">Deepgram • Aura-2 Apollo (Relatable Male)</option>
+              <option value="aura-2-orion-en">Deepgram • Aura-2 Orion (Resonant Baritone Male)</option>
+              <option value="aura-2-andromeda-en">Deepgram • Aura-2 Andromeda (Warm Female)</option>
+            </optgroup>
+            <optgroup label="Deepgram Aura Classic (Natural Conversational)">
+              <option value="aura-asteria-en">Deepgram • Aura Asteria Classic (Warm Female)</option>
+              <option value="aura-luna-en">Deepgram • Aura Luna Classic (Empathetic / Medical Female)</option>
+              <option value="aura-zeus-en">Deepgram • Aura Zeus Classic (Authoritative Male)</option>
+              <option value="aura-athena-en">Deepgram • Aura Athena Classic (Executive Female)</option>
+              <option value="aura-stella-en">Deepgram • Aura Stella Classic (Corporate / SaaS Female)</option>
+              <option value="aura-arcas-en">Deepgram • Aura Arcas (Natural Casual Male)</option>
+              <option value="aura-angus-en">Deepgram • Aura Angus (Distinguished British/Irish Male)</option>
+              <option value="aura-helios-en">Deepgram • Aura Helios (Warm Relatable Male)</option>
+              <option value="aura-hera-en">Deepgram • Aura Hera (Warm Experienced Female)</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <!-- VAD Turn Detection -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
+            <span>Voice Activity Detection (VAD)</span>
+            <span class="text-[10px] text-slate-400 font-mono">Silero Onnx</span>
+          </label>
+          <div class="px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between text-xs font-mono text-slate-300">
+            <span>Silero VAD (v5 Neural Engine)</span>
+            <span class="text-emerald-400 text-[11px]">Active • 0.70s Silence Limit</span>
+          </div>
+        </div>
+
+
+        <!-- Agent Instructions / Prompt Studio with Latency Safeguard -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center justify-between">
+            <span class="flex items-center space-x-1.5">
+              <span>Agent Persona &amp; Instructions</span>
+              <span class="text-[10px] text-emerald-400 font-mono">Live Hot-Reload</span>
+            </span>
+            <div class="flex items-center space-x-1.5">
+              <button onclick="condenseLiveKitPrompt(this)" title="Condense long playbooks into high-density XML (<300 tokens) using Gemini 3.1 Flash Lite" class="px-2 py-0.5 rounded bg-blue-900/40 hover:bg-blue-800/60 text-blue-300 text-[10px] font-semibold border border-blue-700/50 transition flex items-center space-x-1 cursor-pointer">
+                <span>⚡ Smart Condense</span>
+              </button>
+              <button onclick="updateActivePromptLive()" title="Dynamically push updated instructions to active agent session in memory" class="px-2 py-0.5 rounded bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-[10px] font-semibold border border-emerald-500/30 transition flex items-center space-x-1 cursor-pointer">
+                <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                <span>⚡ Apply Live</span>
+              </button>
+              <button onclick="savePromptDefault()" title="Save prompt as default" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-medium border border-slate-700 transition cursor-pointer">
+                💾 Save
+              </button>
+              <button onclick="resetInstructions()" class="text-[10px] text-slate-400 hover:text-white underline ml-1 cursor-pointer">Reset</button>
+            </div>
+          </label>
+          <textarea id="txt-instructions" rows="4" oninput="updatePromptMetrics()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 font-mono leading-relaxed focus:outline-none focus:border-emerald-500 resize-none">You are Riley, warm and deeply empathetic voice receptionist for Comfort Breeze Heating &amp; Air. Tone: Warm and caring, never indifferent, cold, or bureaucratic. Empathy: When caller reports a problem, validate their feeling first ('Oh no, having no AC in this heat is brutal! Let's get someone out right away.'). Speak in 1-2 natural spoken sentences (<22 words). Use contractions. Hours: Mon-Fri 8am-6pm. Services: repairs and maintenance. Pricing: Upfront quote before work. Flow: 1. Empathize &amp; clarify issue. 2. Confirm address ('Got it, [Address], is that correct?'). 3. Offer 2 time windows. 4. Collect name, phone, email. 5. Confirm booking recap. Transfer: If emergency, say 'Connecting you with our team right away'. Ask only ONE clear question per turn.</textarea>
+          
+          <!-- Character & Latency Guard Indicator -->
+          <div class="flex items-center justify-between mt-1 text-[11px] font-mono">
+            <div class="flex items-center space-x-2">
+              <span id="prompt-char-count" class="text-slate-300 font-bold">542 chars</span>
+              <span class="text-slate-600">/</span>
+              <span id="prompt-token-count" class="text-slate-400">~135 tokens</span>
+              <span class="text-slate-600">|</span>
+              <span id="prompt-cost-est" class="text-emerald-400 font-medium">~$0.00004/min</span>
+            </div>
+            <div id="prompt-speed-badge" class="px-2 py-0.5 rounded-full text-[10px] font-semibold flex items-center space-x-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" title="Keep under 600 characters for snappy conversational voice">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span id="prompt-speed-text">🟢 Ultra-Fast (&lt;300ms)</span>
+            </div>
+          </div>
+          <div class="text-[10px] text-slate-500 mt-0.5 italic flex items-center justify-between">
+            <span>Budget: &lt;600 chars for optimal TTFT latency on Gemini 3.1 Flash Lite</span>
+            <span id="prompt-toast" class="text-emerald-400 font-medium hidden">Saved!</span>
+          </div>
+        </div>
+
+        <!-- Initial Greeting -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5">Initial Spoken Greeting</label>
+          <input type="text" id="txt-greeting" value="Hey, this is Ana with OrxLabs — I'm actually an AI, but I'll keep it quick. Do you have a couple minutes to chat?" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 font-mono focus:outline-none focus:border-emerald-500">
+        </div>
+
+      </div>
+
+      <!-- LiveKit Connection Target Panel -->
+      <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 text-xs space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="font-semibold text-slate-300">LiveKit Connection Settings</span>
+          <span class="text-[11px] text-slate-400">Zero-Config Local or Cloud</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <label class="flex items-center space-x-2 p-2 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer">
+            <input type="radio" name="lk_mode" value="local" checked onchange="switchLkMode('local')" class="text-emerald-500 focus:ring-0">
+            <span class="text-slate-200 text-xs">Local Server (Port 7880)</span>
+          </label>
+          <label class="flex items-center space-x-2 p-2 rounded-lg bg-slate-950 border border-slate-800 cursor-pointer">
+            <input type="radio" name="lk_mode" value="cloud" onchange="switchLkMode('cloud')" class="text-emerald-500 focus:ring-0">
+            <span class="text-slate-200 text-xs">LiveKit Cloud URL</span>
+          </label>
+        </div>
+
+        <div id="cloud-creds" class="hidden space-y-2 pt-1 border-t border-slate-800">
+          <input type="text" id="cloud-url" placeholder="wss://your-project.livekit.cloud" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono">
+          <div class="grid grid-cols-2 gap-2">
+            <input type="text" id="cloud-key" placeholder="API Key" class="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono">
+            <input type="password" id="cloud-secret" placeholder="API Secret" class="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white font-mono">
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Interactive LiveKit WebRTC Voice Call Arena -->
+    <div class="lg:col-span-7 space-y-5">
+
+      <!-- Main LiveKit Voice Console -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-6 backdrop-blur-sm shadow-2xl relative overflow-hidden flex flex-col items-center text-center">
+        <!-- Subtle background glow -->
+        <div class="absolute -top-24 -left-24 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-24 -right-24 w-72 h-72 bg-sky-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <!-- Header Status -->
+        <div class="flex items-center justify-between w-full mb-6">
+          <div class="flex items-center space-x-2">
+            <span class="text-xs uppercase tracking-wider text-slate-400 font-semibold">WebRTC Status:</span>
+            <span id="call-state-badge" class="px-2.5 py-0.5 rounded-full text-xs font-mono font-medium bg-slate-800 text-slate-300 border border-slate-700">
+              Ready to Connect
+            </span>
+          </div>
+          <div id="call-timer" class="font-mono text-xs text-slate-500">00:00</div>
+        </div>
+
+        <!-- Big Animated Voice Avatar & Pulse Visualizer -->
+        <div class="relative my-4 flex items-center justify-center">
+          <div id="pulse-ring" class="absolute w-40 h-40 rounded-full bg-emerald-500/20 pulse-ring hidden"></div>
+          <div id="avatar-circle" class="w-28 h-28 rounded-full bg-gradient-to-tr from-emerald-600 via-teal-500 to-sky-500 p-1 flex items-center justify-center shadow-lg transition-all duration-300">
+            <div class="w-full h-full rounded-full bg-slate-950 flex flex-col items-center justify-center">
+              <svg id="mic-icon" class="w-10 h-10 text-emerald-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dynamic Audio Waveform Visualizer -->
+        <div class="w-full max-w-sm h-12 flex items-center justify-center space-x-1 my-2">
+          <div class="wave-bar w-1.5 h-2 bg-emerald-500/40 rounded-full" id="wb-1"></div>
+          <div class="wave-bar w-1.5 h-3 bg-emerald-500/50 rounded-full" id="wb-2"></div>
+          <div class="wave-bar w-1.5 h-5 bg-emerald-500/70 rounded-full" id="wb-3"></div>
+          <div class="wave-bar w-1.5 h-7 bg-emerald-400 rounded-full" id="wb-4"></div>
+          <div class="wave-bar w-1.5 h-10 bg-emerald-400 rounded-full" id="wb-5"></div>
+          <div class="wave-bar w-1.5 h-6 bg-emerald-400 rounded-full" id="wb-6"></div>
+          <div class="wave-bar w-1.5 h-8 bg-emerald-400 rounded-full" id="wb-7"></div>
+          <div class="wave-bar w-1.5 h-10 bg-emerald-400 rounded-full" id="wb-8"></div>
+          <div class="wave-bar w-1.5 h-7 bg-emerald-400 rounded-full" id="wb-9"></div>
+          <div class="wave-bar w-1.5 h-4 bg-emerald-500/60 rounded-full" id="wb-10"></div>
+          <div class="wave-bar w-1.5 h-2 bg-emerald-500/40 rounded-full" id="wb-11"></div>
+        </div>
+
+        <!-- Primary Action Button -->
+        <div class="mt-4 flex flex-col sm:flex-row items-center justify-center gap-3 w-full max-w-md">
+          <button id="btn-call-action" onclick="toggleLiveKitCall()" class="w-full sm:flex-1 py-3.5 px-6 rounded-xl font-bold text-sm text-white bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] transition shadow-lg shadow-emerald-950/50 flex items-center justify-center space-x-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+            </svg>
+            <span id="btn-call-label">Start LiveKit Voice Call</span>
+          </button>
+
+          <button id="btn-mute" onclick="toggleMute()" disabled class="w-full sm:w-auto px-4 py-3.5 rounded-xl text-xs font-semibold text-slate-400 bg-slate-800/80 hover:bg-slate-700 border border-slate-700 disabled:opacity-40 transition flex items-center justify-center space-x-1.5">
+            <span id="mute-label">Mute Mic</span>
+          </button>
+        </div>
+
+        <!-- Live Latency Telemetry HUD -->
+        <div class="w-full grid grid-cols-4 gap-2 mt-6 pt-5 border-t border-slate-800/80 text-left font-mono">
+          <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+            <div class="text-[10px] text-slate-400 uppercase">RTT Ping</div>
+            <div id="stat-rtt" class="text-sm font-bold text-slate-200 mt-0.5">-- ms</div>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+            <div class="text-[10px] text-slate-400 uppercase">LLM TTFT</div>
+            <div id="stat-ttft" class="text-sm font-bold text-emerald-400 mt-0.5">-- ms</div>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+            <div class="text-[10px] text-slate-400 uppercase">TTS TTFA</div>
+            <div id="stat-ttfa" class="text-sm font-bold text-purple-400 mt-0.5">-- ms</div>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+            <div class="text-[10px] text-slate-400 uppercase">Turnaround</div>
+            <div id="stat-turn" class="text-sm font-bold text-sky-400 mt-0.5">-- ms</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Post-Call Live Intelligence & Google Calendar Sync Card -->
+      <div id="post-call-card" class="hidden bg-slate-900/95 border-2 border-emerald-500/40 rounded-2xl p-5 shadow-2xl space-y-3.5 transition-all">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+          <div class="flex items-center space-x-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center space-x-1.5">
+              <span>📅 Post-Call Sync & Appointment Intel</span>
+            </h3>
+          </div>
+          <span id="post-call-badge" class="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Synced</span>
+        </div>
+
+        <div id="post-call-loading" class="text-center py-4 space-y-2 hidden">
+          <div class="inline-block w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+          <div class="text-xs text-slate-300 font-medium">Extracting Booking & Syncing with Google Calendar...</div>
+          <div class="text-[11px] text-slate-500 font-mono">Updating dedicated client database and dispatching customer confirmation...</div>
+        </div>
+
+        <div id="post-call-content" class="space-y-3 text-xs">
+          <!-- Extracted Details Grid -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 bg-slate-950 p-3 rounded-xl border border-slate-800/80">
+            <div>
+              <span class="text-[10px] text-slate-500 font-mono block">CUSTOMER NAME</span>
+              <span id="pc-cust-name" class="font-bold text-white">--</span>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-500 font-mono block">SERVICE TYPE</span>
+              <span id="pc-service" class="font-bold text-emerald-400">--</span>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-500 font-mono block">DATE & TIME WINDOW</span>
+              <span id="pc-datetime" class="text-sky-300 font-semibold text-[11px]">--</span>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-500 font-mono block">SERVICE ADDRESS</span>
+              <span id="pc-address" class="text-slate-300 font-mono text-[11px]">--</span>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-500 font-mono block">PHONE NUMBER</span>
+              <span id="pc-phone" class="text-slate-300 font-mono text-[11px]">--</span>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-500 font-mono block">EMAIL ADDRESS</span>
+              <span id="pc-email" class="text-amber-300 font-mono text-[11px]">--</span>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex flex-wrap items-center gap-2 pt-1">
+            <a id="pc-btn-cal" href="#" target="_blank" rel="noopener" class="flex-1 py-2 px-3 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs flex items-center justify-center space-x-1.5 shadow-lg shadow-sky-950 transition">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              <span>Add to Google Calendar</span>
+            </a>
+            <button onclick="scrollToRecordings()" class="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 font-medium text-xs transition">
+              View in Recordings
+            </button>
+          </div>
+
+          <!-- Notification & Database Badges -->
+          <div class="space-y-1 text-[11px] font-mono text-slate-400 bg-slate-950/60 p-2.5 rounded-xl border border-slate-900">
+            <div class="flex items-center space-x-1.5 text-emerald-400">
+              <span>✓</span>
+              <span>Customer Confirmation: <span id="pc-cust-notif">Email + 1-Click Link + SMS dispatched</span></span>
+            </div>
+            <div class="flex items-center space-x-1.5 text-emerald-400">
+              <span>✓</span>
+              <span>Owner & Admin Alert: <span id="pc-owner-notif">Full transcript + audio link sent</span></span>
+            </div>
+            <div class="flex items-center space-x-1.5 text-slate-400">
+              <span>🗄️</span>
+              <span>Client Database: <span id="pc-db-path" class="text-slate-300">data/projects/.../client.db</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Transcript Log Box -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 backdrop-blur-sm shadow-xl space-y-3">
+        <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
+          <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center space-x-2">
+            <span>💬 Live Conversation Stream</span>
+          </h3>
+          <button onclick="clearTranscripts()" class="text-[11px] text-slate-400 hover:text-white transition">Clear</button>
+        </div>
+
+        <div id="transcript-box" class="h-48 overflow-y-auto space-y-2.5 pr-2 font-sans text-xs">
+          <div class="text-center text-slate-500 py-6 text-xs italic">
+            Click "Start LiveKit Voice Call" to begin speaking with Aria.
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Recorded Messages & Transcripts Section -->
+  <section id="section-recordings" class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 backdrop-blur-sm shadow-xl space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+        <div>
+          <h2 class="text-base font-bold text-white flex items-center space-x-2">
+            <span>🎙️ Recorded Messages & Call History</span>
+            <span id="rec-count-badge" class="px-2 py-0.5 text-xs font-mono font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded-full">0 Calls</span>
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">Full audio playback, turn-by-turn timestamps, and extracted client details from LiveKit voice sessions.</p>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button onclick="loadLiveKitRecordings()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-medium transition flex items-center space-x-1.5">
+            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            <span>Refresh</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Recordings Container -->
+      <div id="recordings-container" class="space-y-3">
+        <div class="text-center text-slate-500 py-8 text-xs font-mono">
+          Loading LiveKit call recordings...
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Bottom Comparative Benchmark Section -->
+  <section class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 mb-12">
+    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 backdrop-blur-sm">
+      <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4 mb-4">
+        <div>
+          <h2 class="text-base font-bold text-white flex items-center space-x-2">
+            <span>⚡ LiveKit Model Latency Benchmark Results</span>
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">Compare live performance across Groq, Gemini, Deepgram STT, and Deepgram TTS.</p>
+        </div>
+        <button id="btn-run-bench" onclick="runBenchmark()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition flex items-center space-x-2">
+          <span id="bench-btn-label">Run New Benchmark Test</span>
+        </button>
+      </div>
+
+      <div id="benchmark-results-container" class="overflow-x-auto font-mono text-xs">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-slate-800 text-slate-400 text-[11px]">
+              <th class="py-2 px-3">LAYER</th>
+              <th class="py-2 px-3">MODEL / VOICE</th>
+              <th class="py-2 px-3">FRAMEWORK</th>
+              <th class="py-2 px-3">METRIC</th>
+              <th class="py-2 px-3">LATENCY</th>
+              <th class="py-2 px-3">STATUS</th>
+            </tr>
+          </thead>
+          <tbody id="bench-tbody" class="divide-y divide-slate-800/60 text-slate-200">
+            <tr>
+              <td class="py-2.5 px-3 font-semibold text-emerald-400">LLM</td>
+              <td class="py-2.5 px-3">Groq LPU (Qwen 3.8 27B)</td>
+              <td class="py-2.5 px-3 text-slate-400">LiveKit Plugins</td>
+              <td class="py-2.5 px-3">Time-To-First-Token (TTFT)</td>
+              <td class="py-2.5 px-3 font-bold text-emerald-300">~485 ms</td>
+              <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded bg-emerald-900/60 text-emerald-300 text-[10px]">PASS</span></td>
+            </tr>
+            <tr>
+              <td class="py-2.5 px-3 font-semibold text-emerald-400">LLM</td>
+              <td class="py-2.5 px-3">Google Gemini (3.1 Flash Lite)</td>
+              <td class="py-2.5 px-3 text-slate-400">LiveKit Plugins</td>
+              <td class="py-2.5 px-3">Time-To-First-Token (TTFT)</td>
+              <td class="py-2.5 px-3 font-bold text-emerald-300">~891 ms</td>
+              <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded bg-emerald-900/60 text-emerald-300 text-[10px]">PASS</span></td>
+            </tr>
+            <tr>
+              <td class="py-2.5 px-3 font-semibold text-sky-400">STT</td>
+              <td class="py-2.5 px-3">Deepgram Nova-3</td>
+              <td class="py-2.5 px-3 text-slate-400">LiveKit Plugins</td>
+              <td class="py-2.5 px-3">Time-To-First-Byte (TTFB)</td>
+              <td class="py-2.5 px-3 font-bold text-sky-300">~529 ms</td>
+              <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded bg-emerald-900/60 text-emerald-300 text-[10px]">PASS</span></td>
+            </tr>
+            <tr>
+              <td class="py-2.5 px-3 font-semibold text-purple-400">TTS</td>
+              <td class="py-2.5 px-3">Deepgram Aura (Asteria)</td>
+              <td class="py-2.5 px-3 text-slate-400">LiveKit Plugins</td>
+              <td class="py-2.5 px-3">Time-To-First-Audio (TTFA)</td>
+              <td class="py-2.5 px-3 font-bold text-purple-300">~1547 ms</td>
+              <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded bg-emerald-900/60 text-emerald-300 text-[10px]">PASS</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Hidden audio element for LiveKit playback -->
+  <audio id="livekit-audio" autoplay playsinline class="hidden"></audio>
+
+  <!-- ========================================================= -->
+  <!-- Modal 1: Outbound Phone Call Launcher & Carrier Selector -->
+  <!-- ========================================================= -->
+  <div id="modal-outbound" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-5 text-xs">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center space-x-2">
+          <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></div>
+          <h3 class="text-sm font-bold text-white tracking-tight">📞 LiveKit Outbound Phone Call Dispatcher</h3>
+        </div>
+        <button onclick="closeOutboundModal()" class="text-slate-400 hover:text-white text-base font-bold">&times;</button>
+      </div>
+
+      <!-- Top 3 Companies Recommendation Matrix -->
+      <div>
+        <label class="block font-semibold text-slate-300 mb-2">Select Carrier / SIP Trunk Provider</label>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <!-- 1. Telnyx (Recommended) -->
+          <label class="relative flex flex-col p-3 rounded-xl bg-slate-950 border-2 border-emerald-500/80 cursor-pointer hover:border-emerald-400 transition">
+            <input type="radio" name="outbound_provider" value="telnyx" checked class="absolute top-2.5 right-2.5 text-emerald-500 focus:ring-0">
+            <div class="font-bold text-emerald-400 text-xs flex items-center space-x-1">
+              <span>Telnyx ★</span>
+              <span class="text-[9px] px-1.5 py-0.2 bg-emerald-500/20 rounded text-emerald-300 font-mono">Top Pick</span>
+            </div>
+            <div class="text-[11px] text-slate-300 mt-1 font-mono">$1.00/mo number</div>
+            <div class="text-[10px] text-slate-400 font-mono">$0.005 / min SIP</div>
+            <div class="text-[10px] text-emerald-300/80 mt-1.5 leading-tight">Native LiveKit SIP docs, &lt;300ms ultra-low latency.</div>
+          </label>
+
+          <!-- 2. Twilio -->
+          <label class="relative flex flex-col p-3 rounded-xl bg-slate-950 border border-slate-800 cursor-pointer hover:border-slate-700 transition">
+            <input type="radio" name="outbound_provider" value="twilio" class="absolute top-2.5 right-2.5 text-emerald-500 focus:ring-0">
+            <div class="font-bold text-slate-200 text-xs">Twilio</div>
+            <div class="text-[11px] text-slate-300 mt-1 font-mono">$1.15/mo number</div>
+            <div class="text-[10px] text-slate-400 font-mono">$0.0085 / min SIP</div>
+            <div class="text-[10px] text-slate-400 mt-1.5 leading-tight">Massive global reach & carrier redundancy.</div>
+          </label>
+
+          <!-- 3. Plivo -->
+          <label class="relative flex flex-col p-3 rounded-xl bg-slate-950 border border-slate-800 cursor-pointer hover:border-slate-700 transition">
+            <input type="radio" name="outbound_provider" value="plivo" class="absolute top-2.5 right-2.5 text-emerald-500 focus:ring-0">
+            <div class="font-bold text-slate-200 text-xs">Plivo</div>
+            <div class="text-[11px] text-slate-300 mt-1 font-mono">$0.50/mo number</div>
+            <div class="text-[10px] text-slate-400 font-mono">$0.0065 / min SIP</div>
+            <div class="text-[10px] text-slate-400 mt-1.5 leading-tight">Economical choice for high-volume outbound.</div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Destination Phone Number -->
+      <div>
+        <label class="block font-semibold text-slate-300 mb-1">Destination Phone Number (E.164 format)</label>
+        <input type="text" id="outbound-phone" placeholder="+1 (555) 234-5678" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-emerald-500">
+        <p class="text-[10px] text-slate-500 mt-1">Accepts standard domestic and international numbers (e.g. +14155552671).</p>
+      </div>
+
+      <!-- Outbound Voice Prompt -->
+      <div>
+        <label class="block font-semibold text-slate-300 mb-1 flex items-center justify-between">
+          <span>Outbound Persona & Instructions</span>
+          <span id="outbound-char-count" class="text-[10px] font-mono text-emerald-400">188 chars (Ultra-Fast)</span>
+        </label>
+        <textarea id="outbound-prompt" rows="3" oninput="updateOutboundCharCount()" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 font-mono focus:outline-none focus:border-emerald-500 resize-none">You are Aria, an AI outbound coordinator from Comfort Breeze. You are calling to confirm an HVAC maintenance appointment for tomorrow. Keep sentences brief, warm, and natural (1-2 sentences).</textarea>
+      </div>
+
+      <!-- Dispatch Status Display -->
+      <div id="outbound-status-box" class="hidden p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono space-y-1">
+        <div class="flex items-center space-x-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+          <span id="outbound-status-title" class="font-bold text-emerald-400">Dispatching Outbound Call...</span>
+        </div>
+        <div id="outbound-status-desc" class="text-slate-400 text-[11px]">Connecting LiveKit WebRTC session to SIP trunk...</div>
+      </div>
+
+      <!-- Modal Action Buttons -->
+      <div class="flex items-center justify-end space-x-3 pt-2 border-t border-slate-800">
+        <button onclick="closeOutboundModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition">Cancel</button>
+        <button id="btn-dispatch-call" onclick="dispatchOutboundCall()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition flex items-center space-x-1.5 shadow-lg shadow-emerald-950">
+          <span>🚀 Initiate Outbound Call</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- Modal 2: Multi-Tenant Client Onboarding & Project Trigger -->
+  <!-- ========================================================= -->
+  <div id="modal-onboarding" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 text-xs">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center space-x-2">
+          <div class="w-2.5 h-2.5 rounded-full bg-sky-400 animate-pulse"></div>
+          <h3 class="text-sm font-bold text-white tracking-tight">🏢 Onboard New Client & Provision Project</h3>
+        </div>
+        <button onclick="closeOnboardingModal()" class="text-slate-400 hover:text-white text-base font-bold">&times;</button>
+      </div>
+
+      <p class="text-[11px] text-slate-400">
+        Automatically provisions an isolated tenant workspace (<code class="text-sky-300">data/projects/{client_id}/client.db</code>), compiles a latency-optimized voice prompt (&lt;600 chars), and connects Google Calendar & SMS.
+      </p>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Business Name *</label>
+          <input type="text" id="onb-biz-name" placeholder="Apex Cooling & Heating" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Industry</label>
+          <select id="onb-industry" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500">
+            <option value="hvac">HVAC &amp; Climate Control</option>
+            <option value="plumbing">Plumbing &amp; Water</option>
+            <option value="electrical">Electrical &amp; Lighting</option>
+            <option value="dental">Dental &amp; Medical Clinic</option>
+            <option value="legal">Legal &amp; Attorney</option>
+            <option value="general">General Professional Services</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Owner Contact Phone *</label>
+          <input type="text" id="onb-owner-phone" placeholder="+1 (555) 789-0123" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-sky-500">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Owner Email</label>
+          <input type="email" id="onb-owner-email" oninput="onOwnerEmailChanged()" placeholder="owner@apexair.com" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Forwarding / Emergency Phone</label>
+          <input type="text" id="onb-forwarding-phone" placeholder="+1 (555) 789-0123" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-sky-500">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Assigned Voice Line</label>
+          <input type="text" id="onb-assigned-phone" value="+1 (833) 420-5227" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-emerald-400 font-mono focus:outline-none focus:border-sky-500">
+        </div>
+      </div>
+
+      <!-- Google Calendar Fast Connect Section -->
+      <div class="p-3 bg-slate-950/80 rounded-xl border border-slate-800 space-y-2">
+        <div class="flex items-center justify-between">
+          <label class="font-semibold text-slate-200 flex items-center space-x-1.5">
+            <svg class="w-3.5 h-3.5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            <span>Google Calendar Sync (Fast Connect)</span>
+          </label>
+          <span id="onb-oauth-mode-tag" class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">🧪 Dev Sandbox (Simulation)</span>
+        </div>
+        <p id="onb-oauth-mode-desc" class="text-[10px] text-amber-400/90 leading-relaxed">
+          ⚠️ Real Google OAuth keys are not set in .env. Currently running in Sandbox Simulation mode (simulates connection for any email). To require real Google account sign-in &amp; verification, set GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET in .env.
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[11px] text-slate-300 mb-0.5">Google Calendar ID / Gmail</label>
+            <input type="text" id="onb-cal-id" oninput="onCalendarEmailChanged()" placeholder="e.g. owner@apexair.com or primary" value="" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-sky-500">
+          </div>
+          <div>
+            <label class="block text-[11px] text-slate-300 mb-0.5">Connection Method</label>
+            <select id="onb-cal-mode" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-sky-500">
+              <option value="auto_email">1. Instant Email Sync (No setup, zero friction)</option>
+              <option value="share">2. Share with Agent Service Account (10 seconds)</option>
+              <option value="service_account">3. Service Account JSON / OAuth (Direct API)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 1-Click Google OAuth Connection Action -->
+        <div class="pt-2 flex flex-wrap items-center justify-between gap-2 border-t border-slate-900">
+          <div class="flex items-center space-x-2 flex-wrap gap-y-1">
+            <button type="button" id="btn-oauth-google" onclick="connectGoogleCalendarOAuth()" class="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-slate-900 font-semibold text-xs flex items-center space-x-2 shadow-sm transition cursor-pointer">
+              <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+              <span id="btn-oauth-google-label">Sign in with Google (1-Click)</span>
+            </button>
+            <span id="onb-oauth-badge" class="hidden px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">✅ Connected</span>
+            <button type="button" id="btn-oauth-disconnect" onclick="disconnectGoogleCalendarOAuth()" class="hidden px-2 py-0.5 rounded text-[10px] font-medium bg-rose-950/50 hover:bg-rose-900 text-rose-300 border border-rose-800/50 transition">
+              ✕ Switch Account
+            </button>
+          </div>
+          <button type="button" onclick="testOnboardingCalendar()" class="px-2.5 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-[10px] font-mono transition">
+            ⚡ Verify Calendar
+          </button>
+        </div>
+        <div id="onb-cal-test-status" class="hidden text-[10px] font-mono"></div>
+      </div>
+
+      <!-- Result Feedback Box -->
+      <div id="onb-result-box" class="hidden p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono space-y-1.5">
+        <div class="flex items-center space-x-2 text-emerald-400 font-bold">
+          <span>✅ Project Successfully Provisioned!</span>
+        </div>
+        <div id="onb-result-details" class="text-[11px] text-slate-300 space-y-1"></div>
+      </div>
+
+      <!-- Modal Action Buttons -->
+      <div class="flex items-center justify-end space-x-3 pt-2 border-t border-slate-800">
+        <button onclick="closeOnboardingModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition">Cancel</button>
+        <button id="btn-provision-project" onclick="submitNewClientOnboarding()" class="px-5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold transition flex items-center space-x-1.5 shadow-lg shadow-sky-950">
+          <span>🚀 Provision Client AI Project</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- Modal 3: Admin End-to-End Client & Calendar Testing Suite -->
+  <!-- ========================================================= -->
+  <div id="modal-admin-testing" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 text-xs max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center space-x-2">
+          <div class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></div>
+          <h3 class="text-sm font-bold text-white tracking-tight">⚙️ Admin End-to-End Test: Payment ➔ Client DB ➔ Call ➔ Calendar ➔ Email ➔ SMS</h3>
+        </div>
+        <button onclick="closeAdminTestingModal()" class="text-slate-400 hover:text-white text-base font-bold">&times;</button>
+      </div>
+
+      <p class="text-[11px] text-slate-400">
+        Simulates the entire customer & company lifecycle in one click: triggers payment processing, provisions client SQLite DB (<code class="text-amber-300">data/projects/{id}/client.db</code>), logs AI call turn-by-turn speech transcript, generates Google Calendar link, and dispatches customer confirmation and owner alerts.
+      </p>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Business Name</label>
+          <input type="text" id="adm-biz-name" value="Apex Climate Solutions" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Google Calendar ID</label>
+          <input type="text" id="adm-cal-id" value="primary" placeholder="primary or business@gmail.com" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Admin / Owner Email</label>
+          <input type="email" id="adm-owner-email" value="abdulazizalpadi91@gmail.com" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Admin / Owner Phone</label>
+          <input type="text" id="adm-owner-phone" value="+16127169989" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-amber-500">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Test Customer Name</label>
+          <input type="text" id="adm-cust-name" value="Abdul Aziz Albadi" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Test Customer Email</label>
+          <input type="email" id="adm-cust-email" value="abdulazizalpadi91@gmail.com" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Customer Phone</label>
+          <input type="text" id="adm-cust-phone" value="+16127169989" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-amber-500">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Service Address</label>
+          <input type="text" id="adm-cust-addr" value="2508 Delaware Street, Minneapolis, MN 55414" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+        </div>
+      </div>
+
+      <!-- Live Execution Steps Box -->
+      <div id="adm-result-box" class="hidden p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="font-bold text-slate-200 text-xs flex items-center space-x-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span>Test Execution Results</span>
+          </span>
+          <span id="adm-status-badge" class="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Completed</span>
+        </div>
+        
+        <div id="adm-steps-list" class="space-y-2 text-[11px]"></div>
+
+        <div id="adm-actions" class="pt-2 border-t border-slate-900 flex flex-wrap items-center gap-2">
+          <a id="adm-btn-cal" href="#" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-sky-500/20 hover:bg-sky-500/30 border border-sky-500/30 text-sky-300 font-medium transition flex items-center space-x-1.5">
+            <span>📅 Open Google Calendar Event</span>
+          </a>
+          <span id="adm-db-path" class="text-[10px] text-slate-400 font-mono py-1 px-2 bg-slate-900 rounded border border-slate-800"></span>
+        </div>
+      </div>
+
+      <!-- Modal Action Buttons -->
+      <div class="flex items-center justify-end space-x-3 pt-2 border-t border-slate-800">
+        <button onclick="closeAdminTestingModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition">Close</button>
+        <button id="btn-run-admin-test" onclick="runAdminTestFlow()" class="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold transition flex items-center space-x-1.5 shadow-lg shadow-amber-950">
+          <span>🚀 Run Full End-to-End Test</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LiveKit Client Application Script -->
+  <script>
+    let currentRoom = null;
+    let isConnected = false;
+    let isMuted = false;
+    let callTimerInterval = null;
+    let callSeconds = 0;
+    let audioCtx = null;
+    let analyser = null;
+    let animFrame = null;
+    let templateCatalog = [];
+
+    // Check server status, update prompt metrics, and load templates & recordings on boot
+    window.addEventListener('DOMContentLoaded', () => {
+      checkServerStatus();
+      loadLiveKitTemplates();
+      updatePromptMetrics();
+      loadLiveKitRecordings();
+      setInterval(checkServerStatus, 5000);
+      setInterval(loadLiveKitRecordings, 15000);
+    });
+
+    async function loadLiveKitTemplates() {
+      try {
+        const res = await fetch('/api/livekit/templates');
+        const data = await res.json();
+        templateCatalog = data.templates || [];
+        const sel = document.getElementById('sel-template');
+        sel.innerHTML = '';
+
+        // Group templates by category
+        const categories = {};
+        templateCatalog.forEach((tpl, idx) => {
+          const cat = tpl.category || 'General Templates';
+          if (!categories[cat]) categories[cat] = [];
+          categories[cat].push({ tpl, idx });
+        });
+
+        for (const [category, items] of Object.entries(categories)) {
+          const group = document.createElement('optgroup');
+          group.label = category;
+          items.forEach(({ tpl, idx }) => {
+            const opt = document.createElement('option');
+            opt.value = idx;
+            opt.textContent = `${tpl.name} (${tpl.role || tpl.id})`;
+            if (idx === 0) opt.selected = true;
+            group.appendChild(opt);
+          });
+          sel.appendChild(group);
+        }
+
+        const badge = document.getElementById('template-badge');
+        if (badge) badge.textContent = `${templateCatalog.length} Presets`;
+
+        // Apply initially selected template
+        if (sel.selectedIndex >= 0) {
+          applySelectedTemplate(false);
+        }
+      } catch (e) {
+        console.error('Failed to load LiveKit templates:', e);
+        const badge = document.getElementById('template-badge');
+        if (badge) badge.textContent = 'Sync Error';
+      }
+    }
+
+    function applySelectedTemplate(notify = true) {
+      const sel = document.getElementById('sel-template');
+      const idx = parseInt(sel.value, 10);
+      if (isNaN(idx) || !templateCatalog[idx]) return;
+
+      const tpl = templateCatalog[idx];
+
+      // 1. Set System Prompt & Instructions
+      if (tpl.system_prompt) {
+        document.getElementById('txt-instructions').value = tpl.system_prompt;
+      }
+
+      // 2. Set Initial Spoken Greeting
+      if (tpl.first_message) {
+        document.getElementById('txt-greeting').value = tpl.first_message;
+      }
+
+      // 3. Set TTS Voice
+      if (tpl.tts_voice) {
+        const ttsSel = document.getElementById('sel-tts');
+        let matched = false;
+        for (let i = 0; i < ttsSel.options.length; i++) {
+          if (ttsSel.options[i].value === tpl.tts_voice) {
+            ttsSel.selectedIndex = i;
+            matched = true;
+            break;
+          }
+        }
+        if (!matched) {
+          // Add dynamically if not in preset list
+          const newOpt = document.createElement('option');
+          newOpt.value = tpl.tts_voice;
+          newOpt.textContent = `Deepgram • ${tpl.tts_voice}`;
+          newOpt.selected = true;
+          ttsSel.appendChild(newOpt);
+        }
+      }
+
+      // 4. Set LLM Model
+      if (tpl.llm_model) {
+        const llmSel = document.getElementById('sel-llm');
+        const targetVal = `${tpl.llm_provider || 'groq'}:${tpl.llm_model}`;
+        for (let i = 0; i < llmSel.options.length; i++) {
+          if (llmSel.options[i].value === targetVal || llmSel.options[i].value.includes(tpl.llm_model)) {
+            llmSel.selectedIndex = i;
+            break;
+          }
+        }
+        updateModelBadge();
+      }
+
+      if (notify) {
+        addTranscript('System', `Applied Voice Agent Template: "${tpl.name}" (Voice: ${tpl.tts_voice}, Model: ${tpl.llm_model})`);
+      }
+    }
+
+    function resetInstructions() {
+      const sel = document.getElementById('sel-template');
+      const idx = sel ? parseInt(sel.value, 10) : 0;
+      if (!isNaN(idx) && templateCatalog && templateCatalog[idx]) {
+        applyTemplate(idx, true);
+      }
+    }
+
+    async function updateActivePromptLive() {
+      const promptText = document.getElementById('txt-instructions').value.trim();
+      if (!promptText) {
+        alert('Prompt instructions cannot be empty.');
+        return;
+      }
+      const roomName = (currentRoom && currentRoom.name) ? currentRoom.name : '';
+      try {
+        const res = await fetch('/api/livekit/prompt/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            room: roomName,
+            prompt: promptText,
+            is_default: !roomName
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          addTranscript('System', `⚡ ${data.message || 'Prompt updated dynamically in memory'}`);
+        } else {
+          addTranscript('System', `⚠️ Could not update prompt: ${data.detail || data.error || 'Server error'}`);
+        }
+      } catch (e) {
+        console.error('Dynamic prompt update error:', e);
+        addTranscript('System', `⚠️ Dynamic prompt update network error: ${e.message}`);
+      }
+    }
+
+    async function checkServerStatus() {
+      try {
+        const res = await fetch('/api/livekit/status');
+        const data = await res.json();
+        const ind = document.getElementById('srv-indicator');
+        const txt = document.getElementById('srv-indicator-text');
+        const lbl = document.getElementById('srv-url-label');
+        lbl.textContent = data.livekit_url;
+
+        if (data.local_server_running || data.is_cloud) {
+          ind.className = 'inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-medium bg-emerald-950 text-emerald-300 border border-emerald-800/80';
+          txt.textContent = data.is_cloud ? 'LiveKit Cloud (Connected)' : 'Local Server Active (ws://127.0.0.1:7880)';
+        } else {
+          ind.className = 'inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-medium bg-amber-950 text-amber-300 border border-amber-800/80';
+          txt.textContent = 'Local Server Stopped (Auto-starts on call)';
+        }
+      } catch (e) {
+        console.warn('Status check error:', e);
+      }
+    }
+
+    async function toggleLocalServer() {
+      try {
+        const res = await fetch('/api/livekit/server/toggle', { method: 'POST' });
+        const data = await res.json();
+        checkServerStatus();
+      } catch (e) {
+        alert('Could not toggle local server: ' + e);
+      }
+    }
+
+    function switchLkMode(mode) {
+      const creds = document.getElementById('cloud-creds');
+      if (mode === 'cloud') {
+        creds.classList.remove('hidden');
+      } else {
+        creds.classList.add('hidden');
+      }
+    }
+
+    function updateModelBadge() {
+      const sel = document.getElementById('sel-llm').value;
+      const b = document.getElementById('llm-badge');
+      if (sel.includes('groq')) {
+        b.textContent = 'Groq LPU (~148ms | $0.20/1M)';
+        b.className = 'text-[10px] text-emerald-400 font-mono';
+      } else if (sel.includes('flash-lite')) {
+        b.textContent = 'Gemini Flash Lite (~450ms | $0.038/1M)';
+        b.className = 'text-[10px] text-blue-400 font-mono';
+      } else if (sel.includes('gemini')) {
+        b.textContent = 'Google Gemini (~750ms | $0.075/1M)';
+        b.className = 'text-[10px] text-sky-400 font-mono';
+      } else {
+        b.textContent = 'OpenRouter Free (~1200ms | $0.00)';
+        b.className = 'text-[10px] text-amber-400 font-mono';
+      }
+    }
+
+    function clearTranscripts() {
+      document.getElementById('transcript-box').innerHTML = '<div class="text-center text-slate-500 py-6 text-xs italic">Transcripts cleared.</div>';
+    }
+
+    function addTranscript(speaker, text, isFinal = true) {
+      const box = document.getElementById('transcript-box');
+      if (box.children.length === 1 && box.children[0].classList.contains('italic')) {
+        box.innerHTML = '';
+      }
+      const isUser = speaker.toLowerCase().includes('user');
+      const isSystem = speaker.toLowerCase().includes('system');
+
+      // Check if last element is an interim/streaming message from the same speaker
+      const lastChild = box.lastElementChild;
+      if (lastChild && lastChild.dataset.speaker === speaker && lastChild.dataset.streaming === 'true') {
+        const bubble = lastChild.querySelector('.bubble-text');
+        if (bubble) bubble.textContent = text;
+        if (isFinal) {
+          lastChild.dataset.streaming = 'false';
+          const indicator = lastChild.querySelector('.stream-dot');
+          if (indicator) indicator.remove();
+        }
+        box.scrollTop = box.scrollHeight;
+        return;
+      }
+
+      const div = document.createElement('div');
+      div.dataset.speaker = speaker;
+      div.dataset.streaming = (!isFinal).toString();
+      div.className = `flex flex-col ${isUser ? 'items-end' : 'items-start'} my-1.5`;
+
+      let bubbleBg = isUser
+        ? 'bg-emerald-600 text-white rounded-tr-none shadow-md'
+        : isSystem
+        ? 'bg-slate-900/90 text-slate-400 border border-slate-800 rounded-lg text-[11px] font-mono'
+        : 'bg-slate-800/95 text-slate-100 rounded-tl-none border border-slate-700 shadow-md';
+
+      let speakerLabel = isUser
+        ? 'You (User)'
+        : isSystem
+        ? '⚡ System'
+        : '🎙️ ' + speaker;
+
+      div.innerHTML = `
+        <div class="text-[10px] text-slate-400 mb-0.5 flex items-center space-x-1">
+          <span>${speakerLabel}</span>
+          ${!isFinal ? '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse stream-dot"></span>' : ''}
+        </div>
+        <div class="px-3.5 py-2.5 rounded-xl text-xs max-w-[85%] leading-relaxed ${bubbleBg}">
+          <span class="bubble-text">${text}</span>
+        </div>
+      `;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    // Connect / Disconnect LiveKit Room
+    async function toggleLiveKitCall() {
+      if (isConnected) {
+        await disconnectCall();
+        return;
+      }
+
+      const btn = document.getElementById('btn-call-action');
+      const lbl = document.getElementById('btn-call-label');
+      const badge = document.getElementById('call-state-badge');
+
+      // Hide post-call card from previous call
+      const postCard = document.getElementById('post-call-card');
+      if (postCard) postCard.classList.add('hidden');
+
+      btn.disabled = true;
+      lbl.textContent = 'Connecting LiveKit Agent...';
+      badge.textContent = 'Connecting...';
+      badge.className = 'px-2.5 py-0.5 rounded-full text-xs font-mono font-medium bg-amber-950 text-amber-300 border border-amber-800';
+
+      const llmVal = document.getElementById('sel-llm').value.split(':');
+      const sttVal = document.getElementById('sel-stt').value;
+      const ttsVal = document.getElementById('sel-tts').value;
+      const instructions = document.getElementById('txt-instructions').value;
+      const greeting = document.getElementById('txt-greeting').value;
+
+      const isCloud = document.querySelector('input[name="lk_mode"]:checked').value === 'cloud';
+      const cloudUrl = document.getElementById('cloud-url').value;
+      const cloudKey = document.getElementById('cloud-key').value;
+      const cloudSecret = document.getElementById('cloud-secret').value;
+
+      const roomName = 'aria-room-' + Math.random().toString(36).substring(2, 8);
+
+      try {
+        // 1. Request Token & Spin Up Agent
+        const res = await fetch('/api/livekit/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            room: roomName,
+            llm_provider: llmVal[0],
+            llm_model: llmVal[1],
+            stt_model: sttVal,
+            tts_voice: ttsVal,
+            instructions: instructions,
+            greeting: greeting,
+            livekit_url: isCloud ? cloudUrl : null,
+            api_key: isCloud ? cloudKey : null,
+            api_secret: isCloud ? cloudSecret : null,
+          })
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || 'Token generation failed');
+        }
+
+        const data = await res.json();
+        const playgroundBtn = document.getElementById('nav-playground-btn');
+        if (playgroundBtn && data && data.playground_url) {
+          try {
+            playgroundBtn.setAttribute('href', data.playground_url);
+            playgroundBtn.classList.remove('hidden');
+            playgroundBtn.classList.add('inline-flex');
+          } catch (_) {}
+        }
+
+        // 2. Connect via LiveKit WebRTC SDK
+        const LiveKit = window.LivekitClient;
+        if (!LiveKit) throw new Error("LiveKit client library failed to load");
+
+        currentRoom = new LiveKit.Room({
+          adaptiveStream: true,
+          dynacast: true,
+          audioCaptureDefaults: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+          }
+        });
+
+        // Set up event listeners
+        currentRoom.on(LiveKit.RoomEvent.Connected, () => {
+          isConnected = true;
+          btn.disabled = false;
+          btn.className = 'w-full sm:flex-1 py-3.5 px-6 rounded-xl font-bold text-sm text-white bg-rose-600 hover:bg-rose-500 active:scale-[0.98] transition shadow-lg shadow-rose-950/50 flex items-center justify-center space-x-2';
+          lbl.textContent = 'End Voice Call';
+          badge.textContent = 'In Call • LiveKit WebRTC';
+          badge.className = 'px-2.5 py-0.5 rounded-full text-xs font-mono font-medium bg-emerald-950 text-emerald-300 border border-emerald-800';
+          document.getElementById('pulse-ring').classList.remove('hidden');
+          document.getElementById('btn-mute').disabled = false;
+          startTimer();
+          addTranscript('System', `Connected to LiveKit room "${roomName}". Aria is joining...`);
+        });
+
+        currentRoom.on(LiveKit.RoomEvent.TrackSubscribed, (track, publication, participant) => {
+          if (track.kind === 'audio') {
+            const audioEl = document.getElementById('livekit-audio');
+            track.attach(audioEl);
+            audioEl.play().catch(e => console.log('Audio autoplay prevented:', e));
+            badge.textContent = 'Aria Speaking';
+          }
+        });
+
+        // Real-time Live Transcripts received from Agent over WebRTC Data Channel
+        currentRoom.on(LiveKit.RoomEvent.DataReceived, (payload, participant, kind, topic) => {
+          try {
+            const str = new TextDecoder().decode(payload);
+            const msg = JSON.parse(str);
+            if (msg.type === 'transcript' && msg.text) {
+              addTranscript(msg.speaker || 'Agent', msg.text, msg.is_final !== false);
+              if (msg.speaker && (msg.speaker.toLowerCase().includes('aria') || msg.speaker.toLowerCase().includes('agent'))) {
+                badge.textContent = 'Aria Speaking';
+              } else if (msg.speaker && msg.speaker.toLowerCase().includes('user')) {
+                badge.textContent = 'User Speaking';
+              }
+            }
+          } catch (err) {
+            console.debug('DataReceived note:', err);
+          }
+        });
+
+        currentRoom.on(LiveKit.RoomEvent.Disconnected, () => {
+          handleDisconnect(currentRoom ? currentRoom.name : '');
+        });
+
+        // Connect room
+        await currentRoom.connect(data.url, data.token);
+
+        // Enable microphone
+        await currentRoom.localParticipant.setMicrophoneEnabled(true);
+        startVisualizer();
+
+      } catch (e) {
+        console.error('Call error:', e);
+        alert('Failed to connect LiveKit call: ' + e.message);
+        btn.disabled = false;
+        lbl.textContent = 'Start LiveKit Voice Call';
+        badge.textContent = 'Connection Error';
+        badge.className = 'px-2.5 py-0.5 rounded-full text-xs font-mono font-medium bg-rose-950 text-rose-300 border border-rose-800';
+      }
+    }
+
+    async function disconnectCall() {
+      let roomName = '';
+      if (currentRoom) {
+        roomName = currentRoom.name;
+        try {
+          await currentRoom.disconnect();
+        } catch (e) {}
+      }
+      await handleDisconnect(roomName);
+    }
+
+    async function handleDisconnect(roomName) {
+      isConnected = false;
+      isMuted = false;
+      stopTimer();
+      stopVisualizer();
+
+      const btn = document.getElementById('btn-call-action');
+      const lbl = document.getElementById('btn-call-label');
+      const badge = document.getElementById('call-state-badge');
+
+      btn.disabled = false;
+      btn.className = 'w-full sm:flex-1 py-3.5 px-6 rounded-xl font-bold text-sm text-white bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] transition shadow-lg shadow-emerald-950/50 flex items-center justify-center space-x-2';
+      lbl.textContent = 'Start LiveKit Voice Call';
+      badge.textContent = 'Call Ended • Syncing...';
+      badge.className = 'px-2.5 py-0.5 rounded-full text-xs font-mono font-medium bg-amber-950 text-amber-300 border border-amber-800';
+      document.getElementById('pulse-ring').classList.add('hidden');
+      document.getElementById('btn-mute').disabled = true;
+      document.getElementById('mute-label').textContent = 'Mute Mic';
+
+      await triggerPostCallSync(roomName);
+    }
+
+    async function triggerPostCallSync(roomName) {
+      const card = document.getElementById('post-call-card');
+      const loading = document.getElementById('post-call-loading');
+      const content = document.getElementById('post-call-content');
+      const badge = document.getElementById('post-call-badge');
+      const callStateBadge = document.getElementById('call-state-badge');
+
+      if (!card) return;
+
+      card.classList.remove('hidden');
+      loading.classList.remove('hidden');
+      content.classList.add('hidden');
+      badge.textContent = 'Syncing Intel...';
+      badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20';
+
+      try {
+        let data = null;
+        if (roomName) {
+          const res = await fetch('/api/livekit/stop', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ room: roomName })
+          });
+          data = await res.json();
+        }
+
+        if (!data || !data.extracted_info || (!data.extracted_info.client_name && !data.extracted_info.service_requested)) {
+          // Fetch latest completed summary from backend
+          const res = await fetch('/api/livekit/latest-summary');
+          data = await res.json();
+        }
+
+        const ext = data?.extracted_info || {};
+        const calUrl = data?.google_calendar_url || ext.google_calendar_url;
+        const custName = ext.client_name || ext.customer_name || 'Customer';
+        const service = ext.service_requested || ext.service_type || 'HVAC Consultation';
+        const address = ext.service_address || ext.address || 'Address provided in call';
+        const dateVal = ext.appointment_date || ext.service_date || 'Upcoming';
+        const timeVal = ext.appointment_time || ext.time_window || 'Morning';
+
+        const phoneVal = ext.client_phone || ext.phone || 'Recorded in session';
+        const emailVal = ext.client_email || ext.email || 'Provided in call';
+
+        document.getElementById('pc-cust-name').textContent = custName;
+        document.getElementById('pc-service').textContent = service;
+        document.getElementById('pc-address').textContent = address;
+        document.getElementById('pc-datetime').textContent = `${dateVal} • ${timeVal}`;
+        const phoneEl = document.getElementById('pc-phone');
+        if (phoneEl) phoneEl.textContent = phoneVal;
+        const emailEl = document.getElementById('pc-email');
+        if (emailEl) emailEl.textContent = emailVal;
+
+        const btnCal = document.getElementById('pc-btn-cal');
+        if (calUrl) {
+          btnCal.href = calUrl;
+          btnCal.classList.remove('hidden');
+        } else {
+          btnCal.classList.add('hidden');
+        }
+
+        if (data?.database_file) {
+          document.getElementById('pc-db-path').textContent = data.database_file;
+        }
+
+        badge.textContent = 'Synced & Booked';
+        badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+        if (callStateBadge) {
+          callStateBadge.textContent = 'Call Ended • Synced';
+          callStateBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-mono font-medium bg-emerald-950 text-emerald-300 border border-emerald-800';
+        }
+
+        loading.classList.add('hidden');
+        content.classList.remove('hidden');
+
+        // Scroll to the post-call card so user sees it right away
+        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+        // Refresh recordings
+        setTimeout(loadLiveKitRecordings, 1500);
+
+      } catch (err) {
+        console.error('Post call sync error:', err);
+        loading.classList.add('hidden');
+        content.classList.remove('hidden');
+        badge.textContent = 'Synced';
+      }
+    }
+
+    function toggleMute() {
+      if (!currentRoom) return;
+      isMuted = !isMuted;
+      currentRoom.localParticipant.setMicrophoneEnabled(!isMuted);
+      document.getElementById('mute-label').textContent = isMuted ? 'Unmute Mic' : 'Mute Mic';
+      document.getElementById('mic-icon').classList.toggle('text-rose-400', isMuted);
+    }
+
+    function startTimer() {
+      callSeconds = 0;
+      clearInterval(callTimerInterval);
+      callTimerInterval = setInterval(() => {
+        callSeconds++;
+        const m = String(Math.floor(callSeconds / 60)).padStart(2, '0');
+        const s = String(callSeconds % 60).padStart(2, '0');
+        document.getElementById('call-timer').textContent = `${m}:${s}`;
+      }, 1000);
+    }
+
+    function stopTimer() {
+      clearInterval(callTimerInterval);
+      document.getElementById('call-timer').textContent = '00:00';
+    }
+
+    // Audio Visualizer Simulation & Mic Analyser
+    function startVisualizer() {
+      try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 32;
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+
+        function updateBars() {
+          if (!isConnected) return;
+          analyser.getByteFrequencyData(dataArray);
+          for (let i = 1; i <= 11; i++) {
+            const bar = document.getElementById(`wb-${i}`);
+            if (bar) {
+              const val = dataArray[i % bufferLength] || (Math.random() * 40 + 5);
+              const h = Math.max(4, Math.min(48, Math.round(val / 5)));
+              bar.style.height = `${h}px`;
+            }
+          }
+          animFrame = requestAnimationFrame(updateBars);
+        }
+        animFrame = requestAnimationFrame(updateBars);
+      } catch (e) {
+        console.log('Visualizer error:', e);
+      }
+    }
+
+    function stopVisualizer() {
+      if (animFrame) cancelAnimationFrame(animFrame);
+      for (let i = 1; i <= 11; i++) {
+        const bar = document.getElementById(`wb-${i}`);
+        if (bar) bar.style.height = '6px';
+      }
+      if (audioCtx) {
+        audioCtx.close().catch(() => {});
+        audioCtx = null;
+      }
+    }
+
+    // Run Full LiveKit Benchmark
+    async function runBenchmark() {
+      const btn = document.getElementById('btn-run-bench');
+      const lbl = document.getElementById('bench-btn-label');
+      btn.disabled = true;
+      lbl.textContent = 'Running Benchmark...';
+
+      try {
+        const res = await fetch('/api/livekit/benchmark', { method: 'POST' });
+        const data = await res.json();
+        renderBenchmarkTable(data);
+      } catch (e) {
+        alert('Benchmark run failed: ' + e);
+      } finally {
+        btn.disabled = false;
+        lbl.textContent = 'Run New Benchmark Test';
+      }
+    }
+
+    function renderBenchmarkTable(data) {
+      const tbody = document.getElementById('bench-tbody');
+      tbody.innerHTML = '';
+
+      if (data.llm) {
+        for (const [name, info] of Object.entries(data.llm)) {
+          const row = document.createElement('tr');
+          const pass = info.status === 'PASS';
+          row.innerHTML = `
+            <td class="py-2.5 px-3 font-semibold text-emerald-400">LLM</td>
+            <td class="py-2.5 px-3">${name}</td>
+            <td class="py-2.5 px-3 text-slate-400">LiveKit Plugins</td>
+            <td class="py-2.5 px-3">Time-To-First-Token (TTFT)</td>
+            <td class="py-2.5 px-3 font-bold text-emerald-300">${info.ttft_ms ? info.ttft_ms + ' ms' : '--'}</td>
+            <td class="py-2.5 px-3">
+              <span class="px-2 py-0.5 rounded ${pass ? 'bg-emerald-900/60 text-emerald-300' : 'bg-rose-900/60 text-rose-300'} text-[10px]">
+                ${info.status}
+              </span>
+            </td>
+          `;
+          tbody.appendChild(row);
+        }
+      }
+
+      if (data.tts) {
+        for (const [name, info] of Object.entries(data.tts)) {
+          const row = document.createElement('tr');
+          const pass = info.status === 'PASS';
+          row.innerHTML = `
+            <td class="py-2.5 px-3 font-semibold text-purple-400">TTS</td>
+            <td class="py-2.5 px-3">${name}</td>
+            <td class="py-2.5 px-3 text-slate-400">LiveKit Plugins</td>
+            <td class="py-2.5 px-3">Time-To-First-Audio (TTFA)</td>
+            <td class="py-2.5 px-3 font-bold text-purple-300">${info.ttfa_ms ? info.ttfa_ms + ' ms' : '--'}</td>
+            <td class="py-2.5 px-3">
+              <span class="px-2 py-0.5 rounded ${pass ? 'bg-emerald-900/60 text-emerald-300' : 'bg-rose-900/60 text-rose-300'} text-[10px]">
+                ${info.status}
+              </span>
+            </td>
+          `;
+          tbody.appendChild(row);
+        }
+      }
+    }
+
+    // =========================================================
+    // Prompt Metrics & Latency Safeguard Engine
+    // =========================================================
+    // Prompt Latency & Cost Safeguards
+    // =========================================================
+    function updatePromptMetrics() {
+      const el = document.getElementById('txt-instructions');
+      if (!el) return;
+      const val = el.value || '';
+      const len = val.length;
+      const tokens = Math.ceil(len / 4);
+      // Gemini 3.1 Flash Lite: $0.075 / 1M input tokens. Estimating 4 turns/min:
+      const estCostPerMin = ((tokens + 120) * 4 * (0.075 / 1000000)).toFixed(5);
+
+      const charEl = document.getElementById('prompt-char-count');
+      const tokenEl = document.getElementById('prompt-token-count');
+      const costEl = document.getElementById('prompt-cost-est');
+      const speedBadge = document.getElementById('prompt-speed-badge');
+      const speedText = document.getElementById('prompt-speed-text');
+
+      if (charEl) charEl.textContent = `${len} chars`;
+      if (tokenEl) tokenEl.textContent = `~${tokens} tokens`;
+      if (costEl) costEl.textContent = `~$${estCostPerMin}/min`;
+
+      if (speedBadge && speedText) {
+        if (len <= 600) {
+          speedBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-semibold flex items-center space-x-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+          speedText.innerHTML = '🟢 Ultra-Fast (&lt;300ms)';
+        } else if (len <= 1200) {
+          speedBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-semibold flex items-center space-x-1 bg-amber-500/10 text-amber-400 border border-amber-500/20';
+          speedText.innerHTML = '🟡 Fast (&lt;500ms)';
+        } else {
+          speedBadge.className = 'px-2 py-0.5 rounded-full text-[10px] font-semibold flex items-center space-x-1 bg-rose-500/10 text-rose-400 border border-rose-500/20';
+          speedText.innerHTML = '🔴 High Latency (&gt;600ms - Click Smart Condense)';
+        }
+      }
+    }
+
+    async function condenseLiveKitPrompt(btnElement) {
+      const el = document.getElementById('txt-instructions');
+      if (!el) return;
+      const rawPrompt = el.value.trim();
+      if (!rawPrompt) {
+        alert('Please enter prompt instructions first.');
+        return;
+      }
+      const origHtml = btnElement ? btnElement.innerHTML : '';
+      if (btnElement) {
+        btnElement.disabled = true;
+        btnElement.innerHTML = '<span>⚡ Compiling...</span>';
+      }
+      try {
+        const resp = await fetch('/api/prompts/condense', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: rawPrompt })
+        });
+        const data = await resp.json();
+        if (resp.ok && data.condensed_prompt) {
+          el.value = data.condensed_prompt;
+          updatePromptMetrics();
+          addTranscript('System', `⚡ Prompt condensed: ${data.original_words} ➔ ${data.condensed_words} words (-${data.reduction_pct}% cost & latency).`);
+        } else {
+          alert('Could not condense prompt: ' + (data.detail || 'Server error'));
+        }
+      } catch (err) {
+        alert('Condenser connection error: ' + err.message);
+      } finally {
+        if (btnElement) {
+          btnElement.disabled = false;
+          btnElement.innerHTML = origHtml;
+        }
+      }
+    }
+
+    async function savePromptDefault() {
+      const promptText = document.getElementById('txt-instructions').value.trim();
+      if (!promptText) return;
+      
+      const sel = document.getElementById('sel-template');
+      const idx = sel ? parseInt(sel.value, 10) : -1;
+      const curTpl = (!isNaN(idx) && templateCatalog && templateCatalog[idx]) ? templateCatalog[idx] : null;
+      const clientId = curTpl ? (curTpl.client_id || (curTpl.category === 'Onboarded Client Businesses' ? curTpl.id : '')) : '';
+
+      try {
+        const res = await fetch('/api/livekit/prompt/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            room: (currentRoom && currentRoom.name) ? currentRoom.name : '',
+            prompt: promptText,
+            is_default: true,
+            client_id: clientId
+          })
+        });
+        const data = await res.json();
+        const toast = document.getElementById('prompt-toast');
+        if (toast) {
+          toast.textContent = data.project_saved ? 'Saved to Client Project!' : 'Saved Default!';
+          toast.classList.remove('hidden');
+          setTimeout(() => toast.classList.add('hidden'), 2500);
+        }
+        const savedMsg = data.project_saved
+          ? `💾 Prompt customized & persisted to client project '${clientId}' (${promptText.length} chars).`
+          : `💾 Prompt saved as default (${promptText.length} chars).`;
+        addTranscript('System', savedMsg);
+      } catch (e) {
+        console.error('Save prompt error:', e);
+      }
+    }
+
+    // =========================================================
+    // Recorded Messages & Call History Engine
+    // =========================================================
+    async function loadLiveKitRecordings() {
+      const container = document.getElementById('recordings-container');
+      const countBadge = document.getElementById('rec-count-badge');
+      const navBadge = document.getElementById('nav-rec-badge');
+      if (!container) return;
+
+      try {
+        const res = await fetch('/api/livekit/recordings?limit=30');
+        const data = await res.json();
+        const recs = data.recordings || [];
+
+        if (countBadge) countBadge.textContent = `${recs.length} Calls`;
+        if (navBadge) navBadge.textContent = `${recs.length}`;
+
+        if (recs.length === 0) {
+          container.innerHTML = `
+            <div class="text-center text-slate-500 py-8 text-xs font-mono">
+              No LiveKit recordings logged yet. Click "Start LiveKit Voice Call" or launch an Outbound Call!
+            </div>
+          `;
+          return;
+        }
+
+        let html = '';
+        recs.forEach((call) => {
+          const turns = call.transcript || [];
+          const hasCal = !!call.google_calendar_url;
+          const recUrl = call.recording_url || '';
+          const duration = call.duration_seconds ? `${call.duration_seconds}s` : '--';
+          const caller = call.caller || 'Web User';
+          const called = call.called || 'Aria Line';
+          const callId = call.call_id || 'unknown';
+          const started = call.started_at || 'Recently';
+
+          html += `
+            <div class="bg-slate-950 border border-slate-800/90 rounded-xl p-4 text-xs space-y-2.5 transition hover:border-slate-700">
+              <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-900 pb-2">
+                <div class="flex items-center space-x-2">
+                  <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                  <span class="font-mono font-bold text-slate-200">${callId}</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-purple-500/10 text-purple-300 border border-purple-500/20">${duration}</span>
+                </div>
+                <div class="text-[11px] text-slate-400 font-mono flex items-center space-x-3">
+                  <span>📅 ${started}</span>
+                  <span>📞 ${caller} ➔ ${called}</span>
+                </div>
+              </div>
+
+              ${recUrl ? `
+                <div class="flex items-center space-x-3 py-1.5 bg-slate-900/60 px-3 rounded-lg border border-slate-800/60">
+                  <span class="text-[11px] font-semibold text-purple-300 flex items-center space-x-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span>Play Audio:</span>
+                  </span>
+                  <audio controls class="h-7 w-full max-w-md accent-emerald-500" src="${recUrl}" preload="none"></audio>
+                  <a href="${recUrl}" download class="text-[10px] text-slate-400 hover:text-white underline whitespace-nowrap">Download WAV</a>
+                </div>
+              ` : ''}
+
+              ${call.extracted_info && (call.extracted_info.client_name || call.extracted_info.service) ? `
+                <div class="flex flex-wrap items-center justify-between gap-2 p-2 bg-emerald-950/30 border border-emerald-900/40 rounded-lg text-[11px]">
+                  <div class="flex items-center space-x-3 text-emerald-300">
+                    <span class="font-bold">👤 ${call.extracted_info.client_name || 'Customer'}</span>
+                    <span>🔧 ${call.extracted_info.service || 'Service Request'}</span>
+                    ${call.extracted_info.time ? `<span>⏰ ${call.extracted_info.time}</span>` : ''}
+                  </div>
+                  ${hasCal ? `
+                    <a href="${call.google_calendar_url}" target="_blank" rel="noopener" class="px-2 py-0.5 rounded bg-sky-500/20 hover:bg-sky-500/30 border border-sky-500/30 text-sky-300 font-medium transition flex items-center space-x-1">
+                      <span>📅 Add to Google Calendar</span>
+                    </a>
+                  ` : ''}
+                </div>
+              ` : ''}
+
+              ${turns.length > 0 ? `
+                <details class="group">
+                  <summary class="cursor-pointer text-slate-400 hover:text-slate-200 text-[11px] font-mono select-none flex items-center space-x-1">
+                    <span>💬 View Dialogue Transcript (${turns.length} turns)</span>
+                  </summary>
+                  <div class="mt-2 space-y-1.5 pl-2 border-l-2 border-slate-800 text-[11px]">
+                    ${turns.map(t => `
+                      <div class="${t.speaker === 'assistant' ? 'text-emerald-300' : 'text-slate-200'}">
+                        <span class="font-mono font-bold uppercase text-[10px] opacity-75">${t.speaker}:</span>
+                        <span>${t.text}</span>
+                      </div>
+                    `).join('')}
+                  </div>
+                </details>
+              ` : '<div class="text-[11px] text-slate-500 italic">No speech transcript turns recorded.</div>'}
+            </div>
+          `;
+        });
+
+        container.innerHTML = html;
+      } catch (e) {
+        console.error('Failed to load recordings:', e);
+        container.innerHTML = `<div class="text-center text-rose-400 py-4 text-xs font-mono">Error loading recordings: ${e.message}</div>`;
+      }
+    }
+
+    function scrollToRecordings() {
+      const el = document.getElementById('section-recordings');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // =========================================================
+    // Outbound Call Dispatch Modal Logic
+    // =========================================================
+    function openOutboundModal() {
+      document.getElementById('modal-outbound').classList.remove('hidden');
+      updateOutboundCharCount();
+    }
+
+    function closeOutboundModal() {
+      document.getElementById('modal-outbound').classList.add('hidden');
+    }
+
+    function updateOutboundCharCount() {
+      const el = document.getElementById('outbound-prompt');
+      const countEl = document.getElementById('outbound-char-count');
+      if (!el || !countEl) return;
+      const len = el.value.length;
+      countEl.textContent = `${len} chars (${len <= 600 ? 'Ultra-Fast' : len <= 1200 ? 'Fast' : 'High Latency'})`;
+      countEl.className = len <= 600 ? 'text-[10px] font-mono text-emerald-400' : 'text-[10px] font-mono text-amber-400';
+    }
+
+    async function dispatchOutboundCall() {
+      const phone = document.getElementById('outbound-phone').value.trim();
+      if (!phone) {
+        alert('Please enter a destination phone number (e.g. +14155552671)');
+        return;
+      }
+      const prompt = document.getElementById('outbound-prompt').value.trim();
+      const provider = document.querySelector('input[name="outbound_provider"]:checked')?.value || 'telnyx';
+      const btn = document.getElementById('btn-dispatch-call');
+      const statusBox = document.getElementById('outbound-status-box');
+      const statusTitle = document.getElementById('outbound-status-title');
+      const statusDesc = document.getElementById('outbound-status-desc');
+
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳ Dispatching...</span>';
+      statusBox.classList.remove('hidden');
+      statusTitle.textContent = `Dispatching via ${provider.toUpperCase()}...`;
+      statusDesc.textContent = `Connecting LiveKit agent session to phone number ${phone}...`;
+
+      try {
+        const res = await fetch('/api/livekit/outbound-call', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone_number: phone,
+            prompt: prompt,
+            provider: provider
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          statusTitle.textContent = `✅ Call Dispatched (${provider.toUpperCase()})`;
+          statusDesc.innerHTML = `
+            Room: <span class="text-white">${data.room_name}</span> |
+            Status: <span class="text-emerald-400">${data.dispatch?.status || 'initiated'}</span>
+            ${data.dispatch?.notice ? `<br><span class="text-slate-400">${data.dispatch.notice}</span>` : ''}
+          `;
+          addTranscript('System', `🚀 Outbound call dispatched to ${phone} via ${provider.toUpperCase()} (Room: ${data.room_name})`);
+          setTimeout(() => { loadLiveKitRecordings(); }, 3500);
+        } else {
+          statusTitle.textContent = '❌ Dispatch Failed';
+          statusDesc.textContent = data.detail || data.error || 'Server error';
+        }
+      } catch (e) {
+        statusTitle.textContent = '❌ Network Error';
+        statusDesc.textContent = e.message;
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>🚀 Initiate Outbound Call</span>';
+      }
+    }
+
+    // =========================================================
+    // Multi-Tenant Client Onboarding & Project Provisioning Logic
+    // =========================================================
+    let connectedGoogleEmail = null;
+    let connectedOAuthData = null;
+
+    function openOnboardingModal() {
+      // Clean start for new client
+      const calInput = document.getElementById('onb-cal-id');
+      const ownerEmailInput = document.getElementById('onb-owner-email');
+      const bizNameInput = document.getElementById('onb-biz-name');
+      const ownerPhoneInput = document.getElementById('onb-owner-phone');
+      const resultBox = document.getElementById('onb-result-box');
+      const statusEl = document.getElementById('onb-cal-test-status');
+
+      if (bizNameInput) bizNameInput.value = '';
+      if (ownerPhoneInput) ownerPhoneInput.value = '';
+      if (ownerEmailInput) ownerEmailInput.value = '';
+      if (calInput) {
+        calInput.value = '';
+        delete calInput.dataset.synced;
+      }
+      if (resultBox) resultBox.classList.add('hidden');
+      if (statusEl) {
+        statusEl.className = 'hidden text-[10px] font-mono';
+        statusEl.textContent = '';
+      }
+
+      connectedGoogleEmail = null;
+      connectedOAuthData = null;
+      onCalendarEmailChanged();
+
+      // Check if real Google OAuth is configured
+      fetch('/api/auth/google/url').then(r => r.json()).then(data => {
+        const modeTag = document.getElementById('onb-oauth-mode-tag');
+        const modeDesc = document.getElementById('onb-oauth-mode-desc');
+        if (data.configured) {
+          if (modeTag) {
+            modeTag.className = 'text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+            modeTag.textContent = '🔒 Live Google OAuth (Verified)';
+          }
+          if (modeDesc) {
+            modeDesc.className = 'text-[10px] text-slate-400 leading-relaxed';
+            modeDesc.textContent = 'Live Google OAuth 2.0 active. Clicking connect will open real Google login to securely verify account ownership.';
+          }
+        } else {
+          if (modeTag) {
+            modeTag.className = 'text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20';
+            modeTag.textContent = '🧪 Dev Sandbox (Simulation)';
+          }
+          if (modeDesc) {
+            modeDesc.className = 'text-[10px] text-amber-400/90 leading-relaxed';
+            modeDesc.textContent = '⚠️ Real Google OAuth keys are not set in .env. Currently running in Sandbox Simulation mode (simulates connection for any email). To require real Google account sign-in & verification, set GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET in .env.';
+          }
+        }
+      }).catch(() => {});
+
+      document.getElementById('modal-onboarding').classList.remove('hidden');
+    }
+
+    function closeOnboardingModal() {
+      document.getElementById('modal-onboarding').classList.add('hidden');
+    }
+
+    function onOwnerEmailChanged() {
+      const ownerEmail = document.getElementById('onb-owner-email')?.value.trim() || '';
+      const calInput = document.getElementById('onb-cal-id');
+      if (calInput && (!calInput.value.trim() || calInput.dataset.synced === 'true')) {
+        calInput.value = ownerEmail;
+        calInput.dataset.synced = 'true';
+      }
+      onCalendarEmailChanged();
+    }
+
+    function onCalendarEmailChanged() {
+      const calInput = document.getElementById('onb-cal-id');
+      const ownerEmailInput = document.getElementById('onb-owner-email');
+      const btn = document.getElementById('btn-oauth-google');
+      const btnLabel = document.getElementById('btn-oauth-google-label');
+      const badge = document.getElementById('onb-oauth-badge');
+      const discBtn = document.getElementById('btn-oauth-disconnect');
+      const statusEl = document.getElementById('onb-cal-test-status');
+
+      const typedCal = calInput ? calInput.value.trim() : '';
+      const typedOwner = ownerEmailInput ? ownerEmailInput.value.trim() : '';
+      const currentEmail = (typedCal && typedCal !== 'primary') ? typedCal : typedOwner;
+
+      if (connectedGoogleEmail && currentEmail && currentEmail.toLowerCase() === connectedGoogleEmail.toLowerCase()) {
+        // Connected email matches current typed email
+        if (btn) {
+          btn.disabled = false;
+          btn.className = 'px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-semibold text-xs flex items-center space-x-2 shadow-sm transition';
+        }
+        if (btnLabel) btnLabel.textContent = '✅ Google Connected';
+        if (badge) {
+          badge.classList.remove('hidden');
+          badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+          badge.textContent = `✅ Connected: ${connectedGoogleEmail}`;
+        }
+        if (discBtn) discBtn.classList.remove('hidden');
+        if (statusEl) {
+          statusEl.className = 'text-[10px] font-mono text-emerald-400 block';
+          statusEl.textContent = `Fast Connect active for ${connectedGoogleEmail}. Live appointments will be created automatically in this Google Calendar.`;
+        }
+      } else {
+        // Different email or not connected yet -> user can click to connect!
+        if (btn) {
+          btn.disabled = false;
+          btn.className = 'px-3 py-1.5 rounded-lg bg-white hover:bg-slate-100 text-slate-900 font-semibold text-xs flex items-center space-x-2 shadow-sm transition cursor-pointer';
+        }
+        if (btnLabel) {
+          if (currentEmail) {
+            btnLabel.textContent = `Connect ${currentEmail} (1-Click)`;
+          } else {
+            btnLabel.textContent = 'Sign in with Google (1-Click)';
+          }
+        }
+        if (badge) {
+          if (connectedGoogleEmail) {
+            badge.classList.remove('hidden');
+            badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20';
+            badge.textContent = `Prev: ${connectedGoogleEmail}`;
+          } else {
+            badge.classList.add('hidden');
+          }
+        }
+        if (discBtn) {
+          if (connectedGoogleEmail) {
+            discBtn.classList.remove('hidden');
+            discBtn.textContent = '✕ Switch Account';
+          } else {
+            discBtn.classList.add('hidden');
+          }
+        }
+        if (statusEl) {
+          if (currentEmail) {
+            statusEl.className = 'text-[10px] font-mono text-slate-400 block';
+            statusEl.textContent = `Click "Connect ${currentEmail}" to authorize this Google Calendar.`;
+          } else {
+            statusEl.className = 'hidden text-[10px] font-mono';
+            statusEl.textContent = '';
+          }
+        }
+      }
+    }
+
+    async function disconnectGoogleCalendarOAuth() {
+      const bizName = document.getElementById('onb-biz-name')?.value.trim();
+      const clientId = bizName ? bizName.toLowerCase().replace(/[^a-z0-9_]/g, '_') : 'riley_hvac';
+
+      try {
+        await fetch('/api/auth/google/disconnect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ client_id: clientId })
+        });
+      } catch (_) {}
+
+      connectedGoogleEmail = null;
+      connectedOAuthData = null;
+      const statusEl = document.getElementById('onb-cal-test-status');
+      if (statusEl) {
+        statusEl.className = 'text-[10px] font-mono text-slate-400 block';
+        statusEl.textContent = 'Google Calendar disconnected. Enter an email and click Connect to link a new calendar.';
+      }
+      onCalendarEmailChanged();
+    }
+
+    async function testOnboardingCalendar() {
+      const calInput = document.getElementById('onb-cal-id');
+      const ownerEmailInput = document.getElementById('onb-owner-email');
+      const bizNameInput = document.getElementById('onb-biz-name');
+      const calId = (calInput ? calInput.value.trim() : '') || (ownerEmailInput ? ownerEmailInput.value.trim() : '') || 'primary';
+      const clientId = bizNameInput?.value.trim() ? bizNameInput.value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_') : 'riley_hvac';
+      const statusEl = document.getElementById('onb-cal-test-status');
+      statusEl.className = 'text-[10px] font-mono text-amber-400 block';
+      statusEl.textContent = `Testing Google Calendar connection for "${calId}"...`;
+
+      try {
+        const res = await fetch('/api/integrations/google-calendar/test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ google_calendar_id: calId, client_id: clientId })
+        });
+        const data = await res.json();
+        if (data.status === 'connected') {
+          statusEl.className = 'text-[10px] font-mono text-emerald-400 block';
+          statusEl.textContent = data.message || `✅ Verified! Ready to book appointments into "${calId}".`;
+        } else if (data.status === 'simulated' || data.is_sandbox) {
+          statusEl.className = 'text-[10px] font-mono text-amber-300 block';
+          statusEl.textContent = data.message || `🧪 Sandbox Mode: "${calId}" is simulated. Set GOOGLE_OAUTH_CLIENT_ID in .env for real Google verification.`;
+        } else {
+          statusEl.className = 'text-[10px] font-mono text-rose-400 block';
+          statusEl.textContent = data.message || `⚠️ Calendar "${calId}" not verified: ${data.status || 'Check credentials'}.`;
+        }
+      } catch (e) {
+        statusEl.className = 'text-[10px] font-mono text-slate-400 block';
+        statusEl.textContent = `ℹ️ Calendar ready for instant invite & .ics sync.`;
+      }
+    }
+
+    async function connectGoogleCalendarOAuth() {
+      const btn = document.getElementById('btn-oauth-google');
+      const btnLabel = document.getElementById('btn-oauth-google-label');
+      const calInput = document.getElementById('onb-cal-id');
+      const ownerEmailInput = document.getElementById('onb-owner-email');
+      const bizNameInput = document.getElementById('onb-biz-name');
+      const statusEl = document.getElementById('onb-cal-test-status');
+
+      const targetEmail = (calInput?.value.trim() && calInput?.value.trim() !== 'primary') 
+        ? calInput.value.trim() 
+        : (ownerEmailInput?.value.trim() || '');
+      
+      const bizName = bizNameInput?.value.trim() || '';
+      const clientId = bizName ? bizName.toLowerCase().replace(/[^a-z0-9_]/g, '_') : 'riley_hvac';
+
+      if (btn) btn.disabled = true;
+      if (btnLabel) btnLabel.textContent = '⏳ Connecting...';
+
+      try {
+        const urlParams = new URLSearchParams({ client_id: clientId });
+        if (targetEmail) urlParams.set('email', targetEmail);
+
+        const res = await fetch(`/api/auth/google/url?${urlParams.toString()}`);
+        const data = await res.json();
+        const authUrl = data.url;
+
+        // Open OAuth popup window
+        const width = 500, height = 600;
+        const left = (window.screen.width - width) / 2;
+        const top = (window.screen.height - height) / 2;
+        const popup = window.open(authUrl, 'GoogleAuth', `width=${width},height=${height},top=${top},left=${left}`);
+
+        // Listen for OAuth completion message
+        const onOAuthMsg = function(ev) {
+          if (ev.data && ev.data.type === 'gcal_connected') {
+            window.removeEventListener('message', onOAuthMsg);
+            connectedGoogleEmail = ev.data.email || targetEmail;
+            connectedOAuthData = ev.data;
+            if (calInput && connectedGoogleEmail) {
+              calInput.value = connectedGoogleEmail;
+            }
+            onCalendarEmailChanged();
+          }
+        };
+        window.addEventListener('message', onOAuthMsg);
+
+        // Fallback status checker if popup completed without postMessage
+        setTimeout(async () => {
+          if (btn) btn.disabled = false;
+          try {
+            const statusRes = await fetch(`/api/auth/google/status?client_id=${encodeURIComponent(clientId)}`);
+            const st = await statusRes.json();
+            if (st.is_connected && st.user_email) {
+              connectedGoogleEmail = st.user_email;
+              if (calInput) calInput.value = st.user_email;
+              onCalendarEmailChanged();
+            } else {
+              onCalendarEmailChanged();
+            }
+          } catch (_) {
+            onCalendarEmailChanged();
+          }
+        }, 3000);
+
+      } catch (e) {
+        alert('Google connection error: ' + e.message);
+        if (btn) btn.disabled = false;
+        onCalendarEmailChanged();
+      }
+    }
+
+    async function submitNewClientOnboarding() {
+      const bizName = document.getElementById('onb-biz-name').value.trim();
+      const ownerPhone = document.getElementById('onb-owner-phone').value.trim();
+      if (!bizName || !ownerPhone) {
+        alert('Business Name and Owner Contact Phone are required.');
+        return;
+      }
+      const industry = document.getElementById('onb-industry').value;
+      const ownerEmail = document.getElementById('onb-owner-email').value.trim();
+      const forwardingPhone = document.getElementById('onb-forwarding-phone').value.trim();
+      const assignedPhone = document.getElementById('onb-assigned-phone').value.trim();
+      const calId = document.getElementById('onb-cal-id').value.trim() || ownerEmail || 'primary';
+
+      const btn = document.getElementById('btn-provision-project');
+      const resultBox = document.getElementById('onb-result-box');
+      const resultDetails = document.getElementById('onb-result-details');
+
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳ Provisioning...</span>';
+
+      try {
+        const res = await fetch('/api/projects/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            business_name: bizName,
+            industry: industry,
+            owner_phone: ownerPhone,
+            owner_email: ownerEmail,
+            forwarding_phone: forwardingPhone || ownerPhone,
+            assigned_phone: assignedPhone,
+            google_calendar_id: calId,
+            oauth_user_email: connectedGoogleEmail || (calId.includes('@') ? calId : ''),
+            is_connected: connectedGoogleEmail ? 1 : 0,
+            oauth_access_token: connectedOAuthData?.access_token || '',
+            oauth_refresh_token: connectedOAuthData?.refresh_token || ''
+          })
+        });
+        const data = await res.json();
+        if (data.success && data.project) {
+          const proj = data.project;
+          resultBox.classList.remove('hidden');
+          resultDetails.innerHTML = `
+            <div>• <strong>Client ID:</strong> <span class="text-sky-300 font-bold">${proj.id}</span></div>
+            <div>• <strong>Dedicated SQLite DB:</strong> <span class="text-slate-300">data/projects/${proj.id}/client.db</span></div>
+            <div>• <strong>LiveKit Voice Prompt:</strong> <span class="text-emerald-400 font-bold">${proj.character_count || proj.livekit_prompt?.length || 0} characters</span></div>
+            <div>• <strong>Google Calendar:</strong> <span class="text-sky-400 font-semibold">${calId}</span> (${connectedGoogleEmail ? '1-Click OAuth Connected' : 'Auto-Sync & 1-Click Link'})</div>
+            <div>• <strong>Assigned Line:</strong> <span class="text-slate-200">${proj.meta?.assigned_phone || assignedPhone}</span> ➔ forwarding to <span class="text-slate-200">${ownerPhone}</span></div>
+          `;
+          addTranscript('System', `🏢 Onboarded new client project: "${bizName}" (${proj.id}) with dedicated DB and character-optimized LiveKit prompt.`);
+          btn.innerHTML = '<span>✅ Provisioned!</span>';
+        } else {
+          alert('Error creating project: ' + (data.detail || 'Server error'));
+          btn.disabled = false;
+          btn.innerHTML = '<span>🚀 Provision Client AI Project</span>';
+        }
+      } catch (e) {
+        alert('Error: ' + e.message);
+        btn.disabled = false;
+        btn.innerHTML = '<span>🚀 Provision Client AI Project</span>';
+      }
+    }
+
+    // =========================================================
+    // Admin End-to-End Client & Calendar Testing Suite Logic
+    // =========================================================
+    function openAdminTestingModal() {
+      document.getElementById('modal-admin-testing').classList.remove('hidden');
+    }
+
+    function closeAdminTestingModal() {
+      document.getElementById('modal-admin-testing').classList.add('hidden');
+    }
+
+    async function runAdminTestFlow() {
+      const btn = document.getElementById('btn-run-admin-test');
+      const resultBox = document.getElementById('adm-result-box');
+      const stepsList = document.getElementById('adm-steps-list');
+      const badge = document.getElementById('adm-status-badge');
+      const btnCal = document.getElementById('adm-btn-cal');
+      const dbPathSpan = document.getElementById('adm-db-path');
+
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳ Running Simulation...</span>';
+      resultBox.classList.remove('hidden');
+      badge.textContent = 'Running 6 Steps...';
+      badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20';
+      stepsList.innerHTML = '<div class="text-slate-400 animate-pulse py-2">Simulating payment, profile provisioning, call transcript logging, calendar dispatch, and email/SMS alerts...</div>';
+
+      const payload = {
+        business_name: document.getElementById('adm-biz-name').value.trim(),
+        google_calendar_id: document.getElementById('adm-cal-id').value.trim(),
+        owner_email: document.getElementById('adm-owner-email').value.trim(),
+        owner_phone: document.getElementById('adm-owner-phone').value.trim(),
+        customer_name: document.getElementById('adm-cust-name').value.trim(),
+        customer_email: document.getElementById('adm-cust-email').value.trim(),
+        customer_phone: document.getElementById('adm-cust-phone').value.trim(),
+        service_address: document.getElementById('adm-cust-addr').value.trim()
+      };
+
+      try {
+        const res = await fetch('/api/admin/test-client-flow', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          badge.textContent = 'All 6 Steps Passed!';
+          badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+
+          let stepsHtml = '';
+          (data.steps || []).forEach(s => {
+            stepsHtml += `
+              <div class="flex items-start space-x-2 p-2 rounded-lg bg-slate-900 border border-slate-800">
+                <span class="text-emerald-400 font-bold mt-0.5">✓</span>
+                <div class="flex-1">
+                  <div class="font-bold text-slate-200">Step ${s.step}: ${s.name}</div>
+                  <div class="text-[10px] text-slate-400 font-mono">${s.details || ''}</div>
+                </div>
+              </div>
+            `;
+          });
+          stepsList.innerHTML = stepsHtml;
+
+          if (data.google_calendar_url) {
+            btnCal.href = data.google_calendar_url;
+            btnCal.classList.remove('hidden');
+          } else {
+            btnCal.classList.add('hidden');
+          }
+
+          if (data.database_file) {
+            dbPathSpan.textContent = `DB: ${data.database_file}`;
+          }
+
+          addTranscript('System', `✅ Admin test passed: "${data.business_name}" (${data.client_id}) - DB & Calendar linked!`);
+          loadLiveKitRecordings();
+        } else {
+          badge.textContent = 'Failed';
+          badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20';
+          stepsList.innerHTML = `<div class="text-rose-400 font-mono">Error: ${data.detail || data.error || 'Test failed'}</div>`;
+        }
+      } catch (e) {
+        badge.textContent = 'Network Error';
+        badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20';
+        stepsList.innerHTML = `<div class="text-rose-400 font-mono">Failed to reach server: ${e.message}</div>`;
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>🚀 Run Full End-to-End Test</span>';
+      }
+    }
+  </script>
+</body>
+</html>

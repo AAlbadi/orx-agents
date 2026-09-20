@@ -1,0 +1,17 @@
+{
+  "client_id": "cli_w0dm2fd",
+  "project_name": "Melody Jabooda Apartments Project",
+  "business_name": "Melody Jabooda Apartments",
+  "industry": "hvac",
+  "address": "2101 S Grand St, Seattle, WA 98144",
+  "forwarding_phone": "+1 (555) 234-5678",
+  "assigned_phone": "+1 (833) 420-5227",
+  "owner_phone": "+1 (555) 234-5678",
+  "owner_email": "",
+  "timezone": "America/New_York",
+  "status": "active",
+  "trigger_source": "onboarding",
+  "created_at": "2026-09-18 18:13:05",
+  "updated_at": "2026-09-18 18:13:05",
+  "sms_notifications_enabled": 1
+}

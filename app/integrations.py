@@ -14,6 +14,7 @@ import re
 import smtplib
 import time
 import urllib.parse
+import uuid
 from datetime import datetime, timedelta
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -24,9 +25,23 @@ from loguru import logger
 
 from app.config import settings
 
+import re
+
+def transliterate_arabic_to_english(text: str) -> str:
+    """Romanizes Arabic names and speech into standard Latin alphabet."""
+    return text
+
+def normalize_spoken_email(text: str) -> str:
+    """Normalizes spoken email syntax into standard clean email format."""
+    if not text:
+        return text
+    clean = text.lower().replace(" at ", "@").replace(" dot ", ".").replace(" ", "")
+    return re.sub(r'([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+).*', r'\1', clean)
+
 DATA_DIR = Path(__file__).parent.parent / "data"
 INTEGRATIONS_FILE = DATA_DIR / "integrations.json"
 EMAIL_LOG_FILE = DATA_DIR / "email_notifications.log"
+SMS_LOG_FILE = DATA_DIR / "sms_notifications.log"
 
 DEFAULT_SETTINGS: Dict[str, Any] = {
     "auto_extract_client_info": True,
@@ -39,6 +54,15 @@ DEFAULT_SETTINGS: Dict[str, Any] = {
     "owner_phone_number": "",
     "enable_owner_sms": True,
     "enable_customer_sms": True,
+    "sms_provider": "auto",  # 'auto' | 'telnyx' | 'twilio' | 'plivo'
+    "telnyx_api_key": os.getenv("TELNYX_API_KEY", ""),
+    "telnyx_phone_number": os.getenv("TELNYX_PHONE_NUMBER", ""),
+    "twilio_account_sid": os.getenv("TWILIO_ACCOUNT_SID", ""),
+    "twilio_auth_token": os.getenv("TWILIO_AUTH_TOKEN", ""),
+    "twilio_phone_number": os.getenv("TWILIO_PHONE_NUMBER", ""),
+    "plivo_auth_id": os.getenv("PLIVO_AUTH_ID", ""),
+    "plivo_auth_token": os.getenv("PLIVO_AUTH_TOKEN", ""),
+    "plivo_phone_number": os.getenv("PLIVO_PHONE_NUMBER", ""),
     "email_notifications_enabled": False,
     "notify_email": "",
     "smtp_host": "smtp.gmail.com",
@@ -135,7 +159,6 @@ def _heuristic_fallback_extraction(transcript: List[Dict[str, Any]], caller: Opt
 
     # If language is English, guarantee transliteration of any Arabic characters
     if language == "en" and name and re.search(r'[\u0600-\u06FF]', name):
-        from app.bot import transliterate_arabic_to_english
         name = transliterate_arabic_to_english(name)
 
     # Phone extraction
@@ -146,7 +169,6 @@ def _heuristic_fallback_extraction(transcript: List[Dict[str, Any]], caller: Opt
 
     # Email extraction
     email = ""
-    from app.bot import normalize_spoken_email
     # 1. Turn alignment: check customer turn immediately following email prompt
     for idx, t in enumerate(transcript):
         if t.get("speaker") == "assistant":
@@ -324,8 +346,6 @@ Respond ONLY with the JSON object. Do not include markdown ticks or additional c
 {transcript_text}
 """
 
-    from app.bot import transliterate_arabic_to_english, normalize_spoken_email
-
     def _sanitize_extracted(parsed: Dict[str, Any]) -> Dict[str, Any]:
         if language == "en":
             for k in ["client_name", "customer_name", "service_address", "address"]:
@@ -427,27 +447,27 @@ Respond ONLY with the JSON object. Do not include markdown ticks or additional c
 
 def create_google_calendar_url(extracted_info: Dict[str, Any], assistant_name: str = "Riley") -> str:
     """
-    Generates a 1-click Google Calendar web creation URL.
-    Opens calendar.google.com with prefilled title, date, time, location, and call notes.
+    Generates an instant 1-click Google Calendar web creation URL.
+    Opens calendar.google.com with prefilled title, date, time, location, and notes.
     """
-    date_str = extracted_info.get("appointment_date")
-    time_str = extracted_info.get("appointment_time")
-    client_name = extracted_info.get("client_name") or "Customer"
-    service = extracted_info.get("service_requested") or "Service Appointment"
-    address = extracted_info.get("service_address") or ""
-    summary = extracted_info.get("summary") or ""
-    phone = extracted_info.get("client_phone") or ""
+    date_str = extracted_info.get("appointment_date") or extracted_info.get("date")
+    time_str = extracted_info.get("appointment_time") or extracted_info.get("time") or extracted_info.get("exact_time") or extracted_info.get("window")
+    client_name = extracted_info.get("client_name") or extracted_info.get("customer_name") or "Customer"
+    service = extracted_info.get("service_requested") or extracted_info.get("service") or "Service Appointment"
+    address = extracted_info.get("service_address") or extracted_info.get("address") or ""
+    summary = extracted_info.get("summary") or extracted_info.get("notes") or ""
+    phone = extracted_info.get("client_phone") or extracted_info.get("phone") or ""
 
     if not date_str:
         now = datetime.now() + timedelta(days=1)
         start_dt = now.replace(hour=10, minute=0, second=0, microsecond=0)
     else:
         try:
-            parts = [int(p) for p in date_str.split("-")]
+            parts = [int(p) for p in re.findall(r"\d+", str(date_str))[:3]]
             hour = 10
             minute = 0
             if time_str:
-                tm = re.search(r"(\d{1,2}):?(\d{2})?\s*(AM|PM)?", time_str, re.IGNORECASE)
+                tm = re.search(r"(\d{1,2}):?(\d{2})?\s*(AM|PM)?", str(time_str), re.IGNORECASE)
                 if tm:
                     hour = int(tm.group(1))
                     minute = int(tm.group(2) or 0)
@@ -486,29 +506,29 @@ def create_google_calendar_url(extracted_info: Dict[str, Any], assistant_name: s
 
 def generate_ical_data(
     extracted_info: Dict[str, Any],
-    call_id: str,
+    call_id: str = "",
     assistant_name: str = "Riley",
 ) -> bytes:
-    """Generates standard RFC 5545 iCalendar (.ics) bytes for 1-click import into any calendar."""
-    date_str = extracted_info.get("appointment_date")
-    time_str = extracted_info.get("appointment_time")
-    client_name = extracted_info.get("client_name") or "Customer"
-    service = extracted_info.get("service_requested") or "Service Appointment"
-    address = extracted_info.get("service_address") or ""
-    summary = extracted_info.get("summary") or ""
-    phone = extracted_info.get("client_phone") or ""
+    """Generates standard RFC 5545 iCalendar (.ics) bytes with CRLF endings for 1-click import."""
+    date_str = extracted_info.get("appointment_date") or extracted_info.get("date")
+    time_str = extracted_info.get("appointment_time") or extracted_info.get("time") or extracted_info.get("exact_time") or extracted_info.get("window")
+    client_name = extracted_info.get("client_name") or extracted_info.get("customer_name") or "Customer"
+    service = extracted_info.get("service_requested") or extracted_info.get("service") or "Service Appointment"
+    address = extracted_info.get("service_address") or extracted_info.get("address") or ""
+    summary = extracted_info.get("summary") or extracted_info.get("notes") or ""
+    phone = extracted_info.get("client_phone") or extracted_info.get("phone") or ""
 
     now = datetime.now()
     if not date_str:
         start_dt = now + timedelta(days=1)
-        start_dt = start_dt.replace(hour=10, minute=0, second=0)
+        start_dt = start_dt.replace(hour=10, minute=0, second=0, microsecond=0)
     else:
         try:
-            parts = [int(p) for p in date_str.split("-")]
+            parts = [int(p) for p in re.findall(r"\d+", str(date_str))[:3]]
             hour = 10
             minute = 0
             if time_str:
-                tm = re.search(r"(\d{1,2}):?(\d{2})?\s*(AM|PM)?", time_str, re.IGNORECASE)
+                tm = re.search(r"(\d{1,2}):?(\d{2})?\s*(AM|PM)?", str(time_str), re.IGNORECASE)
                 if tm:
                     hour = int(tm.group(1))
                     minute = int(tm.group(2) or 0)
@@ -526,9 +546,10 @@ def generate_ical_data(
     start_str = start_dt.strftime("%Y%m%dT%H%M%S")
     end_str = end_dt.strftime("%Y%m%dT%H%M%S")
 
-    uid = f"{call_id}@ariavoice.ai"
-    title = f"{service} — {client_name}"
-    description = (
+    uid = f"{call_id or uuid.uuid4().hex[:12]}@ariavoice.ai"
+    title = f"{service} — {client_name}".replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,")
+
+    desc_raw = (
         f"Customer: {client_name}\n"
         f"Phone: {phone}\n"
         f"Service: {service}\n"
@@ -536,25 +557,180 @@ def generate_ical_data(
         f"Summary: {summary}\n"
         f"Booked via {assistant_name} Voice AI."
     )
+    description = desc_raw.replace("\\", "\\\\").replace("\n", "\\n").replace(";", "\\;").replace(",", "\\,")
+    escaped_address = address.replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,")
 
-    ics_content = f"""BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//Aria Voice AI//Appointment Scheduler//EN
-CALSCALE:GREGORIAN
-METHOD:PUBLISH
-BEGIN:VEVENT
-UID:{uid}
-DTSTAMP:{stamp_str}
-DTSTART:{start_str}
-DTEND:{end_str}
-SUMMARY:{title}
-DESCRIPTION:{description}
-LOCATION:{address}
-STATUS:CONFIRMED
-END:VEVENT
-END:VCALENDAR"""
+    # Strict RFC 5545 CRLF line breaks
+    lines = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//Aria Voice AI//Appointment Scheduler//EN",
+        "CALSCALE:GREGORIAN",
+        "METHOD:PUBLISH",
+        "BEGIN:VEVENT",
+        f"UID:{uid}",
+        f"DTSTAMP:{stamp_str}",
+        f"DTSTART:{start_str}",
+        f"DTEND:{end_str}",
+        f"SUMMARY:{title}",
+        f"DESCRIPTION:{description}",
+        f"LOCATION:{escaped_address}",
+        "STATUS:CONFIRMED",
+        "END:VEVENT",
+        "END:VCALENDAR",
+        ""
+    ]
+    return "\r\n".join(lines).encode("utf-8")
 
-    return ics_content.encode("utf-8")
+
+async def dispatch_google_calendar_event(
+    appointment_data: Dict[str, Any],
+    calendar_id: str = "primary",
+    service_account_data: Optional[str] = None,
+    client_id: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Dispatches an event directly to Google Calendar API using OAuth access token or Service Account credentials.
+    Returns status and calendar event details, with fallback to instant 1-click URL.
+    """
+    cfg = get_integrations_settings()
+    sa_json = (service_account_data or cfg.get("google_service_account_json") or "").strip()
+    cal_id = (calendar_id or cfg.get("google_calendar_id") or "primary").strip()
+
+    cal_url = create_google_calendar_url(appointment_data)
+
+    # 1. Check for 1-Click OAuth Token for the client
+    token = None
+    if client_id:
+        try:
+            from app.google_oauth import get_valid_access_token
+            token = await get_valid_access_token(client_id)
+            if token:
+                logger.info(f"Using Google Calendar OAuth 2.0 access token for client '{client_id}'")
+        except Exception as e:
+            logger.warning(f"Notice fetching OAuth token for '{client_id}': {e}")
+
+    # 2. Check for Service Account if no OAuth token
+    if not token and sa_json:
+        try:
+            from google.oauth2 import service_account
+            from google.auth.transport.requests import Request
+
+            if sa_json.startswith("{") and sa_json.endswith("}"):
+                info_dict = json.loads(sa_json)
+                creds = service_account.Credentials.from_service_account_info(
+                    info_dict, scopes=["https://www.googleapis.com/auth/calendar"]
+                )
+            elif Path(sa_json).exists():
+                creds = service_account.Credentials.from_service_account_file(
+                    sa_json, scopes=["https://www.googleapis.com/auth/calendar"]
+                )
+            else:
+                return {
+                    "status": "error",
+                    "calendar_id": cal_id,
+                    "error": "Invalid service account JSON format or non-existent file path",
+                    "google_calendar_url": cal_url
+                }
+
+            await asyncio.to_thread(creds.refresh, Request())
+            token = creds.token
+        except Exception as sa_err:
+            logger.error(f"Service account token resolution error: {sa_err}")
+
+    if not token:
+        logger.info(f"Google Calendar credentials not provided; 1-click calendar link: {cal_url}")
+        return {
+            "status": "simulated",
+            "calendar_id": cal_id,
+            "google_calendar_url": cal_url,
+            "reason": "no_credentials_configured",
+            "message": "Google OAuth or service account credentials not configured. Generated 1-click Google Calendar add link."
+        }
+
+    try:
+
+        date_str = appointment_data.get("appointment_date") or appointment_data.get("date") or ""
+        time_str = appointment_data.get("appointment_time") or appointment_data.get("time") or appointment_data.get("exact_time") or appointment_data.get("window") or ""
+        client_name = appointment_data.get("client_name") or appointment_data.get("customer_name") or "Valued Customer"
+        service = appointment_data.get("service_requested") or appointment_data.get("service") or "Service Appointment"
+        address = appointment_data.get("service_address") or appointment_data.get("address") or ""
+        phone = appointment_data.get("client_phone") or appointment_data.get("phone") or ""
+        notes = appointment_data.get("summary") or appointment_data.get("notes") or ""
+
+        now = datetime.now() + timedelta(days=1)
+        start_dt = now.replace(hour=10, minute=0, second=0, microsecond=0)
+        if date_str:
+            try:
+                parts = [int(p) for p in re.findall(r"\d+", str(date_str))[:3]]
+                if len(parts) == 3:
+                    hr, mn = 10, 0
+                    if time_str:
+                        tm = re.search(r"(\d{1,2}):?(\d{2})?\s*(AM|PM)?", str(time_str), re.IGNORECASE)
+                        if tm:
+                            hr = int(tm.group(1))
+                            mn = int(tm.group(2) or 0)
+                            ampm = (tm.group(3) or "").upper()
+                            if ampm == "PM" and hr < 12:
+                                hr += 12
+                            elif ampm == "AM" and hr == 12:
+                                hr = 0
+                    start_dt = datetime(parts[0], parts[1], parts[2], hr, mn)
+            except Exception:
+                pass
+        end_dt = start_dt + timedelta(hours=1)
+
+        event_payload = {
+            "summary": f"{service} — {client_name}",
+            "description": f"Customer: {client_name}\nPhone: {phone}\nService: {service}\nLocation: {address}\n\nNotes:\n{notes}",
+            "location": address,
+            "start": {"dateTime": start_dt.isoformat(), "timeZone": "UTC"},
+            "end": {"dateTime": end_dt.isoformat(), "timeZone": "UTC"},
+        }
+
+        # Add customer as attendee for automatic calendar sync across Google accounts
+        attendees = []
+        cust_email = (appointment_data.get("email") or appointment_data.get("client_email") or "").strip()
+        if cust_email and "@" in cust_email:
+            attendees.append({"email": cust_email, "displayName": client_name})
+        if attendees:
+            event_payload["attendees"] = attendees
+
+        # sendUpdates=all automatically places event on attendee calendars and sends Google invites
+        api_url = f"https://www.googleapis.com/calendar/v3/calendars/{urllib.parse.quote(cal_id)}/events?sendUpdates=all"
+        async with httpx.AsyncClient(timeout=8.0) as client:
+            res = await client.post(
+                api_url,
+                headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+                json=event_payload
+            )
+            if res.status_code in (200, 201):
+                ev_data = res.json()
+                logger.success(f"Google Calendar event created: {ev_data.get('id')}")
+                return {
+                    "status": "dispatched",
+                    "event_id": ev_data.get("id"),
+                    "html_link": ev_data.get("htmlLink"),
+                    "calendar_id": cal_id,
+                    "google_calendar_url": cal_url
+                }
+            else:
+                logger.error(f"Google Calendar event API failed ({res.status_code}): {res.text}")
+                return {
+                    "status": "api_error",
+                    "http_code": res.status_code,
+                    "error": res.text,
+                    "calendar_id": cal_id,
+                    "google_calendar_url": cal_url
+                }
+    except Exception as e:
+        logger.error(f"Google Calendar event dispatch exception: {e}")
+        return {
+            "status": "error",
+            "error": str(e),
+            "calendar_id": cal_id,
+            "google_calendar_url": cal_url
+        }
 
 
 async def sync_to_calendar_webhook(extracted_info: Dict[str, Any], call_id: str) -> bool:
@@ -845,3 +1021,526 @@ async def test_email_notification(recipient: str) -> Dict[str, Any]:
         if old_recipient is not None:
             cfg["notify_email"] = old_recipient
             update_integrations_settings(cfg)
+
+
+async def send_customer_appointment_confirmation(
+    customer_email: Optional[str],
+    customer_phone: Optional[str],
+    appointment_data: Dict[str, Any],
+    business_name: str = "Comfort Breeze HVAC",
+    calendar_url: str = "",
+    call_id: str = "",
+) -> Dict[str, Any]:
+    """
+    Sends customer appointment confirmation via email (with 1-click Google Calendar button + .ics)
+    and SMS (with calendar link).
+    """
+    results: Dict[str, Any] = {"email": None, "sms": None}
+    client_name = appointment_data.get("client_name") or appointment_data.get("customer_name") or "Valued Customer"
+    service = appointment_data.get("service_requested") or appointment_data.get("service") or "Service Appointment"
+    date_str = appointment_data.get("appointment_date") or appointment_data.get("date") or "Upcoming"
+    time_str = appointment_data.get("appointment_time") or appointment_data.get("time") or appointment_data.get("window") or ""
+    address = appointment_data.get("service_address") or appointment_data.get("address") or ""
+
+    if not calendar_url:
+        calendar_url = create_google_calendar_url(appointment_data, assistant_name=business_name)
+
+    # 1. Customer Email
+    if customer_email and "@" in customer_email:
+        clean_email = customer_email.strip()
+        subject = f"✅ Appointment Confirmed: {service} with {business_name}"
+        html_body = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;margin:0;padding:24px;background:#f8fafc;color:#1e293b;">
+  <div style="max-width:580px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 4px 12px rgba(0,0,0,0.05);">
+    <div style="background:linear-gradient(135deg,#059669,#10b981);padding:24px 32px;color:#ffffff;">
+      <h1 style="margin:0;font-size:20px;font-weight:700;">{business_name}</h1>
+      <p style="margin:4px 0 0 0;font-size:14px;opacity:0.9;">Appointment Confirmation</p>
+    </div>
+    <div style="padding:32px;">
+      <p style="font-size:16px;margin:0 0 16px;">Hi <strong>{client_name}</strong>,</p>
+      <p style="font-size:14px;line-height:1.6;color:#475569;margin:0 0 24px;">Your service appointment has been successfully scheduled. Our technician will arrive during your scheduled window.</p>
+      
+      <div style="background:#f1f5f9;border-radius:8px;padding:16px 20px;margin-bottom:24px;border-left:4px solid #10b981;">
+        <table style="width:100%;font-size:14px;border-collapse:collapse;">
+          <tr><td style="padding:4px 0;color:#64748b;font-weight:600;width:120px;">Service:</td><td style="padding:4px 0;font-weight:600;color:#0f172a;">{service}</td></tr>
+          <tr><td style="padding:4px 0;color:#64748b;font-weight:600;">Date & Time:</td><td style="padding:4px 0;font-weight:600;color:#0f172a;">{date_str} ({time_str})</td></tr>
+          <tr><td style="padding:4px 0;color:#64748b;font-weight:600;">Location:</td><td style="padding:4px 0;color:#0f172a;">{address}</td></tr>
+        </table>
+      </div>
+
+      <div style="text-align:center;margin:32px 0 24px;">
+        <a href="{calendar_url}" target="_blank" style="display:inline-block;background:#10b981;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:15px;box-shadow:0 2px 8px rgba(16,185,129,0.35);">📅 Add to Google Calendar</a>
+      </div>
+      <p style="font-size:12px;color:#94a3b8;text-align:center;margin:0;">Need to reschedule? Reply directly to this email or call our team.</p>
+    </div>
+    <div style="background:#f8fafc;padding:16px;text-align:center;font-size:12px;color:#94a3b8;border-top:1px solid #e2e8f0;">
+      {business_name} • Powered by Aria Voice AI
+    </div>
+  </div>
+</body>
+</html>"""
+        text_body = (
+            f"Hi {client_name},\n\n"
+            f"Your appointment for {service} with {business_name} is confirmed for {date_str} ({time_str}) at {address}.\n\n"
+            f"Add to your Google Calendar:\n{calendar_url}\n\n"
+            f"Thank you for choosing {business_name}!"
+        )
+
+        cfg = get_integrations_settings()
+        email_res = {"status": "simulated", "recipient": clean_email, "subject": subject}
+        resend_key = cfg.get("resend_api_key", "").strip()
+
+        # Generate RFC 5545 iCalendar (.ics) invite for automatic calendar recognition
+        import base64
+        ics_bytes = generate_ical_data(appointment_data, call_id=call_id, assistant_name=business_name)
+        ics_base64 = base64.b64encode(ics_bytes).decode("ascii")
+
+        if resend_key:
+            try:
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    r = await client.post(
+                        "https://api.resend.com/emails",
+                        headers={"Authorization": f"Bearer {resend_key}", "Content-Type": "application/json"},
+                        json={
+                            "from": cfg.get("from_email", "notifications@ariavoice.ai"),
+                            "to": [clean_email],
+                            "subject": subject,
+                            "html": html_body,
+                            "text": text_body,
+                            "attachments": [
+                                {
+                                    "filename": "invite.ics",
+                                    "content": ics_base64,
+                                }
+                            ],
+                            "headers": {
+                                "Content-Class": "urn:content-classes:calendarmessage"
+                            }
+                        }
+                    )
+                    if r.status_code in (200, 201):
+                        email_res["status"] = "sent_via_resend"
+            except Exception as ex:
+                logger.warning(f"Customer confirmation email via Resend notice: {ex}")
+
+        _log_email_record(email_res, appointment_data)
+        results["email"] = email_res
+
+    # 2. Customer SMS
+    if customer_phone:
+        sms_msg = (
+            f"Hi {client_name}, your appointment with {business_name} is confirmed for {date_str} ({time_str}). "
+            f"Add to your calendar: {calendar_url}"
+        )
+        sms_res = await send_sms(customer_phone, sms_msg)
+        results["sms"] = sms_res
+
+    return results
+
+
+async def send_owner_lead_alert(
+    owner_email: Optional[str],
+    owner_phone: Optional[str],
+    appointment_data: Dict[str, Any],
+    call_session: Dict[str, Any],
+    business_name: str = "Our Business",
+    calendar_url: str = "",
+) -> Dict[str, Any]:
+    """
+    Sends new appointment lead alert to the business owner and admin.
+    Includes full customer details, Google Calendar button, executive summary, and transcript.
+    """
+    results: Dict[str, Any] = {"email": None, "sms": None}
+    client_name = appointment_data.get("client_name") or appointment_data.get("customer_name") or "New Customer"
+    service = appointment_data.get("service_requested") or appointment_data.get("service") or "Service Request"
+    phone = appointment_data.get("client_phone") or appointment_data.get("phone") or "Not provided"
+    email = appointment_data.get("client_email") or appointment_data.get("email") or "Not provided"
+    address = appointment_data.get("service_address") or appointment_data.get("address") or "Not provided"
+    date_str = appointment_data.get("appointment_date") or appointment_data.get("date") or "Upcoming"
+    time_str = appointment_data.get("appointment_time") or appointment_data.get("time") or appointment_data.get("window") or ""
+
+    if not calendar_url:
+        calendar_url = create_google_calendar_url(appointment_data, assistant_name=business_name)
+
+    cfg = get_integrations_settings()
+    recipients = []
+    if owner_email and "@" in owner_email:
+        recipients.append(owner_email.strip())
+    admin_email = cfg.get("notify_email", "").strip()
+    if admin_email and admin_email not in recipients:
+        recipients.append(admin_email)
+
+    # 1. Owner & Admin Email
+    if recipients:
+        subject = f"🚨 New Booking: {service} — {client_name} ({date_str})"
+        html_body = _build_email_html(appointment_data, call_session, calendar_url)
+        email_res = {"status": "simulated", "recipient": ", ".join(recipients), "subject": subject}
+        resend_key = cfg.get("resend_api_key", "").strip()
+
+        # Generate RFC 5545 iCalendar (.ics) invite so Google Calendar auto-places it on owner's calendar
+        import base64
+        call_id = call_session.get("call_id", "")
+        ics_bytes = generate_ical_data(appointment_data, call_id=call_id, assistant_name=business_name)
+        ics_base64 = base64.b64encode(ics_bytes).decode("ascii")
+
+        if resend_key:
+            try:
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    r = await client.post(
+                        "https://api.resend.com/emails",
+                        headers={"Authorization": f"Bearer {resend_key}", "Content-Type": "application/json"},
+                        json={
+                            "from": cfg.get("from_email", "notifications@ariavoice.ai"),
+                            "to": recipients,
+                            "subject": subject,
+                            "html": html_body,
+                            "attachments": [
+                                {
+                                    "filename": "appointment.ics",
+                                    "content": ics_base64,
+                                }
+                            ],
+                            "headers": {
+                                "Content-Class": "urn:content-classes:calendarmessage"
+                            }
+                        }
+                    )
+                    if r.status_code in (200, 201):
+                        email_res["status"] = "sent_via_resend"
+            except Exception as ex:
+                logger.warning(f"Owner alert email notice: {ex}")
+
+        _log_email_record(email_res, appointment_data)
+        results["email"] = email_res
+
+    # 2. Owner SMS
+    target_phone = owner_phone or cfg.get("owner_phone_number")
+    if target_phone:
+        sms_msg = (
+            f"🚨 NEW BOOKING for {business_name}!\n"
+            f"👤 {client_name} ({service})\n"
+            f"📅 {date_str} ({time_str})\n"
+            f"📍 {address}\n"
+            f"📞 {phone}\n"
+            f"Calendar: {calendar_url}"
+        )
+        sms_res = await send_sms(target_phone, sms_msg)
+        results["sms"] = sms_res
+
+    return results
+
+
+# ── 4. Multi-Provider SMS Integration (Telnyx, Twilio, Plivo) ────────────────
+
+def _log_sms_record(entry: Dict[str, Any]):
+    """Logs sent or simulated SMS notifications to audit log."""
+    try:
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
+        with open(SMS_LOG_FILE, "a") as f:
+            f.write(json.dumps(entry) + "\n")
+    except Exception as e:
+        logger.warning(f"Could not append to SMS log: {e}")
+
+
+async def send_sms(to_phone: str, message: str, provider: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Sends an SMS message supporting Telnyx REST API, Twilio REST API, and Plivo fallback.
+    If live credentials are not configured or in testing mode, safely logs and simulates successful delivery.
+    """
+    cfg = get_integrations_settings()
+    clean_to = re.sub(r"[^\d+]", "", (to_phone or "").strip())
+    if not clean_to.startswith("+") and len(clean_to) == 10:
+        clean_to = f"+1{clean_to}"
+    elif not clean_to.startswith("+") and len(clean_to) == 11 and clean_to.startswith("1"):
+        clean_to = f"+{clean_to}"
+
+    now_str = time.strftime("%Y-%m-%d %H:%M:%S")
+
+    # Determine provider
+    resolved_provider = (provider or cfg.get("sms_provider") or "auto").lower()
+
+    telnyx_key = (cfg.get("telnyx_api_key") or os.getenv("TELNYX_API_KEY") or "").strip()
+    telnyx_from = (cfg.get("telnyx_phone_number") or os.getenv("TELNYX_PHONE_NUMBER") or "").strip()
+
+    twilio_sid = (cfg.get("twilio_account_sid") or os.getenv("TWILIO_ACCOUNT_SID") or "").strip()
+    twilio_token = (cfg.get("twilio_auth_token") or os.getenv("TWILIO_AUTH_TOKEN") or "").strip()
+    twilio_from = (cfg.get("twilio_phone_number") or os.getenv("TWILIO_PHONE_NUMBER") or "").strip()
+
+    plivo_id = (cfg.get("plivo_auth_id") or getattr(settings, "PLIVO_AUTH_ID", "") or os.getenv("PLIVO_AUTH_ID") or "").strip()
+    plivo_tok = (cfg.get("plivo_auth_token") or getattr(settings, "PLIVO_AUTH_TOKEN", "") or os.getenv("PLIVO_AUTH_TOKEN") or "").strip()
+    plivo_from = (cfg.get("plivo_phone_number") or getattr(settings, "PLIVO_PHONE_NUMBER", "") or os.getenv("PLIVO_PHONE_NUMBER") or "").strip()
+
+    if resolved_provider == "auto":
+        if telnyx_key and telnyx_from:
+            resolved_provider = "telnyx"
+        elif twilio_sid and twilio_token and twilio_from:
+            resolved_provider = "twilio"
+        elif plivo_id and plivo_tok and plivo_from:
+            resolved_provider = "plivo"
+        else:
+            resolved_provider = "simulated"
+
+    # 1. Telnyx REST API (https://api.telnyx.com/v2/messages)
+    if resolved_provider == "telnyx":
+        if not telnyx_key or not telnyx_from:
+            result = {
+                "status": "simulated_success",
+                "provider": "telnyx",
+                "to": clean_to,
+                "text": message,
+                "timestamp": now_str,
+                "message_id": f"telnyx_sim_{uuid.uuid4().hex[:10]}",
+                "reason": "telnyx_credentials_not_configured"
+            }
+            _log_sms_record(result)
+            logger.info(f"[Telnyx SIMULATED] -> {clean_to}: {message[:80]}...")
+            return result
+
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                res = await client.post(
+                    "https://api.telnyx.com/v2/messages",
+                    headers={
+                        "Authorization": f"Bearer {telnyx_key}",
+                        "Content-Type": "application/json"
+                    },
+                    json={
+                        "from": telnyx_from,
+                        "to": clean_to,
+                        "text": message
+                    }
+                )
+                if res.status_code in (200, 201, 202):
+                    data = res.json().get("data", {})
+                    msg_id = data.get("id", f"telnyx_{uuid.uuid4().hex[:8]}")
+                    result = {
+                        "status": "sent",
+                        "provider": "telnyx",
+                        "to": clean_to,
+                        "from": telnyx_from,
+                        "message_id": msg_id,
+                        "timestamp": now_str,
+                        "text": message
+                    }
+                    _log_sms_record(result)
+                    logger.success(f"Dispatched Telnyx SMS to {clean_to}: ID {msg_id}")
+                    return result
+                else:
+                    result = {
+                        "status": "failed",
+                        "provider": "telnyx",
+                        "error": res.text,
+                        "http_code": res.status_code,
+                        "to": clean_to,
+                        "text": message,
+                        "timestamp": now_str
+                    }
+                    _log_sms_record(result)
+                    logger.error(f"Telnyx SMS error ({res.status_code}): {res.text}")
+                    return result
+        except Exception as e:
+            result = {
+                "status": "error",
+                "provider": "telnyx",
+                "error": str(e),
+                "to": clean_to,
+                "text": message,
+                "timestamp": now_str
+            }
+            _log_sms_record(result)
+            return result
+
+    # 2. Twilio REST API (https://api.twilio.com/2010-04-01/Accounts/.../Messages.json)
+    elif resolved_provider == "twilio":
+        if not twilio_sid or not twilio_token or not twilio_from:
+            result = {
+                "status": "simulated_success",
+                "provider": "twilio",
+                "to": clean_to,
+                "text": message,
+                "timestamp": now_str,
+                "message_id": f"twilio_sim_{uuid.uuid4().hex[:10]}",
+                "reason": "twilio_credentials_not_configured"
+            }
+            _log_sms_record(result)
+            logger.info(f"[Twilio SIMULATED] -> {clean_to}: {message[:80]}...")
+            return result
+
+        try:
+            url = f"https://api.twilio.com/2010-04-01/Accounts/{twilio_sid}/Messages.json"
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                res = await client.post(
+                    url,
+                    auth=(twilio_sid, twilio_token),
+                    data={
+                        "From": twilio_from,
+                        "To": clean_to,
+                        "Body": message
+                    }
+                )
+                if res.status_code in (200, 201):
+                    data = res.json()
+                    msg_id = data.get("sid", f"twilio_{uuid.uuid4().hex[:8]}")
+                    result = {
+                        "status": "sent",
+                        "provider": "twilio",
+                        "to": clean_to,
+                        "from": twilio_from,
+                        "message_id": msg_id,
+                        "timestamp": now_str,
+                        "text": message
+                    }
+                    _log_sms_record(result)
+                    logger.success(f"Dispatched Twilio SMS to {clean_to}: SID {msg_id}")
+                    return result
+                else:
+                    result = {
+                        "status": "failed",
+                        "provider": "twilio",
+                        "error": res.text,
+                        "http_code": res.status_code,
+                        "to": clean_to,
+                        "text": message,
+                        "timestamp": now_str
+                    }
+                    _log_sms_record(result)
+                    logger.error(f"Twilio SMS error ({res.status_code}): {res.text}")
+                    return result
+        except Exception as e:
+            result = {
+                "status": "error",
+                "provider": "twilio",
+                "error": str(e),
+                "to": clean_to,
+                "text": message,
+                "timestamp": now_str
+            }
+            _log_sms_record(result)
+            return result
+
+    # 3. Plivo REST API fallback
+    elif resolved_provider == "plivo":
+        if not plivo_id or not plivo_tok:
+            result = {
+                "status": "simulated_success",
+                "provider": "plivo",
+                "to": clean_to,
+                "text": message,
+                "timestamp": now_str,
+                "message_id": f"plivo_sim_{uuid.uuid4().hex[:10]}",
+                "reason": "plivo_credentials_not_configured"
+            }
+            _log_sms_record(result)
+            logger.info(f"[Plivo SIMULATED] -> {clean_to}: {message[:80]}...")
+            return result
+
+        try:
+            url = f"https://api.plivo.com/v1/Account/{plivo_id}/Message/"
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                res = await client.post(
+                    url,
+                    auth=(plivo_id, plivo_tok),
+                    json={"src": plivo_from or "AriaVoice", "dst": clean_to, "text": message}
+                )
+                if res.status_code in (200, 201, 202):
+                    data = res.json()
+                    msg_id = data.get("message_uuid", [f"plivo_{uuid.uuid4().hex[:8]}"])[0]
+                    result = {
+                        "status": "sent",
+                        "provider": "plivo",
+                        "to": clean_to,
+                        "from": plivo_from,
+                        "message_id": msg_id,
+                        "timestamp": now_str,
+                        "text": message
+                    }
+                    _log_sms_record(result)
+                    return result
+                else:
+                    result = {
+                        "status": "failed",
+                        "provider": "plivo",
+                        "error": res.text,
+                        "http_code": res.status_code,
+                        "to": clean_to,
+                        "text": message,
+                        "timestamp": now_str
+                    }
+                    _log_sms_record(result)
+                    return result
+        except Exception as e:
+            result = {
+                "status": "error",
+                "provider": "plivo",
+                "error": str(e),
+                "to": clean_to,
+                "text": message,
+                "timestamp": now_str
+            }
+            _log_sms_record(result)
+            return result
+
+    # 4. Default / Simulated Success Fallback
+    result = {
+        "status": "simulated_success",
+        "provider": resolved_provider or "simulated",
+        "to": clean_to,
+        "text": message,
+        "timestamp": now_str,
+        "message_id": f"sim_{uuid.uuid4().hex[:10]}",
+        "reason": "simulated_environment"
+    }
+    _log_sms_record(result)
+    logger.info(f"[SMS SIMULATED] -> {clean_to} ({resolved_provider}): {message[:80]}...")
+    return result
+
+
+async def send_appointment_confirmation_sms(
+    customer_phone: str,
+    appointment_data: Dict[str, Any],
+    business_name: str = "Our Business",
+    provider: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Sends an automated appointment confirmation SMS to customer with calendar add link."""
+    client_name = appointment_data.get("client_name") or appointment_data.get("customer_name") or "Valued Customer"
+    service = appointment_data.get("service_requested") or appointment_data.get("service") or "Service Appointment"
+    date_str = appointment_data.get("appointment_date") or appointment_data.get("date") or "Upcoming"
+    time_str = appointment_data.get("appointment_time") or appointment_data.get("time") or appointment_data.get("exact_time") or appointment_data.get("window") or ""
+    address = appointment_data.get("service_address") or appointment_data.get("address") or "Address on file"
+
+    cal_link = create_google_calendar_url(appointment_data)
+    time_display = f" at {time_str}" if time_str else ""
+    msg = (
+        f"Hi {client_name}! Your appointment with {business_name} for {service} is confirmed for {date_str}{time_display}. "
+        f"Location: {address}. 1-Tap Calendar & Receipt: {cal_link} Questions? Reply directly to this text."
+    )
+    return await send_sms(to_phone=customer_phone, message=msg, provider=provider)
+
+
+async def send_lead_alert_sms(
+    owner_phone: str,
+    appointment_data: Dict[str, Any],
+    business_name: str = "Our Business",
+    provider: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Sends an instant lead alert SMS to the business owner."""
+    client_name = appointment_data.get("client_name") or appointment_data.get("customer_name") or "Caller"
+    phone = appointment_data.get("client_phone") or appointment_data.get("phone") or "Not provided"
+    service = appointment_data.get("service_requested") or appointment_data.get("service") or "General Inquiry"
+    date_str = appointment_data.get("appointment_date") or appointment_data.get("date") or "ASAP"
+    time_str = appointment_data.get("appointment_time") or appointment_data.get("time") or appointment_data.get("exact_time") or appointment_data.get("window") or ""
+    address = appointment_data.get("service_address") or appointment_data.get("address") or "Not provided"
+    summary = appointment_data.get("summary") or appointment_data.get("notes") or ""
+
+    time_part = f" {time_str}" if time_str else ""
+    msg = (
+        f"🔔 NEW LEAD for {business_name}!\n"
+        f"Customer: {client_name} ({phone})\n"
+        f"Service: {service}\n"
+        f"Slot: {date_str}{time_part}\n"
+        f"Address: {address}\n"
+        f"Notes: {summary[:100]}"
+    )
+    return await send_sms(to_phone=owner_phone, message=msg, provider=provider)

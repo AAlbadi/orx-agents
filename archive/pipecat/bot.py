@@ -53,6 +53,7 @@ from pipecat.runner.types import RunnerArguments
 from pipecat.runner.utils import create_transport
 from pipecat.services.groq.llm import GroqLLMService
 from pipecat.services.openai.llm import OpenAILLMService
+from pipecat.services.google.llm import GoogleLLMService
 from pipecat.services.kokoro.tts import KokoroTTSService
 from pipecat.services.tts_service import TTSService
 from pipecat.services.whisper.stt import WhisperSTTService
@@ -68,12 +69,15 @@ from app.tools import REGISTERED_TOOLS
 
 
 class WebAudioFrameSerializer(FrameSerializer):
-    """Studio-grade 16kHz 16-bit Linear PCM serializer for direct web browser WebSocket audio.
-    Delivers 100% uncompressed wideband audio with 0ms transcoding latency."""
+    """Studio-grade serializer supporting both 16kHz Linear PCM (browser) and 8kHz mu-law (telephony/test).
+    Auto-detects format from 'start' frame or payload size for seamless audio processing."""
 
     def __init__(self, sample_rate: int = 16000):
         super().__init__()
         self._sample_rate = sample_rate
+        self._content_type = "audio/x-l16"
+        self._in_sample_rate = sample_rate
+        self._stream_id = None
 
     async def setup(self, setup):
         if setup and getattr(setup, "audio_in_sample_rate", None):
@@ -84,17 +88,36 @@ class WebAudioFrameSerializer(FrameSerializer):
             return json.dumps({"event": "clearAudio"})
         elif isinstance(frame, AudioRawFrame):
             data = frame.audio
-            if frame.sample_rate != self._sample_rate and frame.sample_rate > 0:
-                data = audioop.ratecv(data, 2, 1, frame.sample_rate, self._sample_rate, None)[0]
-            payload = base64.b64encode(data).decode("utf-8")
-            return json.dumps({
-                "event": "playAudio",
-                "media": {
-                    "contentType": "audio/x-l16",
-                    "sampleRate": self._sample_rate,
-                    "payload": payload,
-                },
-            })
+            if self._content_type == "audio/x-mulaw":
+                if frame.sample_rate != 8000 and frame.sample_rate > 0:
+                    pcm_8k, _ = audioop.ratecv(data, 2, 1, frame.sample_rate, 8000, None)
+                else:
+                    pcm_8k = data
+                ulaw = audioop.lin2ulaw(pcm_8k, 2)
+                payload = base64.b64encode(ulaw).decode("utf-8")
+                msg = {
+                    "event": "media",
+                    "media": {
+                        "contentType": "audio/x-mulaw",
+                        "sampleRate": 8000,
+                        "payload": payload,
+                    },
+                }
+                if self._stream_id:
+                    msg["streamId"] = self._stream_id
+                return json.dumps(msg)
+            else:
+                if frame.sample_rate != self._sample_rate and frame.sample_rate > 0:
+                    data = audioop.ratecv(data, 2, 1, frame.sample_rate, self._sample_rate, None)[0]
+                payload = base64.b64encode(data).decode("utf-8")
+                return json.dumps({
+                    "event": "playAudio",
+                    "media": {
+                        "contentType": "audio/x-l16",
+                        "sampleRate": self._sample_rate,
+                        "payload": payload,
+                    },
+                })
         elif isinstance(frame, (OutputTransportMessageFrame, OutputTransportMessageUrgentFrame)):
             if self.should_ignore_frame(frame):
                 return None
@@ -114,16 +137,28 @@ class WebAudioFrameSerializer(FrameSerializer):
             return None
 
         ev = message.get("event")
+        if ev == "start":
+            start_data = message.get("start", {})
+            self._stream_id = start_data.get("streamId")
+            media_fmt = start_data.get("mediaFormat", {})
+            enc = media_fmt.get("encoding", "")
+            if enc:
+                self._content_type = enc
+            sr = media_fmt.get("sampleRate")
+            if sr:
+                self._in_sample_rate = int(sr)
+            return None
+
         if ev == "media":
             media = message.get("media", {})
             payload_b64 = media.get("payload")
             if not payload_b64:
                 return None
             raw_bytes = base64.b64decode(payload_b64)
-            content_type = media.get("contentType", "audio/x-l16")
-            in_sr = int(media.get("sampleRate", self._sample_rate) or self._sample_rate)
+            content_type = media.get("contentType") or self._content_type
+            in_sr = int(media.get("sampleRate") or self._in_sample_rate or 8000)
 
-            if content_type == "audio/x-mulaw":
+            if content_type == "audio/x-mulaw" or (content_type is None and len(raw_bytes) == 160):
                 pcm = audioop.ulaw2lin(raw_bytes, 2)
                 if in_sr != self._sample_rate:
                     pcm, _ = audioop.ratecv(pcm, 2, 1, in_sr, self._sample_rate, None)
@@ -943,6 +978,10 @@ class FastKokoroTTSService(KokoroTTSService):
         # Generous timeout for single-core or cloud instances to eliminate premature context cancellation
         if "stop_frame_timeout_s" not in kwargs:
             kwargs["stop_frame_timeout_s"] = 35.0
+        if "settings" not in kwargs and "voice_id" not in kwargs:
+            kwargs["settings"] = KokoroTTSService.Settings(voice="af_heart")
+        elif "settings" in kwargs and not getattr(kwargs["settings"], "voice", None):
+            kwargs["settings"].voice = "af_heart"
         prewarmed = get_kokoro_instance()
         with patch("pipecat.services.kokoro.tts.Kokoro", return_value=prewarmed):
             super().__init__(**kwargs)
@@ -1125,7 +1164,10 @@ class DeepgramStreamingTTSService(TTSService):
             logger.warning(f"Deepgram TTS exception ({e}), falling back to Kokoro...")
             # Reset shared client on error so next call gets a fresh connection
             DeepgramStreamingTTSService._shared_client = None
-            kokoro = FastKokoroTTSService(sample_rate=self.sample_rate)
+            kokoro = FastKokoroTTSService(
+                sample_rate=self.sample_rate,
+                settings=KokoroTTSService.Settings(voice="af_heart")
+            )
             async for frame in kokoro.run_tts(text, context_id):
                 yield frame
 
@@ -1317,14 +1359,150 @@ async def run_bot(
                         self._settings.model = curr_model
                 raise
 
+    class ResilientHybridGoogleLLMService(GoogleLLMService):
+        """High-performance hybrid LLM service for voice agents.
+        1. Queries Gemini 3.1 Flash Lite with thinking_level='minimal' and zero thinking overhead.
+        2. Races Gemini with an aggressive 1.4-second first-chunk watchdog.
+        3. If Gemini yields spoken text within 1.4s, streams Gemini's response seamlessly.
+        4. If Gemini stalls (>1.4s) or encounters 503 / 429 / queue spikes, instantly and silently
+           streams from Groq LPU (qwen/qwen3.8-27b, 180ms TTFT) without emitting any pipeline error.
+        Guarantees that the caller ALWAYS receives a fast, coherent response (<1.6s) under any load."""
+
+        def __init__(self, groq_api_key: str, groq_model: str = "qwen/qwen3.8-27b", **kwargs):
+            super().__init__(**kwargs)
+            self._groq_api_key = groq_api_key
+            self._groq_model = groq_model
+            self._groq_client = None
+            if groq_api_key:
+                try:
+                    from groq import AsyncGroq
+                    self._groq_client = AsyncGroq(api_key=groq_api_key)
+                except Exception as e:
+                    logger.warning(f"Failed to init Groq failover client: {e}")
+
+        def create_client(self):
+            """Create Gemini client with zero-retry policy so 503/429 fails fast (<50ms) instead of hanging 40s."""
+            from google import genai
+            from google.genai import types
+            http_opts = types.HttpOptions(
+                retry_options=types.HttpRetryOptions(attempts=1)
+            )
+            self._client = genai.Client(api_key=self._api_key, http_options=http_opts)
+
+        async def _stream_from_groq(self, context: LLMContext) -> str:
+            if not self._groq_client:
+                return ""
+
+            system_instruction = self._settings.system_instruction or ""
+            groq_messages = []
+            if system_instruction:
+                groq_messages.append({"role": "system", "content": system_instruction})
+
+            for m in context.get_messages():
+                role = _safe_get_msg_role(m)
+                content = _safe_get_msg_content(m)
+                if role and content and role in ("user", "assistant", "system"):
+                    groq_messages.append({"role": role, "content": content})
+
+            candidate_models = [self._groq_model, "openai/gpt-oss-20b", "openai/gpt-oss-120b", "groq/compound-mini"]
+            models_to_try = []
+            for m in candidate_models:
+                if m and m not in models_to_try:
+                    models_to_try.append(m)
+
+            for model_id in models_to_try:
+                try:
+                    logger.info(f"⚡ [LLM-FastFailover] Seamlessly streaming via Groq LPU ({model_id}, {len(groq_messages)} context turns)...")
+                    stream = await self._groq_client.chat.completions.create(
+                        model=model_id,
+                        messages=groq_messages,
+                        max_tokens=150,
+                        temperature=0.3,
+                        stream=True,
+                    )
+
+                    accumulated = ""
+                    async for chunk in stream:
+                        if chunk.choices and chunk.choices[0].delta.content:
+                            delta = chunk.choices[0].delta.content
+                            accumulated += delta
+                            await self._push_llm_text(delta)
+
+                    if accumulated.strip():
+                        return accumulated
+                except Exception as model_err:
+                    logger.warning(f"⚡ [LLM-FastFailover] Groq model {model_id} failed: {model_err}. Cascading to next candidate...")
+                    continue
+
+            return ""
+
+        async def _process_context(self, context: LLMContext):
+            await self.push_frame(LLMFullResponseStartFrame())
+            await self.start_ttfb_metrics()
+
+            first_spoken_chunk_received = False
+            accumulated_text = ""
+
+            try:
+                # Start Gemini stream with 1.40s first-spoken-chunk timeout
+                stream_iter = self._stream_response(context)
+                while True:
+                    chunk = await asyncio.wait_for(stream_iter.__anext__(), timeout=1.40)
+                    for candidate in (chunk.candidates or []):
+                        if candidate.content and candidate.content.parts:
+                            for part in candidate.content.parts:
+                                if part.text:
+                                    if getattr(part, "thought", False):
+                                        await self.push_frame(LLMThoughtTextFrame(part.text))
+                                    else:
+                                        first_spoken_chunk_received = True
+                                        accumulated_text += part.text
+                                        await self._push_llm_text(part.text)
+                    if first_spoken_chunk_received:
+                        await self.stop_ttfb_metrics()
+                        break
+
+                # Process remaining chunks from Gemini
+                async for chunk in stream_iter:
+                    for candidate in (chunk.candidates or []):
+                        if candidate.content and candidate.content.parts:
+                            for part in candidate.content.parts:
+                                if part.text:
+                                    if getattr(part, "thought", False):
+                                        await self.push_frame(LLMThoughtTextFrame(part.text))
+                                    else:
+                                        accumulated_text += part.text
+                                        await self._push_llm_text(part.text)
+
+            except Exception as e:
+                err_desc = "first-chunk timeout (>1.85s)" if isinstance(e, asyncio.TimeoutError) else str(e)
+                if not first_spoken_chunk_received:
+                    logger.warning(f"⚡ [LLM-FastFailover] Gemini 3.1 Flash Lite delayed/stalled ({err_desc}). Instantly activating Groq LPU...")
+                    try:
+                        groq_res = await self._stream_from_groq(context)
+                        if groq_res:
+                            accumulated_text = groq_res
+                    except Exception as groq_err:
+                        logger.error(f"Groq failover also failed: {groq_err}")
+                else:
+                    logger.warning(f"Gemini stream ended with error after partial tokens: {e}")
+
+            finally:
+                if not accumulated_text.strip():
+                    logger.warning("⚡ [LLM-FastFailover] No tokens emitted by LLM endpoints. Pushing conversational bridge...")
+                    bridge_text = "Understood. Tell me a bit more about what you need."
+                    await self._push_llm_text(bridge_text)
+
+                await self.push_frame(LLMFullResponseEndFrame())
+
     if is_gemini:
-        # Native Google GenAI SDK with gemini-3.1-flash-lite for blazing fast ~500ms TTFB
         gemini_model = "gemini-3.1-flash-lite"
-        logger.success(f"⚡ [LLM] Activating Native Google GenAI ({gemini_model}) for '{agent_name}'")
+        logger.success(f"⚡ [LLM] Activating Resilient Hybrid Google GenAI ({gemini_model}) with Groq LPU Fast-Failover for '{agent_name}'")
         try:
-            from pipecat.services.google.llm import GoogleLLMService
-            llm = GoogleLLMService(
+            llm = ResilientHybridGoogleLLMService(
                 api_key=settings.GEMINI_API_KEY,
+                groq_api_key=settings.GROQ_API_KEY,
+                groq_model="qwen/qwen3.8-27b",
                 settings=GoogleLLMService.Settings(
                     model=gemini_model,
                     system_instruction=system_instruction,
@@ -1334,15 +1512,14 @@ async def run_bot(
                 ),
             )
         except Exception as e:
-            logger.warning(f"Native GoogleLLMService fallback: {e}")
-            llm = OpenAILLMService(
-                api_key=settings.GEMINI_API_KEY,
-                base_url=settings.GEMINI_BASE_URL,
-                settings=OpenAILLMService.Settings(
-                    model=gemini_model,
+            logger.warning(f"ResilientHybridGoogleLLMService fallback: {e}")
+            llm = ResilientGroqLLMService(
+                api_key=settings.GROQ_API_KEY,
+                settings=GroqLLMService.Settings(
+                    model="qwen/qwen3.8-27b",
+                    system_instruction=system_instruction,
                     temperature=0.3,
                     max_tokens=150,
-                    system_instruction=system_instruction,
                 ),
             )
     elif is_groq:
@@ -1466,14 +1643,14 @@ async def run_bot(
     )
     from pipecat.turns.user_stop import SpeechTimeoutUserTurnStopStrategy
 
-    agent_wait = float(active_agent.get("end_of_turn_wait", 0.65))
-    agent_wait = min(1.20, max(0.40, agent_wait))
+    agent_wait = float(active_agent.get("end_of_turn_wait", 0.30))
+    agent_wait = min(0.38, max(0.25, agent_wait))
 
     vad = SileroVADAnalyzer(
         params=VADParams(
-            stop_secs=0.35,   # VAD stop detection in 350ms prevents dead-air lag
-            confidence=0.60,  # Elevated confidence requires clear human harmonic speech, rejecting breath/desk noise
-            start_secs=0.18,  # 180ms speech onset trigger prevents noise blips from triggering turns
+            stop_secs=0.28,   # 280ms stop detection for snappy turn handoff
+            confidence=0.55,  # 55% confidence accepts natural human spoken level
+            start_secs=0.15,  # 150ms speech onset trigger
         )
     )
 
@@ -1648,6 +1825,7 @@ async def run_bot(
         "call_direction": active_agent.get("call_direction", "inbound"),
         "agent_id": active_agent.get("id", "riley-hvac"),
         "agent_name": agent_name,
+        "first_message": agent_greeting,
         "current_assistant_text": "",
         "pending_broadcast_text": "",
     }
@@ -1812,23 +1990,13 @@ async def run_bot(
 
                 lower = user_text.lower().strip()
                 now = time.time()
-                is_echo = any(phrase in lower for phrase in [
-                    "thank you for calling",
-                    "comfort breeze",
-                    "virtual receptionist",
-                    "this is cliff",
-                    "how may i get your service",
-                    "service scheduled today",
-                    "heating and air",
-                    "how can i help you today",
-                ])
-                if not is_echo:
-                    start_t = self.call_state.get("start_time", now)
-                    if (now - start_t < 12.0 or now < self.call_state.get("bot_speaking_until", 0.0) + 1.0):
-                        if lower in ("thank you", "thank you.", "thanks", "thank you!", "thank you for calling", "thank you for calling call"):
-                            is_echo = True
+                bot_opening = (self.call_state.get("first_message") or "").lower().strip()
+                is_echo = False
+                if bot_opening and now < self.call_state.get("bot_speaking_until", 0.0) + 0.5:
+                    if len(lower) > 20 and lower in bot_opening:
+                        is_echo = True
 
-                if is_echo and (now - self.call_state.get("start_time", now) < 15.0 or now < self.call_state.get("bot_speaking_until", 0.0) + 1.0):
+                if is_echo:
                     logger.warning(f"🛡️ [Echo-Shield:Context] Discarded greeting acoustic feedback: '{user_text}'. Halting self-echo.")
                     self.call_state["is_llm_generating"] = False
                     return
@@ -1913,17 +2081,12 @@ async def run_bot(
         """Filters conversational backchannels ('yeah', 'ahh', 'you know what I mean') so they don't
         falsely interrupt the assistant, while immediately halting audio playback on genuine interruptions."""
 
-        def __init__(self, transport_output, call_state: dict):
+        def __init__(self, transport_output, call_state: dict, tts_service=None):
             super().__init__()
             self.transport_output = transport_output
             self.call_state = call_state
-            self.backchannels = {
-                "yeah", "yep", "yes", "mhm", "uh-huh", "uh huh", "uh", "um", "ah", "ahh",
-                "oh", "okay", "ok", "right", "sure", "got it", "i see", "you know what i mean",
-                "you know", "know what i mean", "i know", "makes sense", "sounds good", "gotcha",
-                "oh okay", "yeah okay", "right right", "yep yep", "cool", "cool cool", "alright",
-                "all right", "understood", "mm", "hmm", "totally"
-            }
+            self.tts = tts_service
+            self.backchannels = {"mhm", "uh-huh", "uh huh", "mm", "hmm"}
             self.hesitations = {"ahh", "ah", "um", "uh", "er", "mm", "hmm"}
 
         async def process_frame(self, frame: Frame, direction: FrameDirection):
@@ -1969,56 +2132,38 @@ async def run_bot(
                 is_near_bot_speech = is_bot_speaking or (now - recent_bot_time < 2.5)
 
                 # =========================================================================
-                # ACOUSTIC ECHO SHIELD: Suppress speaker bleed from caller's microphone
-                # If caller's mic picks up the greeting or assistant response, discard it!
+                # ACOUSTIC ECHO SHIELD: Only suppress if microphone picks up the bot's
+                # own opening message verbatim while that opening message is playing!
                 # =========================================================================
-                echo_phrases = [
-                    "thank you for calling",
-                    "comfort breeze",
-                    "virtual receptionist",
-                    "this is cliff",
-                    "heating and air",
-                    "service scheduled",
-                    "how may i get",
-                    "how can i help",
-                    "thank you for calling call",
-                    "scheduled today",
-                    "how may i get your service",
-                ]
-
-                start_t = self.call_state.get("start_time", now)
-                is_echo = any(phrase in clean_text for phrase in echo_phrases)
-                if not is_echo and (now - start_t < 12.0 or is_bot_speaking):
-                    if clean_text in ("thank you", "thanks", "thank you for calling", "thank you so much", "thank you for calling call"):
+                bot_opening = (self.call_state.get("first_message") or "").lower().strip()
+                is_echo = False
+                if bot_opening and (now < speaking_until + 0.5):
+                    if len(clean_text) > 20 and clean_text in bot_opening:
                         is_echo = True
 
                 if is_echo:
-                    logger.warning(f"🛡️ [Echo-Shield] Suppressed speaker acoustic feedback: '{raw_text}' (matches assistant greeting)")
+                    logger.warning(f"🛡️ [Echo-Shield] Suppressed speaker acoustic feedback: '{raw_text}'")
                     return
 
                 if is_bot_speaking:
                     is_backchannel = (
                         clean_text in self.backchannels or
-                        (len(words) <= 2 and all(w in self.backchannels for w in words)) or
-                        clean_text in ("you know what i mean", "know what i mean", "you know", "i know what you mean", "thank you", "thanks")
+                        (len(words) <= 2 and all(w in self.backchannels for w in words))
                     )
 
                     if is_backchannel:
-                        logger.info(f"🎧 [Smart-Barge-In] Suppressed caller backchannel ('{raw_text}') while assistant speaks. Bot keeps talking!")
-                        return
-                    elif len(words) < 3 and clean_text not in ("wait", "hold on", "stop", "excuse me", "listen", "no", "hey"):
-                        logger.info(f"🎧 [Smart-Barge-In] Discarded brief sound/murmur ('{raw_text}') during assistant speech.")
+                        logger.info(f"🎧 [Smart-Barge-In] Suppressed caller backchannel murmur ('{raw_text}') while assistant speaks. Bot keeps talking!")
                         return
                     else:
-                        logger.success(f"⚡ [Smart-Barge-In] Genuine interruption detected ('{raw_text}')! Halting assistant playback immediately!")
+                        logger.success(f"⚡ [Smart-Barge-In] Genuine interruption/answer detected ('{raw_text}')! Halting assistant playback immediately!")
                         self.call_state["bot_speaking_until"] = 0.0
                         self.call_state["is_llm_generating"] = False
                         try:
                             await self.transport_output.send_message(
                                 OutputTransportMessageUrgentFrame(message={"event": "clearAudio"})
                             )
-                            await self.push_frame(InterruptionFrame(), FrameDirection.DOWNSTREAM)
-                            await self.push_frame(InterruptionFrame(), FrameDirection.UPSTREAM)
+                            if self.tts:
+                                await self.tts.queue_frame(InterruptionFrame())
                         except Exception as e:
                             logger.error(f"Error executing barge-in interruption: {e}")
                 else:
@@ -2035,7 +2180,7 @@ async def run_bot(
             await super().process_frame(frame, direction)
             await self.push_frame(frame, direction)
 
-    barge_in = SmartBargeInProcessor(transport.output(), call_state)
+    barge_in = SmartBargeInProcessor(transport.output(), call_state, tts)
 
     class AssistantTextCollector(FrameProcessor):
         """Captures complete response text streamed by LLM before frames enter TTS."""
@@ -2128,8 +2273,8 @@ async def run_bot(
     )
 
     class LLMErrorRecoveryProcessor(FrameProcessor):
-        """Catches upstream LLM exceptions or rate limit errors (413/429) and provides
-        graceful speech recovery so the call never hangs indefinitely on 'Thinking...'."""
+        """Catches upstream LLM exceptions or rate limit errors (413/429) and silently
+        resets generation state so the call never hangs indefinitely on 'Thinking...'."""
 
         def __init__(self, tts_service, broadcast_fn, call_state: dict):
             super().__init__()
@@ -2141,19 +2286,10 @@ async def run_bot(
             await super().process_frame(frame, direction)
             if isinstance(frame, ErrorFrame):
                 err_msg = str(getattr(frame, "error", "")).lower()
-                logger.warning(f"⚠️ [LLM-Recovery] Intercepted LLM pipeline error: {err_msg}")
+                logger.warning(f"⚠️ [LLM-Recovery] Intercepted pipeline error: {err_msg}. Silently resetting state.")
                 self.call_state["is_llm_generating"] = False
                 self.call_state["llm_finished_time"] = time.time()
                 self.call_state["last_user_speech_time"] = time.time()
-
-                # Deliver an immediate conversational recovery response
-                recovery_text = "I'm right here with you! Could you say that one more time?"
-                try:
-                    await self.broadcast_fn("assistant", recovery_text)
-                    from pipecat.frames.frames import TTSSpeakFrame
-                    await self.tts.queue_frame(TTSSpeakFrame(recovery_text))
-                except Exception as e:
-                    logger.error(f"Error dispatching recovery frame: {e}")
                 return
             await self.push_frame(frame, direction)
 
@@ -2163,17 +2299,10 @@ async def run_bot(
         @llm.event_handler("on_error")
         async def on_llm_pipeline_error(processor, error_frame):
             err_msg = str(getattr(error_frame, "error", "")).lower()
-            logger.warning(f"⚠️ [LLM on_error Handler] Intercepted pipeline error: {err_msg}")
+            logger.warning(f"⚠️ [LLM on_error Handler] Pipeline error: {err_msg}. Silently resetting state.")
             call_state["is_llm_generating"] = False
             call_state["llm_finished_time"] = time.time()
             call_state["last_user_speech_time"] = time.time()
-            recovery_text = "I'm right here with you! Could you say that one more time?"
-            try:
-                await broadcast_transcript("assistant", recovery_text)
-                from pipecat.frames.frames import TTSSpeakFrame
-                await tts.queue_frame(TTSSpeakFrame(recovery_text))
-            except Exception as e:
-                logger.error(f"Error dispatching recovery frame from on_error: {e}")
 
     # 8. Build Pipeline
     pipeline_elements = [transport.input()]

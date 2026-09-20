@@ -1,0 +1,19 @@
+{
+  "client_id": "proj_dynamiccoola_840928",
+  "calendar_id": "completely_different@coolbreeze.net",
+  "service_account_json": "",
+  "calendar_webhook_url": "",
+  "sync_enabled": 1,
+  "morning_slot_capacity": 2,
+  "afternoon_slot_capacity": 2,
+  "evening_slot_capacity": 2,
+  "is_connected": 1,
+  "last_tested_at": "2026-09-19 15:03:52",
+  "last_status": "connected",
+  "last_error": null,
+  "oauth_access_token": "",
+  "oauth_refresh_token": "",
+  "oauth_token_expiry": 0,
+  "oauth_user_email": "completely_different@coolbreeze.net",
+  "auth_type": "oauth"
+}

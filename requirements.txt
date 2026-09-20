@@ -1,6 +1,10 @@
-# Pipecat AI core with Groq and Silero VAD support
-pipecat-ai>=0.0.50
-pipecat-ai[groq,silero]>=0.0.50
+# LiveKit Realtime Voice Agent Framework
+livekit>=1.1.18
+livekit-agents>=1.8.0
+livekit-plugins-groq>=1.8.0
+livekit-plugins-deepgram>=1.8.0
+livekit-plugins-silero>=1.8.0
+livekit-plugins-openai>=1.8.0
 
 # Speech to Text and Text to Speech
 faster-whisper>=1.0.0
@@ -14,6 +18,7 @@ fastapi>=0.110.0
 uvicorn[standard]>=0.28.0
 aiohttp>=3.9.0
 requests>=2.31.0
+httpx>=0.27.0
 websockets>=12.0
 
 # Configuration & Utilities
@@ -23,3 +28,5 @@ python-dotenv>=1.0.0
 loguru>=0.7.2
 jinja2>=3.1.3
 python-multipart>=0.0.9
+
+

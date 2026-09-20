@@ -33,7 +33,7 @@ try:
         OPENROUTER_MODEL: str = "google/gemma-4-31b-it:free"
 
         # LLM Provider selection ('auto', 'groq', 'gemini', 'openrouter')
-        LLM_PROVIDER: str = "auto"
+        LLM_PROVIDER: str = "gemini"
 
         # Deepgram Settings (Nova-3 Streaming STT & Flux Cliff TTS)
         DEEPGRAM_API_KEY: str = "f5c0803425b85a228f4ff16eb0d56b20be13d05c"
@@ -51,7 +51,7 @@ try:
 
         # TTS Settings (Kokoro ONNX) — hot-swappable at runtime
         KOKORO_VOICE: str = "af_heart"
-        KOKORO_CACHE_DIR: str = str(Path.home() / ".cache" / "pipecat" / "kokoro-onnx")
+        KOKORO_CACHE_DIR: str = str(Path.home() / ".cache" / "aria" / "kokoro-onnx")
 
         # Greeting — pre-rendered at boot for instant TTFA (Vapi-style)
         GREETING_TEXT: str = (
@@ -81,6 +81,11 @@ try:
 
         # Google Maps / Places API Configuration
         GOOGLE_MAPS_API_KEY: str = ""
+
+        # LiveKit Realtime Voice Agent Settings
+        LIVEKIT_URL: str = "ws://127.0.0.1:7880"
+        LIVEKIT_API_KEY: str = "devkey"
+        LIVEKIT_API_SECRET: str = "secret"
 
 except ImportError:
     from dataclasses import dataclass
@@ -116,7 +121,7 @@ except ImportError:
         WHISPER_CACHE_DIR: str = os.getenv("WHISPER_CACHE_DIR", str(Path.home() / ".cache" / "whisper"))
 
         KOKORO_VOICE: str = os.getenv("KOKORO_VOICE", "af_heart")
-        KOKORO_CACHE_DIR: str = os.getenv("KOKORO_CACHE_DIR", str(Path.home() / ".cache" / "pipecat" / "kokoro-onnx"))
+        KOKORO_CACHE_DIR: str = os.getenv("KOKORO_CACHE_DIR", str(Path.home() / ".cache" / "aria" / "kokoro-onnx"))
 
         GREETING_TEXT: str = os.getenv(
             "GREETING_TEXT",
@@ -140,6 +145,19 @@ except ImportError:
 
         GOOGLE_MAPS_API_KEY: str = os.getenv("GOOGLE_MAPS_API_KEY", "")
 
+        LIVEKIT_URL: str = os.getenv("LIVEKIT_URL", "ws://127.0.0.1:7880")
+        LIVEKIT_API_KEY: str = os.getenv("LIVEKIT_API_KEY", "devkey")
+        LIVEKIT_API_SECRET: str = os.getenv("LIVEKIT_API_SECRET", "secret")
+        LIVEKIT_SIP_TRUNK_ID: str = os.getenv("LIVEKIT_SIP_TRUNK_ID", "")
+
+        TELNYX_API_KEY: str = os.getenv("TELNYX_API_KEY", "")
+        TELNYX_PHONE_NUMBER: str = os.getenv("TELNYX_PHONE_NUMBER", "+18005550199")
+        TELNYX_SIP_CONNECTION_ID: str = os.getenv("TELNYX_SIP_CONNECTION_ID", "")
+
+        TWILIO_ACCOUNT_SID: str = os.getenv("TWILIO_ACCOUNT_SID", "")
+        TWILIO_AUTH_TOKEN: str = os.getenv("TWILIO_AUTH_TOKEN", "")
+        TWILIO_PHONE_NUMBER: str = os.getenv("TWILIO_PHONE_NUMBER", "+18005550198")
+
 
 settings = Settings()
 
@@ -150,20 +168,22 @@ def get_active_llm_info() -> dict:
     try:
         from app.agents import get_active_assistant
         asst = get_active_assistant()
-        agent_llm = asst.get("llm_model", settings.GROQ_MODEL) if asst else settings.GROQ_MODEL
+        agent_llm = asst.get("llm_model", settings.GEMINI_MODEL) if asst else settings.GEMINI_MODEL
     except Exception:
-        agent_llm = settings.GROQ_MODEL
+        agent_llm = settings.GEMINI_MODEL
 
     _DEPRECATED = {"llama-3.3-70b-versatile", "llama-3.1-70b-versatile", "llama-3-70b"}
     if agent_llm in _DEPRECATED:
         agent_llm = "gemini-3.1-flash-lite"
 
-    if "gemini" in agent_llm.lower() and bool(settings.GEMINI_API_KEY):
+    # Primary: Google Gemini Flash
+    if bool(settings.GEMINI_API_KEY) and ("gemini" in agent_llm.lower() or settings.LLM_PROVIDER == "gemini"):
+        model_name = agent_llm if "gemini" in agent_llm.lower() else settings.GEMINI_MODEL
         return {
             "provider": "gemini",
-            "model": agent_llm,
-            "display_name": f"Google Gemini ({agent_llm})",
-            "badge": "⚡ Gemini Flash (Smart)",
+            "model": model_name,
+            "display_name": f"Google Gemini ({model_name})",
+            "badge": "⚡ Gemini 3.1 Flash (Smart & Fast)",
             "is_smart_llm": True,
             "configured": True,
         }
@@ -181,7 +201,7 @@ def get_active_llm_info() -> dict:
             "provider": "gemini",
             "model": settings.GEMINI_MODEL,
             "display_name": f"Google Gemini ({settings.GEMINI_MODEL})",
-            "badge": "⚡ Gemini Flash (Smart)",
+            "badge": "⚡ Gemini 3.1 Flash (Smart & Fast)",
             "is_smart_llm": True,
             "configured": True,
         }

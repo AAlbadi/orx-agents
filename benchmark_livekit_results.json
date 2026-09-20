@@ -1,0 +1,36 @@
+{
+  "timestamp": "2026-09-18 23:06:04 UTC",
+  "framework": "LiveKit Agents v1.8",
+  "llm": {
+    "Groq LPU (Qwen 3.8 27B)": {
+      "ttft_ms": 486.29,
+      "total_time_ms": 887.59,
+      "sample_output": "Hello! I appreciate you reaching out, but I am an AI assistant and **do not",
+      "status": "PASS"
+    },
+    "Google Gemini (3.1 Flash Lite)": {
+      "ttft_ms": 909.68,
+      "total_time_ms": 2062.68,
+      "sample_output": "I would be happy to help you get that scheduled! However, as an AI, I don\u2019t",
+      "status": "PASS"
+    }
+  },
+  "stt": {},
+  "tts": {
+    "Deepgram Aura (Asteria)": {
+      "ttfa_ms": 1963.69,
+      "total_time_ms": 3038.81,
+      "status": "PASS"
+    },
+    "Deepgram Aura-2 (Asteria v2)": {
+      "ttfa_ms": 447.12,
+      "total_time_ms": 1150.59,
+      "status": "PASS"
+    },
+    "Deepgram Flux (Cliff v2)": {
+      "ttfa_ms": 593.35,
+      "total_time_ms": 3268.57,
+      "status": "PASS"
+    }
+  }
+}

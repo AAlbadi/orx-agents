@@ -2619,6 +2619,446 @@
       "google_event_id": null,
       "client_id": null,
       "confirmed_at": "2026-09-18T15:31:54.344140"
+    },
+    {
+      "id": "APT-61321",
+      "call_id": "lk_test-call-1789759626_test",
+      "client_name": "John Doe",
+      "client_phone": "555-123-4567",
+      "service_requested": "AC Inspection",
+      "service_address": "123 Maple Street",
+      "appointment_date": "2026-09-19",
+      "window": "afternoon",
+      "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)",
+      "status": "pending_owner_approval",
+      "created_at": "2026-09-18T23:27:12.060370",
+      "summary": "John Doe called to report his AC blowing warm air and requested an inspection. An appointment was scheduled for September 19, 2026 at 02:00 PM at 123 Maple Street.",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-19",
+          "window": "afternoon",
+          "label": "Sat Sep 19 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-19",
+          "window": "morning",
+          "label": "Sat Sep 19 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-21",
+          "window": "morning",
+          "label": "Mon Sep 21 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://networking-liked-armstrong-indication.trycloudflare.com/a/APT-61321",
+      "google_event_id": null,
+      "client_id": null
+    },
+    {
+      "id": "APT-95051",
+      "call_id": "lk_aria-room-pwm875_1789803472",
+      "client_name": "Abdul Aziz Albadi",
+      "client_phone": "6127169989",
+      "service_requested": "Thermostat issue",
+      "service_address": "2508 Delaware Street, Minneapolis, Minnesota 55414",
+      "appointment_date": "2026-09-20",
+      "window": "afternoon",
+      "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)",
+      "status": "pending_owner_approval",
+      "created_at": "2026-09-19T11:41:13.714532",
+      "summary": "The customer reported a thermostat/sensor issue and requested service for the next day. An appointment was scheduled for any time after 2:00 PM on September 20, 2026 at the provided address.",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-20",
+          "window": "afternoon",
+          "label": "Sun Sep 20 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-20",
+          "window": "morning",
+          "label": "Sun Sep 20 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-21",
+          "window": "morning",
+          "label": "Mon Sep 21 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://networking-liked-armstrong-indication.trycloudflare.com/a/APT-95051",
+      "google_event_id": null,
+      "client_id": null
+    },
+    {
+      "id": "APT-55041",
+      "call_id": "lk_aria-room-hsjnih_1789804615",
+      "client_name": "Valued Customer",
+      "client_phone": "LiveKit Web User",
+      "service_requested": "AC Repair",
+      "service_address": "2508 Delaware Street, Minneapolis, Minnesota, 55414",
+      "appointment_date": "2026-09-20",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "pending_owner_approval",
+      "created_at": "2026-09-19T11:58:13.404723",
+      "summary": "The customer reported that their AC does not turn on and requested service for the next day. The receptionist collected the service address and scheduled a technician visit for September 20, 2026.",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-20",
+          "window": "morning",
+          "label": "Sun Sep 20 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-20",
+          "window": "afternoon",
+          "label": "Sun Sep 20 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-21",
+          "window": "morning",
+          "label": "Mon Sep 21 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://networking-liked-armstrong-indication.trycloudflare.com/a/APT-55041",
+      "google_event_id": null,
+      "client_id": null
+    },
+    {
+      "id": "APT-29955",
+      "call_id": "lk_aria-room-f5mr2w_1789809508",
+      "client_name": "Valued Customer",
+      "client_phone": "LiveKit Web User",
+      "service_requested": "AC Repair",
+      "service_address": "2508 Delaware Street, Minneapolis, 55414",
+      "appointment_date": "2026-09-28",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "pending_owner_approval",
+      "created_at": "2026-09-19T13:21:31.444928",
+      "summary": "The customer reported that their air conditioning unit is completely shut off and requested service. An appointment was scheduled for September 28, 2026, with the exact time to be confirmed.",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-28",
+          "window": "morning",
+          "label": "Mon Sep 28 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-28",
+          "window": "afternoon",
+          "label": "Mon Sep 28 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-29",
+          "window": "morning",
+          "label": "Tue Sep 29 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://networking-liked-armstrong-indication.trycloudflare.com/a/APT-29955",
+      "google_event_id": null,
+      "client_id": null
+    },
+    {
+      "id": "APT-52378",
+      "call_id": "lk_aria-room-xk5efd_1789810256",
+      "client_name": "Abdul Aziz Alpadi",
+      "client_phone": "(612) 716-9989",
+      "service_requested": "HVAC system not turning on (no cooling)",
+      "service_address": "2508 Delaware Street, Minneapolis, Minnesota 55414",
+      "appointment_date": "2026-09-20",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "pending_owner_approval",
+      "created_at": "2026-09-19T13:36:12.135245",
+      "summary": "The customer reported a completely non\u2011functional HVAC system causing high indoor temperatures and requested service as soon as possible. An appointment was scheduled for tomorrow morning, September 20, 2026, at 9:00\u202fAM at 2508 Delaware Street, Minneapolis.",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-20",
+          "window": "morning",
+          "label": "Sun Sep 20 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-20",
+          "window": "afternoon",
+          "label": "Sun Sep 20 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-21",
+          "window": "morning",
+          "label": "Mon Sep 21 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://networking-liked-armstrong-indication.trycloudflare.com/a/APT-52378",
+      "google_event_id": null,
+      "client_id": null
+    },
+    {
+      "id": "APT-58493",
+      "call_id": "lk_aria-room-7uruz3_1789811627",
+      "client_name": "Valued Customer",
+      "client_phone": "LiveKit Web User",
+      "service_requested": "Heating or cooling system service",
+      "service_address": "Address on file",
+      "appointment_date": "2026-09-20",
+      "window": "afternoon",
+      "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)",
+      "status": "pending_owner_approval",
+      "created_at": "2026-09-19T13:54:31.597818",
+      "summary": "The customer requested a service appointment for their heating or cooling system for tomorrow afternoon. The assistant is currently gathering details to finalize the scheduling.",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-20",
+          "window": "afternoon",
+          "label": "Sun Sep 20 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-20",
+          "window": "morning",
+          "label": "Sun Sep 20 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-21",
+          "window": "morning",
+          "label": "Mon Sep 21 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://arctic-association-james-areas.trycloudflare.com/a/APT-58493",
+      "google_event_id": null,
+      "client_id": null
+    },
+    {
+      "id": "APT-13979",
+      "call_id": "lk_aria-room-h1ha5l_1789811674",
+      "client_name": "Abdul Albadi",
+      "client_phone": "612-716-9989",
+      "service_requested": "HVAC repair",
+      "service_address": "2508 Delaware Street, Minneapolis, Minnesota, 55414",
+      "appointment_date": "2026-09-20",
+      "window": "afternoon",
+      "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)",
+      "status": "pending_owner_approval",
+      "created_at": "2026-09-19T13:58:44.254653",
+      "summary": "The customer reported that their HVAC system does not run at all and requested service for the next afternoon. An appointment was scheduled for 2:00 PM to 5:00 PM on 2026-09-20 at the provided address, with the corrected email and phone number confirmed for notifications.",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-20",
+          "window": "afternoon",
+          "label": "Sun Sep 20 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-20",
+          "window": "morning",
+          "label": "Sun Sep 20 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-21",
+          "window": "morning",
+          "label": "Mon Sep 21 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://arctic-association-james-areas.trycloudflare.com/a/APT-13979",
+      "google_event_id": null,
+      "client_id": null
+    },
+    {
+      "id": "APT-12114",
+      "call_id": "lk_test_128028",
+      "client_name": "Abdul Aziz Albadi",
+      "client_phone": "612-716-9989",
+      "service_requested": "AC Repair",
+      "service_address": "2508 Delaware Street, Minneapolis",
+      "appointment_date": "2026-09-20",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "pending_owner_approval",
+      "created_at": "2026-09-19T14:05:32.438580",
+      "summary": "The customer reported a broken AC and requested service for tomorrow morning. An appointment was scheduled for September 20, 2026 between 9:00 AM and 12:00 PM at 2508 Delaware Street, Minneapolis.",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-20",
+          "window": "morning",
+          "label": "Sun Sep 20 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-20",
+          "window": "afternoon",
+          "label": "Sun Sep 20 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-21",
+          "window": "morning",
+          "label": "Mon Sep 21 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://arctic-association-james-areas.trycloudflare.com/a/APT-12114",
+      "google_event_id": null,
+      "client_id": null
+    },
+    {
+      "id": "APT-88444",
+      "call_id": "test_call_1789813860",
+      "client_name": "Abdul Aziz Albadi",
+      "client_phone": "+16127169989",
+      "service_requested": "AC repair",
+      "service_address": "2508 Delaware Street, Minneapolis, MN 55414",
+      "appointment_date": "2026-09-20",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "pending_owner_approval",
+      "created_at": "2026-09-19T14:31:01.806010",
+      "summary": "The customer reported that their AC is blowing warm air and needs repair, and provided the service address. An appointment was scheduled for the morning of September 20, 2026, between 9:00 AM and 12:00 PM.",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-20",
+          "window": "morning",
+          "label": "Sun Sep 20 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-20",
+          "window": "afternoon",
+          "label": "Sun Sep 20 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-21",
+          "window": "morning",
+          "label": "Mon Sep 21 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://arctic-association-james-areas.trycloudflare.com/a/APT-88444",
+      "google_event_id": null,
+      "client_id": null
+    },
+    {
+      "id": "APT-20578",
+      "call_id": "test_call_1789814322",
+      "client_name": "Abdul Aziz Albadi",
+      "client_phone": "+16127169989",
+      "service_requested": "AC Repair",
+      "service_address": "2508 Delaware Street, Minneapolis, MN 55414",
+      "appointment_date": "2026-09-20",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "pending_owner_approval",
+      "created_at": "2026-09-19T14:38:44.232278",
+      "summary": "The customer reported that their AC is blowing warm air and needs repair. An appointment was scheduled for AC repair on 2026-09-20 between 9:00 AM and 12:00 PM at the provided address.",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-20",
+          "window": "morning",
+          "label": "Sun Sep 20 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-20",
+          "window": "afternoon",
+          "label": "Sun Sep 20 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-21",
+          "window": "morning",
+          "label": "Mon Sep 21 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://arctic-association-james-areas.trycloudflare.com/a/APT-20578",
+      "google_event_id": null,
+      "client_id": null
+    },
+    {
+      "id": "APT-49689",
+      "call_id": "test_call_1789824311",
+      "client_name": "Sarah Connor",
+      "client_phone": "+12065559876",
+      "service_requested": "AC Repair",
+      "service_address": "123 Rainier Ave S, Seattle, WA 98144",
+      "appointment_date": "2026-09-20",
+      "window": "morning",
+      "window_label": "Morning (8:00 AM \u2013 12:00 PM)",
+      "status": "pending_owner_approval",
+      "created_at": "2026-09-19T17:25:13.536453",
+      "summary": "The customer reported that their AC is blowing warm air and requested repair. An appointment was scheduled for September 20, 2026 at 9:00 AM at the provided address.",
+      "options": {
+        "1": {
+          "key": "1",
+          "date": "2026-09-20",
+          "window": "morning",
+          "label": "Sun Sep 20 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        },
+        "2": {
+          "key": "2",
+          "date": "2026-09-20",
+          "window": "afternoon",
+          "label": "Sun Sep 20 (12pm-4pm)",
+          "window_label": "Afternoon (12:00 PM \u2013 4:00 PM)"
+        },
+        "3": {
+          "key": "3",
+          "date": "2026-09-21",
+          "window": "morning",
+          "label": "Mon Sep 21 (8am-12pm)",
+          "window_label": "Morning (8:00 AM \u2013 12:00 PM)"
+        }
+      },
+      "action_url": "https://arctic-association-james-areas.trycloudflare.com/a/APT-49689",
+      "google_event_id": null,
+      "client_id": null
     }
   ]
 }

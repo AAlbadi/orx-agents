@@ -12,5 +12,6 @@
   "status": "active",
   "trigger_source": "admin",
   "created_at": "2026-09-18 15:31:18",
-  "updated_at": "2026-09-18 15:31:18"
+  "updated_at": "2026-09-18 15:31:18",
+  "sms_notifications_enabled": 1
 }

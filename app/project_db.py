@@ -69,6 +69,7 @@ def init_project_db(client_id: str):
             timezone TEXT DEFAULT 'America/New_York',
             status TEXT DEFAULT 'active',
             trigger_source TEXT DEFAULT 'admin',
+            sms_notifications_enabled INTEGER DEFAULT 1,
             created_at TEXT,
             updated_at TEXT
         );
@@ -77,6 +78,7 @@ def init_project_db(client_id: str):
             client_id TEXT PRIMARY KEY,
             persona_name TEXT,
             system_prompt TEXT,
+            livekit_prompt TEXT,
             first_message TEXT,
             tts_voice TEXT,
             voice_speed REAL DEFAULT 1.0,
@@ -141,6 +143,44 @@ def init_project_db(client_id: str):
         CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status);
         CREATE INDEX IF NOT EXISTS idx_call_logs_caller ON call_logs(caller_phone);
         """)
+
+        # Migrations for existing project databases
+        cur.execute("PRAGMA table_info(custom_prompt)")
+        cp_cols = [c[1] for c in cur.fetchall()]
+        if "livekit_prompt" not in cp_cols:
+            try:
+                cur.execute("ALTER TABLE custom_prompt ADD COLUMN livekit_prompt TEXT")
+            except Exception:
+                pass
+        if "tone_preset" not in cp_cols:
+            try:
+                cur.execute("ALTER TABLE custom_prompt ADD COLUMN tone_preset TEXT DEFAULT 'warm_empathetic'")
+            except Exception:
+                pass
+
+        cur.execute("PRAGMA table_info(project_meta)")
+        pm_cols = [c[1] for c in cur.fetchall()]
+        if "sms_notifications_enabled" not in pm_cols:
+            try:
+                cur.execute("ALTER TABLE project_meta ADD COLUMN sms_notifications_enabled INTEGER DEFAULT 1")
+            except Exception:
+                pass
+
+        cur.execute("PRAGMA table_info(google_calendar_config)")
+        gcc_cols = [c[1] for c in cur.fetchall()]
+        for col_name, col_def in [
+            ("oauth_access_token", "TEXT DEFAULT ''"),
+            ("oauth_refresh_token", "TEXT DEFAULT ''"),
+            ("oauth_token_expiry", "INTEGER DEFAULT 0"),
+            ("oauth_user_email", "TEXT DEFAULT ''"),
+            ("auth_type", "TEXT DEFAULT 'oauth'")
+        ]:
+            if col_name not in gcc_cols:
+                try:
+                    cur.execute(f"ALTER TABLE google_calendar_config ADD COLUMN {col_name} {col_def}")
+                except Exception:
+                    pass
+
         conn.commit()
     finally:
         conn.close()
@@ -151,6 +191,23 @@ def _write_json_safely(path: Path, data: Any):
     temp_path = path.with_suffix(".tmp")
     temp_path.write_text(json.dumps(data, indent=2, default=str))
     temp_path.replace(path)
+
+
+def compile_livekit_voice_prompt(data: Dict[str, Any]) -> str:
+    """
+    Compiles voice instructions tailored for LiveKit voice agents.
+    Uses custom system prompt or livekit_prompt if explicitly provided (>400 chars),
+    or generates a Marcus-grade master prompt dynamically from client onboarding data.
+    """
+    if data.get("livekit_prompt") and len(data["livekit_prompt"]) > 400:
+        return data["livekit_prompt"].strip()
+    if data.get("system_prompt") and len(data["system_prompt"]) > 400:
+        return data["system_prompt"].strip()
+    if data.get("compiled_prompt") and len(data["compiled_prompt"]) > 400:
+        return data["compiled_prompt"].strip()
+    
+    from app.onboarding import compile_agent_prompt
+    return compile_agent_prompt(data)
 
 
 def sync_project_json_files(client_id: str):
@@ -164,7 +221,11 @@ def sync_project_json_files(client_id: str):
     _write_json_safely(pdir / "project.json", project.get("meta", {}))
 
     # 2. prompt.json
-    _write_json_safely(pdir / "prompt.json", project.get("prompt", {}))
+    prompt_dict = project.get("prompt", {}).copy()
+    if "livekit_prompt" in project and "livekit_prompt" not in prompt_dict:
+        prompt_dict["livekit_prompt"] = project["livekit_prompt"]
+    prompt_dict["character_count"] = len(prompt_dict.get("livekit_prompt", ""))
+    _write_json_safely(pdir / "prompt.json", prompt_dict)
 
     # 3. calendar.json
     _write_json_safely(pdir / "calendar.json", project.get("calendar", {}))
@@ -199,13 +260,15 @@ def create_project(data: Dict[str, Any], trigger_source: str = "admin") -> Dict[
         owner_email = data.get("owner_email") or data.get("email") or ""
         timezone = data.get("timezone") or "America/New_York"
         status = data.get("status") or "active"
+        sms_enabled = 1 if data.get("sms_notifications_enabled", True) else 0
 
         cur.execute("""
             INSERT INTO project_meta (
                 client_id, project_name, business_name, industry, address,
                 forwarding_phone, assigned_phone, owner_phone, owner_email,
-                timezone, status, trigger_source, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                timezone, status, trigger_source, sms_notifications_enabled,
+                created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(client_id) DO UPDATE SET
                 project_name=excluded.project_name,
                 business_name=excluded.business_name,
@@ -217,19 +280,24 @@ def create_project(data: Dict[str, Any], trigger_source: str = "admin") -> Dict[
                 owner_email=excluded.owner_email,
                 timezone=excluded.timezone,
                 status=excluded.status,
+                sms_notifications_enabled=excluded.sms_notifications_enabled,
                 updated_at=excluded.updated_at
         """, (
             clean_id, project_name, biz_name, industry, address,
             forwarding, assigned, owner_phone, owner_email,
-            timezone, status, trigger_source, now_str, now_str
+            timezone, status, trigger_source, sms_enabled, now_str, now_str
         ))
 
-        # 2. Custom Prompt
+        # 2. Custom Prompt & Character-Optimized LiveKit Voice Instructions
         persona_name = data.get("persona_name") or "Riley"
+        from app.onboarding import compile_agent_prompt
         system_prompt = data.get("compiled_prompt") or data.get("system_prompt") or ""
-        if not system_prompt:
-            from app.onboarding import compile_agent_prompt
+        if not system_prompt or len(system_prompt) < 400:
             system_prompt = compile_agent_prompt(data)
+
+        livekit_prompt = data.get("livekit_prompt")
+        if not livekit_prompt or len(livekit_prompt) < 400:
+            livekit_prompt = system_prompt
 
         first_message = data.get("first_message") or (
             f"Thank you for calling {biz_name}. This is {persona_name}, your virtual receptionist. "
@@ -244,16 +312,18 @@ def create_project(data: Dict[str, Any], trigger_source: str = "admin") -> Dict[
         booking_action = data.get("booking_action") or "schedule arrival window"
         custom_qa = data.get("custom_qa", [])
         qa_str = json.dumps(custom_qa) if isinstance(custom_qa, list) else str(custom_qa)
+        tone_preset = data.get("tone_preset") or data.get("tone_id") or "warm_empathetic"
 
         cur.execute("""
             INSERT INTO custom_prompt (
-                client_id, persona_name, system_prompt, first_message,
+                client_id, persona_name, system_prompt, livekit_prompt, first_message,
                 tts_voice, voice_speed, services, emergency_triggers,
-                hours, pricing_policy, booking_action, custom_qa, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                hours, pricing_policy, booking_action, custom_qa, tone_preset, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(client_id) DO UPDATE SET
                 persona_name=excluded.persona_name,
                 system_prompt=excluded.system_prompt,
+                livekit_prompt=excluded.livekit_prompt,
                 first_message=excluded.first_message,
                 tts_voice=excluded.tts_voice,
                 voice_speed=excluded.voice_speed,
@@ -263,11 +333,12 @@ def create_project(data: Dict[str, Any], trigger_source: str = "admin") -> Dict[
                 pricing_policy=excluded.pricing_policy,
                 booking_action=excluded.booking_action,
                 custom_qa=excluded.custom_qa,
+                tone_preset=excluded.tone_preset,
                 updated_at=excluded.updated_at
         """, (
-            clean_id, persona_name, system_prompt, first_message,
+            clean_id, persona_name, system_prompt, livekit_prompt, first_message,
             tts_voice, voice_speed, services, emergency_triggers,
-            hours, pricing_policy, booking_action, qa_str, now_str
+            hours, pricing_policy, booking_action, qa_str, tone_preset, now_str
         ))
 
         # 3. Google Calendar Config
@@ -279,12 +350,20 @@ def create_project(data: Dict[str, Any], trigger_source: str = "admin") -> Dict[
         a_cap = int(data.get("afternoon_slot_capacity", 2))
         e_cap = int(data.get("evening_slot_capacity", 2))
 
+        oauth_email = data.get("oauth_user_email") or (cal_id if "@" in cal_id else "")
+        oauth_access = data.get("oauth_access_token", "")
+        oauth_refresh = data.get("oauth_refresh_token", "")
+        is_conn = 1 if (data.get("is_connected") or oauth_email) else 0
+        auth_type = data.get("auth_type", "oauth" if oauth_email else "manual")
+        last_stat = 'connected' if is_conn else 'untested'
+
         cur.execute("""
             INSERT INTO google_calendar_config (
                 client_id, calendar_id, service_account_json, calendar_webhook_url,
                 sync_enabled, morning_slot_capacity, afternoon_slot_capacity,
-                evening_slot_capacity, is_connected, last_tested_at, last_status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, NULL, 'untested')
+                evening_slot_capacity, is_connected, last_tested_at, last_status,
+                oauth_access_token, oauth_refresh_token, oauth_user_email, auth_type
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(client_id) DO UPDATE SET
                 calendar_id=CASE WHEN excluded.calendar_id != 'primary' THEN excluded.calendar_id ELSE google_calendar_config.calendar_id END,
                 service_account_json=CASE WHEN excluded.service_account_json != '' THEN excluded.service_account_json ELSE google_calendar_config.service_account_json END,
@@ -292,9 +371,16 @@ def create_project(data: Dict[str, Any], trigger_source: str = "admin") -> Dict[
                 sync_enabled=excluded.sync_enabled,
                 morning_slot_capacity=excluded.morning_slot_capacity,
                 afternoon_slot_capacity=excluded.afternoon_slot_capacity,
-                evening_slot_capacity=excluded.evening_slot_capacity
+                evening_slot_capacity=excluded.evening_slot_capacity,
+                is_connected=CASE WHEN excluded.is_connected = 1 THEN 1 ELSE google_calendar_config.is_connected END,
+                oauth_access_token=CASE WHEN excluded.oauth_access_token != '' THEN excluded.oauth_access_token ELSE google_calendar_config.oauth_access_token END,
+                oauth_refresh_token=CASE WHEN excluded.oauth_refresh_token != '' THEN excluded.oauth_refresh_token ELSE google_calendar_config.oauth_refresh_token END,
+                oauth_user_email=CASE WHEN excluded.oauth_user_email != '' THEN excluded.oauth_user_email ELSE google_calendar_config.oauth_user_email END,
+                auth_type=CASE WHEN excluded.auth_type != '' THEN excluded.auth_type ELSE google_calendar_config.auth_type END
         """, (
-            clean_id, cal_id, sa_json, cal_webhook, sync_enabled, m_cap, a_cap, e_cap
+            clean_id, cal_id, sa_json, cal_webhook, sync_enabled, m_cap, a_cap, e_cap,
+            is_conn, now_str if is_conn else None, last_stat,
+            oauth_access, oauth_refresh, oauth_email, auth_type
         ))
 
         conn.commit()
@@ -305,6 +391,82 @@ def create_project(data: Dict[str, Any], trigger_source: str = "admin") -> Dict[
     _update_projects_index()
     logger.success(f"✅ Created dedicated project & database for client '{clean_id}' ({biz_name}) via {trigger_source}")
     return get_project(clean_id) or {}
+
+
+def trigger_new_client_project(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Invoked when a client buys our voice agents (e.g. from stripe webhook, polar checkout,
+    subscribe page, or API).
+    Provisions:
+    1. Dedicated project directory `data/projects/{client_id}/`
+    2. Dedicated SQLite database `data/projects/{client_id}/client.db`
+    3. Human-readable `project.json`, `prompt.json`, `calendar.json`
+    4. Automatically tailored character-optimized voice instructions for LiveKit (<600 chars)
+    5. Connects assigned phone number, Google Calendar, and SMS notifications.
+    """
+    payload = data.copy()
+    client_id = payload.get("id") or payload.get("client_id")
+    if not client_id:
+        biz_name_raw = payload.get("business_name") or payload.get("name") or "client"
+        biz_slug = re.sub(r'[^a-zA-Z0-9]', '', biz_name_raw).lower()[:12]
+        client_id = f"proj_{biz_slug}_{uuid.uuid4().hex[:6]}"
+    payload["id"] = client_id
+    payload["client_id"] = client_id
+
+    # 1. Connect assigned phone number
+    if not payload.get("assigned_phone"):
+        payload["assigned_phone"] = os.getenv("PLIVO_PHONE_NUMBER") or "+1 (833) 420-5227"
+
+    # 2. Connect forwarding and owner phone
+    if not payload.get("forwarding_phone") and payload.get("phone"):
+        payload["forwarding_phone"] = payload.get("phone")
+    if not payload.get("owner_phone"):
+        payload["owner_phone"] = payload.get("forwarding_phone") or payload.get("phone") or ""
+
+    # 3. Connect SMS notifications
+    if "sms_notifications_enabled" not in payload:
+        payload["sms_notifications_enabled"] = 1
+
+    # 4. Connect Google Calendar config
+    if "calendar_sync_enabled" not in payload:
+        payload["calendar_sync_enabled"] = True
+    if not payload.get("google_calendar_id") and not payload.get("calendar_id"):
+        from app.integrations import get_integrations_settings
+        global_cfg = get_integrations_settings()
+        payload["google_calendar_id"] = global_cfg.get("google_calendar_id", "primary")
+
+    # 5. Compile character-optimized LiveKit prompt (<600 chars)
+    livekit_prompt = compile_livekit_voice_prompt(payload)
+    payload["livekit_prompt"] = livekit_prompt
+
+    trigger_src = payload.get("trigger_source") or "onboarding_buy"
+    project = create_project(payload, trigger_source=trigger_src)
+
+    # 6. Automated welcome SMS notification to owner/forwarding phone if requested
+    if payload.get("send_welcome_sms", False) and payload.get("owner_phone"):
+        try:
+            from app.integrations import send_sms
+            biz = payload.get("business_name") or "your business"
+            assigned = payload.get("assigned_phone")
+            welcome_text = (
+                f"🎉 Welcome to ORX Voice AI for {biz}! "
+                f"Your dedicated line {assigned} is active. "
+                f"Your LiveKit AI receptionist is online and ready to answer calls."
+            )
+            import asyncio
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    loop.create_task(send_sms(to_phone=payload["owner_phone"], message=welcome_text))
+                else:
+                    loop.run_until_complete(send_sms(to_phone=payload["owner_phone"], message=welcome_text))
+            except Exception:
+                asyncio.run(send_sms(to_phone=payload["owner_phone"], message=welcome_text))
+        except Exception as sms_err:
+            logger.warning(f"Could not dispatch welcome SMS for project '{client_id}': {sms_err}")
+
+    logger.success(f"🚀 Successfully triggered new client project '{client_id}' with dedicated DB & LiveKit prompt ({len(livekit_prompt)} chars)")
+    return project
 
 
 def get_project(client_id: str) -> Optional[Dict[str, Any]]:
@@ -342,10 +504,16 @@ def get_project(client_id: str) -> Optional[Dict[str, Any]]:
         cur.execute("SELECT COUNT(*) as count FROM call_logs WHERE client_id = ?", (clean_id,))
         call_count = cur.fetchone()["count"]
 
+        livekit_prompt = prompt.get("livekit_prompt") or ""
+        tone_preset = prompt.get("tone_preset") or "warm_empathetic"
+
         return {
             "id": clean_id,
             "meta": meta,
             "prompt": prompt,
+            "tone_preset": tone_preset,
+            "livekit_prompt": livekit_prompt,
+            "character_count": len(livekit_prompt),
             "calendar": cal,
             "stats": {
                 "appointments_count": apt_count,
@@ -381,6 +549,7 @@ def update_project(client_id: str, updates: Dict[str, Any]) -> Dict[str, Any]:
         updates["id"] = clean_id
         return create_project(updates, trigger_source="admin")
 
+    init_project_db(clean_id)
     conn = get_db_connection(clean_id)
     cur = conn.cursor()
     now_str = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -389,7 +558,7 @@ def update_project(client_id: str, updates: Dict[str, Any]) -> Dict[str, Any]:
         # Update Meta fields
         meta_fields = ["project_name", "business_name", "industry", "address",
                        "forwarding_phone", "assigned_phone", "owner_phone",
-                       "owner_email", "timezone", "status"]
+                       "owner_email", "timezone", "status", "sms_notifications_enabled"]
         meta_updates = {k: updates[k] for k in meta_fields if k in updates}
         if meta_updates:
             set_clause = ", ".join([f"{k} = ?" for k in meta_updates.keys()])
@@ -397,13 +566,20 @@ def update_project(client_id: str, updates: Dict[str, Any]) -> Dict[str, Any]:
             cur.execute(f"UPDATE project_meta SET {set_clause}, updated_at = ? WHERE client_id = ?", params)
 
         # Update Prompt fields
-        prompt_fields = ["persona_name", "system_prompt", "first_message", "tts_voice",
+        prompt_fields = ["persona_name", "system_prompt", "livekit_prompt", "first_message", "tts_voice",
                          "voice_speed", "services", "emergency_triggers", "hours",
                          "pricing_policy", "booking_action"]
         prompt_updates = {k: updates[k] for k in prompt_fields if k in updates}
         if "custom_qa" in updates:
             qa_val = updates["custom_qa"]
             prompt_updates["custom_qa"] = json.dumps(qa_val) if isinstance(qa_val, list) else str(qa_val)
+
+        # If voice instructions or business settings changed and no explicit livekit_prompt given, recompile
+        if "livekit_prompt" not in updates and any(k in updates for k in ["business_name", "persona_name", "hours", "services", "pricing_policy", "transfer_rules"]):
+            combined_data = proj.get("meta", {}).copy()
+            combined_data.update(proj.get("prompt", {}))
+            combined_data.update(updates)
+            prompt_updates["livekit_prompt"] = compile_livekit_voice_prompt(combined_data)
 
         if prompt_updates:
             set_clause = ", ".join([f"{k} = ?" for k in prompt_updates.keys()])
@@ -491,6 +667,16 @@ def get_project_calendar_config(client_id: str) -> Dict[str, Any]:
     clean_id = re.sub(r'[^a-zA-Z0-9_\-]', '_', client_id)
     from app.integrations import get_integrations_settings
     global_cfg = get_integrations_settings()
+
+    # 1. Check dedicated calendar.json file
+    cal_file = get_project_dir(clean_id) / "calendar.json"
+    if cal_file.exists():
+        try:
+            cal_data = json.loads(cal_file.read_text())
+            if cal_data:
+                return cal_data
+        except Exception:
+            pass
 
     proj = get_project(clean_id)
     if not proj or not proj.get("calendar"):

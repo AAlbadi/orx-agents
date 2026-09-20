@@ -1,0 +1,17 @@
+{
+  "client_id": "proj_apexpremierh_55aa71",
+  "project_name": "Apex Premier HVAC Solutions Project",
+  "business_name": "Apex Premier HVAC Solutions",
+  "industry": "hvac",
+  "address": "",
+  "forwarding_phone": "+1 (555) 987-6543",
+  "assigned_phone": "+1 (833) 420-5227",
+  "owner_phone": "+1 (555) 987-6543",
+  "owner_email": "owner@apexpremierhvac.com",
+  "timezone": "America/New_York",
+  "status": "active",
+  "trigger_source": "onboarding_buy",
+  "sms_notifications_enabled": 1,
+  "created_at": "2026-09-18 23:31:31",
+  "updated_at": "2026-09-18 23:31:31"
+}

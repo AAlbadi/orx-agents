@@ -1,0 +1,12 @@
+{
+  "client_id": "riley_hvac",
+  "calendar_id": "primary",
+  "auth_type": "oauth",
+  "is_connected": true,
+  "oauth_user_email": "s948338333443@gmail.com",
+  "oauth_user_name": "S948338333443",
+  "oauth_access_token": "sandbox_oauth_token_verified",
+  "oauth_refresh_token": "sandbox_refresh_token_verified",
+  "oauth_token_expiry": 1792408015,
+  "last_connected_at": "2026-09-19 15:06:55"
+}

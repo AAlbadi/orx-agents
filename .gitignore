@@ -26,3 +26,12 @@ whisper_cache/
 
 # Logs
 *.log
+
+# Audio and test recordings
+*.wav
+data/recordings/*.wav
+data/recordings/*
+!data/recordings/.gitkeep
+
+# Active Auth Sessions
+data/auth_sessions.json

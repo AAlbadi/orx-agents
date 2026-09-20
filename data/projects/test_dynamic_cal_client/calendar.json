@@ -1,0 +1,12 @@
+{
+  "client_id": "test_dynamic_cal_client",
+  "calendar_id": "primary",
+  "auth_type": "oauth",
+  "is_connected": true,
+  "oauth_user_email": "completely_different@coolbreeze.net",
+  "oauth_user_name": "Completely_Different",
+  "oauth_access_token": "sandbox_oauth_token_verified",
+  "oauth_refresh_token": "sandbox_refresh_token_verified",
+  "oauth_token_expiry": 1792407832,
+  "last_connected_at": "2026-09-19 15:03:52"
+}

@@ -547,6 +547,17 @@ INDUSTRIES: Dict[str, Dict[str, Any]] = {
     },
 }
 
+from app.industry_topics import (
+    INDUSTRY_TOPIC_CATEGORIES,
+    COMMON_TIMEZONES,
+    SCHEDULE_MODES,
+    AFTER_HOURS_POLICIES,
+    get_industry_topics,
+)
+
+for ind_id, ind_data in INDUSTRIES.items():
+    ind_data["topic_categories"] = get_industry_topics(ind_id)
+
 # ---------------------------------------------------------------------------
 # Business Auto-Discovery & Address Enrichment Engine
 # ---------------------------------------------------------------------------
@@ -561,27 +572,15 @@ def scrape_business_intelligence(query_text: str) -> Optional[Dict[str, Any]]:
 
     snippets = []
 
-    # 1. Primary: Firecrawl search (keyless, high-reliability)
-    try:
-        resp = requests.post(
-            "https://api.firecrawl.dev/v1/search",
-            json={"query": f'"{clean_q}"'},
-            headers={"Content-Type": "application/json"},
-            timeout=4.0
-        )
-        if resp.status_code == 200:
-            for item in resp.json().get("data", []):
-                t = item.get("title", "")
-                d = item.get("description", "")
-                if t or d:
-                    snippets.append(f"{t}: {d}")
-
-        if not snippets:
+    # 1. Primary: Firecrawl search (only if API key is explicitly configured)
+    firecrawl_key = getattr(settings, "FIRECRAWL_API_KEY", None) or os.environ.get("FIRECRAWL_API_KEY")
+    if firecrawl_key:
+        try:
             resp = requests.post(
                 "https://api.firecrawl.dev/v1/search",
-                json={"query": clean_q},
-                headers={"Content-Type": "application/json"},
-                timeout=4.0
+                json={"query": f'"{clean_q}"'},
+                headers={"Content-Type": "application/json", "Authorization": f"Bearer {firecrawl_key}"},
+                timeout=2.5
             )
             if resp.status_code == 200:
                 for item in resp.json().get("data", []):
@@ -589,10 +588,10 @@ def scrape_business_intelligence(query_text: str) -> Optional[Dict[str, Any]]:
                     d = item.get("description", "")
                     if t or d:
                         snippets.append(f"{t}: {d}")
-    except Exception as e:
-        logger.debug(f"Firecrawl search error: {e}")
+        except Exception as e:
+            logger.debug(f"Firecrawl search error: {e}")
 
-    # 2. Fallback: DuckDuckGo Lite POST
+    # 2. Fallback: DuckDuckGo Lite POST (Fast, zero key, reliable)
     if not snippets:
         try:
             url = "https://lite.duckduckgo.com/lite/"
@@ -602,7 +601,7 @@ def scrape_business_intelligence(query_text: str) -> Optional[Dict[str, Any]]:
                 "Content-Type": "application/x-www-form-urlencoded",
             }
             req = urllib.request.Request(url, data=data, headers=headers)
-            with urllib.request.urlopen(req, timeout=3.5) as resp:
+            with urllib.request.urlopen(req, timeout=2.0) as resp:
                 if resp.status == 200:
                     html = resp.read().decode("utf-8", errors="ignore")
                     raw_snippets = re.findall(r"class=[\"\x27]?result-snippet[\"\x27]?[^>]*>(.*?)</td>", html, re.DOTALL)
@@ -613,12 +612,27 @@ def scrape_business_intelligence(query_text: str) -> Optional[Dict[str, Any]]:
         except Exception as e:
             logger.debug(f"DDG Lite fallback error: {e}")
 
+    # 3. Fallback: Yahoo Search
+    if not snippets:
+        try:
+            from bs4 import BeautifulSoup
+            y_url = f"https://search.yahoo.com/search?p={urllib.parse.quote(clean_q)}"
+            y_resp = requests.get(y_url, headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"}, timeout=2.0)
+            if y_resp.status_code == 200:
+                soup = BeautifulSoup(y_resp.text, "html.parser")
+                for div in soup.find_all("div", class_="compText"):
+                    txt = div.get_text().strip()
+                    if txt:
+                        snippets.append(txt)
+        except Exception as e:
+            logger.debug(f"Yahoo search fallback error: {e}")
+
     if not snippets:
         return None
 
     combined_text = "\n".join(snippets[:6])
 
-    # 3. Use Groq LLM for entity resolution
+    # 4. Use Groq LLM for entity resolution
     groq_key = settings.GROQ_API_KEY
     if groq_key:
         try:
@@ -637,19 +651,25 @@ Snippets:
 
 Output MUST be a single raw JSON object only. No markdown, no triple backticks."""
 
-            completion = client.chat.completions.create(
-                model=settings.GROQ_MODEL,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.1,
-                max_tokens=250
-            )
-            raw = completion.choices[0].message.content.strip()
-            raw = re.sub(r"^```json\s*", "", raw)
-            raw = re.sub(r"^```\s*", "", raw)
-            raw = re.sub(r"\s*```$", "", raw)
-            data = json.loads(raw)
-            if data.get("business_name") and "unknown" not in data["business_name"].lower() and "services" != data["business_name"].lower():
-                return data
+            for model_name in [settings.GROQ_MODEL, "openai/gpt-oss-20b", "openai/gpt-oss-120b"]:
+                try:
+                    completion = client.chat.completions.create(
+                        model=model_name,
+                        messages=[{"role": "user", "content": prompt}],
+                        temperature=0.1,
+                        max_tokens=250
+                    )
+                    raw = completion.choices[0].message.content.strip()
+                    raw = re.sub(r"^```json\s*", "", raw)
+                    raw = re.sub(r"^```\s*", "", raw)
+                    raw = re.sub(r"\s*```$", "", raw)
+                    data = json.loads(raw)
+                    if data.get("business_name") and "unknown" not in data["business_name"].lower() and "services" != data["business_name"].lower():
+                        return data
+                except Exception as model_err:
+                    if "429" in str(model_err) or "rate_limit" in str(model_err):
+                        continue
+                    break
         except Exception as e:
             logger.debug(f"Groq business extraction error: {e}")
 
@@ -670,13 +690,71 @@ Output MUST be a single raw JSON object only. No markdown, no triple backticks."
 
 
 def auto_discover_business(query_text: str, location_hint: Optional[str] = None) -> Dict[str, Any]:
-    """Smart auto-enrichment engine that finds details from an address or business name.
+    """Smart auto-enrichment engine that finds details from a phone number, address, or business name.
     Attempts real web intelligence resolution, Google Maps, OpenStreetMap geocoding,
     and robust heuristic parsing fallback.
     """
     clean_query = query_text.strip()
     if not clean_query:
         return {"success": False, "message": "Query cannot be empty"}
+
+    # Check if this is a phone number query (10-11 digits)
+    digits = re.sub(r"[^\d]", "", clean_query)
+    is_phone_query = (len(digits) == 10 or (len(digits) == 11 and digits.startswith("1"))) and bool(re.match(r"^[\d\s\(\)\-\.\+]+$", clean_query))
+
+    def _attach_metadata(data: Dict[str, Any]) -> Dict[str, Any]:
+        ind_key = data.get("inferred_industry", "general")
+        ind_def = INDUSTRIES.get(ind_key, INDUSTRIES["general"])
+        if not data.get("hours"):
+            data["hours"] = ind_def["suggested_questions"][0]["default"]
+        data["topic_categories"] = ind_def.get("topic_categories", {})
+        preselected = []
+        for cat_val in ind_def.get("topic_categories", {}).values():
+            for t in cat_val.get("topics", []):
+                if t.get("pre_selected"):
+                    preselected.append(t["id"])
+        data["preselected_topics"] = preselected
+        data["schedule_presets"] = SCHEDULE_MODES
+        data["timezones"] = COMMON_TIMEZONES
+        data["after_hours_policies"] = AFTER_HOURS_POLICIES
+        return data
+
+    if is_phone_query:
+        d10 = digits[-10:]
+        formatted_phone = f"({d10[:3]}) {d10[3:6]}-{d10[6:]}"
+        # Search web intelligence for phone number in standard format
+        intel = scrape_business_intelligence(formatted_phone)
+
+        if intel and intel.get("business_name"):
+            biz_name = intel["business_name"]
+            addr = intel.get("formatted_address", "")
+            industry = intel.get("industry") if intel.get("industry") in INDUSTRIES else "general"
+            hours = intel.get("hours") or (INDUSTRIES.get(industry, INDUSTRIES["general"])["suggested_questions"][0]["default"])
+            return _attach_metadata({
+                "success": True,
+                "found_via_phone": True,
+                "phone": formatted_phone,
+                "business_name": biz_name,
+                "formatted_address": addr,
+                "inferred_industry": industry,
+                "hours": hours,
+                "source": "web_intelligence",
+                "detected_features": [
+                    f"Phone: {formatted_phone}",
+                    f"Trade: {INDUSTRIES[industry]['name']}",
+                    f"Verified {biz_name} via Web Intelligence"
+                ]
+            })
+        else:
+            return _attach_metadata({
+                "success": True,
+                "found_via_phone": False,
+                "phone": formatted_phone,
+                "business_name": "",
+                "formatted_address": "",
+                "inferred_industry": "general",
+                "message": "No public business listing found for this phone number. Please enter your business address or name."
+            })
 
     result: Dict[str, Any] = {
         "success": True,
@@ -712,12 +790,7 @@ def auto_discover_business(query_text: str, location_hint: Optional[str] = None)
         result["detected_features"].append(f"Verified {intel['business_name']} via Web Intelligence")
         result["source"] = "web_intelligence"
 
-        # If hours still not resolved, set industry default
-        if not result.get("hours"):
-            ind_key = result.get("inferred_industry", "general")
-            ind_def = INDUSTRIES.get(ind_key, INDUSTRIES["general"])
-            result["hours"] = ind_def["suggested_questions"][0]["default"]
-        return result
+        return _attach_metadata(result)
 
     # 2. Heuristic industry detection based on keywords
     query_lower = clean_query.lower()
@@ -923,13 +996,7 @@ def auto_discover_business(query_text: str, location_hint: Optional[str] = None)
             street_clean = re.sub(r"(?i)\b(ste|suite|apt|unit|fl|floor|bldg|building|#)\.?\s*[a-z0-9\-]+", "", parts[0]).strip()
             result["business_name"] = street_clean or parts[0]
 
-    # Suggest industry hours & phone if not extracted
-    if not result.get("hours"):
-        ind_key = result.get("inferred_industry", "general")
-        ind_def = INDUSTRIES.get(ind_key, INDUSTRIES["general"])
-        result["hours"] = ind_def["suggested_questions"][0]["default"]
-
-    return result
+    return _attach_metadata(result)
 
 
 def search_places_autocomplete(query_text: str) -> List[Dict[str, Any]]:
@@ -1056,6 +1123,158 @@ def _ensure_clients_storage() -> Dict[str, Any]:
         CLIENTS_FILE.write_text(json.dumps(storage, indent=2))
         return storage
 
+
+# ---------------------------------------------------------------------------
+# Phone Number Auto-Provisioning (Telnyx + LiveKit SIP)
+# ---------------------------------------------------------------------------
+
+def provision_telnyx_number(client_id: str) -> str:
+    """
+    Buy a fresh Telnyx US local number and link it to the Aria LiveKit SIP
+    connection. Returns the E.164 number string on success, or falls back to
+    the platform default number if anything fails.
+    """
+    telnyx_key = getattr(settings, "TELNYX_API_KEY", "") or os.getenv("TELNYX_API_KEY", "")
+    sip_conn_id = getattr(settings, "TELNYX_SIP_CONNECTION_ID", "") or os.getenv("TELNYX_SIP_CONNECTION_ID", "")
+    fallback = getattr(settings, "TELNYX_PHONE_NUMBER", "") or os.getenv("TELNYX_PHONE_NUMBER", "") or "+18334205227"
+    env = getattr(settings, "ENV", "") or os.getenv("ENV", "local")
+
+    # ⛔ Never provision real numbers in local/dev — saves credits
+    if env in ("local", "dev", "development", "test"):
+        logger.info(f"[Provision] ENV={env} — skipping real provisioning, using platform number")
+        return fallback
+
+    if not telnyx_key:
+        logger.warning("[Provision] TELNYX_API_KEY not set — using platform fallback number")
+        return fallback
+
+    headers = {
+        "Authorization": f"Bearer {telnyx_key}",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+    }
+
+    try:
+        # 1. Search local numbers and pick the cheapest one
+        search_url = (
+            "https://api.telnyx.com/v2/available_phone_numbers"
+            "?filter[country_code]=US&filter[phone_number_type]=local&filter[limit]=20"
+        )
+        resp = requests.get(search_url, headers=headers, timeout=15)
+        resp.raise_for_status()
+        numbers = resp.json().get("data", [])
+        if not numbers:
+            logger.warning("[Provision] No available Telnyx local numbers found — using fallback")
+            return fallback
+
+        # Sort by monthly cost ascending — always pick cheapest
+        def _monthly_cost(n: Dict[str, Any]) -> float:
+            try:
+                return float(n.get("cost", {}).get("monthly", {}).get("amount", 9999))
+            except (TypeError, ValueError):
+                return 9999.0
+
+        numbers.sort(key=_monthly_cost)
+        phone_number = numbers[0]["phone_number"]
+        cost = _monthly_cost(numbers[0])
+        logger.info(f"[Provision] Cheapest number: {phone_number} @ ${cost:.2f}/mo for client {client_id}")
+
+        # 2. Order the number (optionally attach SIP connection at order time)
+        order_payload: Dict[str, Any] = {
+            "phone_numbers": [{"phone_number": phone_number}],
+        }
+        if sip_conn_id:
+            order_payload["connection_id"] = sip_conn_id
+
+        order_resp = requests.post(
+            "https://api.telnyx.com/v2/number_orders",
+            headers=headers,
+            json=order_payload,
+            timeout=20,
+        )
+        order_resp.raise_for_status()
+        logger.success(f"[Provision] Telnyx number {phone_number} ordered for client {client_id}")
+
+        # 3. If connection wasn't set at order time, patch it now
+        if not sip_conn_id:
+            logger.warning("[Provision] TELNYX_SIP_CONNECTION_ID not set — number ordered without SIP connection")
+        else:
+            import urllib.parse
+            encoded = urllib.parse.quote(phone_number, safe="")
+            patch_resp = requests.patch(
+                f"https://api.telnyx.com/v2/phone_numbers/{encoded}",
+                headers=headers,
+                json={"connection_id": sip_conn_id},
+                timeout=15,
+            )
+            if patch_resp.ok:
+                logger.success(f"[Provision] SIP connection linked to {phone_number}")
+            else:
+                logger.warning(f"[Provision] Could not patch SIP connection: {patch_resp.text[:200]}")
+
+        return phone_number
+
+    except Exception as ex:
+        logger.warning(f"[Provision] Telnyx provisioning failed ({ex}) — using fallback number")
+        return fallback
+
+
+async def create_livekit_dispatch_rule(client_id: str, phone_number: str) -> Optional[str]:
+    """
+    Create a dedicated LiveKit SIP inbound trunk + dispatch rule for this customer.
+    Each customer gets their own trunk (filtered to their number) and a dedicated
+    room `aria-{client_id}`. Returns the dispatch rule ID.
+    """
+    try:
+        from livekit import api as lk_api
+
+        livekit_url    = getattr(settings, "LIVEKIT_URL", "") or os.getenv("LIVEKIT_URL", "")
+        livekit_key    = getattr(settings, "LIVEKIT_API_KEY", "") or os.getenv("LIVEKIT_API_KEY", "")
+        livekit_secret = getattr(settings, "LIVEKIT_API_SECRET", "") or os.getenv("LIVEKIT_API_SECRET", "")
+
+        if not (livekit_url and livekit_key and livekit_secret):
+            logger.warning("[Provision] LiveKit credentials not set — skipping dispatch rule creation")
+            return None
+
+        room_name = f"aria-{client_id}"
+        lk = lk_api.LiveKitAPI(url=livekit_url, api_key=livekit_key, api_secret=livekit_secret)
+
+        # 1. Create a dedicated inbound trunk for this customer's number
+        trunk = await lk.sip.create_sip_inbound_trunk(
+            lk_api.CreateSIPInboundTrunkRequest(
+                trunk=lk_api.SIPInboundTrunkInfo(
+                    name=f"Aria-{client_id}",
+                    numbers=[phone_number],
+                )
+            )
+        )
+        trunk_id = trunk.sip_trunk_id
+        logger.success(f"[Provision] LiveKit inbound trunk {trunk_id} created for {phone_number}")
+
+        # 2. Create dispatch rule → customer's dedicated room
+        rule = await lk.sip.create_sip_dispatch_rule(
+            lk_api.CreateSIPDispatchRuleRequest(
+                name=f"Aria-{client_id}",
+                trunk_ids=[trunk_id],
+                rule=lk_api.SIPDispatchRule(
+                    dispatch_rule_direct=lk_api.SIPDispatchRuleDirect(
+                        room_name=room_name,
+                        pin="",
+                    )
+                ),
+            )
+        )
+        await lk.aclose()
+        rule_id = rule.sip_dispatch_rule_id
+        logger.success(f"[Provision] LiveKit dispatch rule {rule_id} → room '{room_name}' for {phone_number}")
+        return rule_id
+
+    except Exception as ex:
+        logger.warning(f"[Provision] LiveKit dispatch rule creation failed: {ex}")
+        return None
+
+
+
 def save_client_profile(profile_data: Dict[str, Any]) -> Dict[str, Any]:
     """Saves or updates a business client profile."""
     storage = _ensure_clients_storage()
@@ -1066,9 +1285,11 @@ def save_client_profile(profile_data: Dict[str, Any]) -> Dict[str, Any]:
         profile_data["created_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
     profile_data["updated_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
 
-    # Ensure phone number assigned
+    # Auto-provision a dedicated phone number if not already assigned
     if not profile_data.get("assigned_phone"):
-        profile_data["assigned_phone"] = settings.PLIVO_PHONE_NUMBER or "+1 (833) 420-5227"
+        provisioned = provision_telnyx_number(client_id)
+        profile_data["assigned_phone"] = provisioned
+        logger.info(f"[Provision] Assigned number {provisioned} to client {client_id}")
 
     # Default polar status
     if "polar_status" not in profile_data:
@@ -1078,6 +1299,8 @@ def save_client_profile(profile_data: Dict[str, Any]) -> Dict[str, Any]:
 
     # Compile dynamic prompt
     profile_data["compiled_prompt"] = compile_agent_prompt(profile_data)
+    from app.project_db import compile_livekit_voice_prompt, trigger_new_client_project
+    profile_data["livekit_prompt"] = compile_livekit_voice_prompt(profile_data)
 
     storage["clients"][client_id] = profile_data
     CLIENTS_FILE.write_text(json.dumps(storage, indent=2))
@@ -1085,12 +1308,157 @@ def save_client_profile(profile_data: Dict[str, Any]) -> Dict[str, Any]:
 
     # Auto-provision dedicated project database & custom prompt workspace upon onboarding
     try:
-        from app.project_db import create_project
-        create_project(profile_data, trigger_source="onboarding")
+        trigger_new_client_project(profile_data)
     except Exception as pr_ex:
         logger.warning(f"Could not auto-provision dedicated project DB: {pr_ex}")
 
     return profile_data
+
+
+
+
+async def complete_client_onboarding(data: Dict[str, Any], public_url: str = "") -> Dict[str, Any]:
+    """
+    Completes onboarding workflow when a client subscribes or completes onboarding:
+    1. Saves and updates client profile in clients.json
+    2. Provisions dedicated project folder, SQLite DB, and LiveKit prompt (<600 chars)
+    3. Creates a LiveKit SIP dispatch rule for the customer's dedicated room
+    4. Connects phone, Google Calendar, and SMS notifications
+    5. Sends welcome/activation SMS if forwarding/owner phone is present
+    """
+    from app.project_db import trigger_new_client_project
+    profile = save_client_profile(data)
+    client_id = profile.get("id")
+
+    project = trigger_new_client_project(profile)
+
+    # Create per-customer LiveKit dispatch rule → aria-{client_id} room
+    assigned_phone = profile.get("assigned_phone", "")
+    dispatch_rule_id = await create_livekit_dispatch_rule(client_id, assigned_phone)
+    if dispatch_rule_id:
+        profile["livekit_dispatch_rule_id"] = dispatch_rule_id
+        save_client_profile(profile)
+
+    # Dispatch welcome / activation SMS
+    sms_sent = False
+    phone = profile.get("forwarding_phone") or profile.get("owner_phone")
+    if phone:
+        try:
+            from app.integrations import send_sms
+            biz = profile.get("business_name") or "Your Business"
+            assigned = profile.get("assigned_phone") or "+1 (833) 420-5227"
+            # Format number nicely for SMS
+            digits = "".join(filter(str.isdigit, assigned))
+            if len(digits) == 11 and digits.startswith("1"):
+                digits = digits[1:]
+            if len(digits) == 10:
+                assigned_fmt = f"+1 ({digits[:3]}) {digits[3:6]}-{digits[6:]}"
+            else:
+                assigned_fmt = assigned
+            base = public_url.rstrip("/") if public_url else "https://agents.orxlabs.com"
+            portal_url = f"{base}/portal?client_id={client_id}&activated=1"
+            sms_msg = (
+                f"🎉 Welcome to ORX Agents, {biz}!\n"
+                f"Your dedicated AI receptionist number is ready:\n"
+                f"📞 {assigned_fmt}\n\n"
+                f"To activate: forward your Google Maps number to {assigned_fmt}\n"
+                f"Portal: {portal_url}"
+            )
+            res = await send_sms(to_phone=phone, message=sms_msg)
+            sms_sent = res.get("status") in ("sent", "simulated_success")
+        except Exception as err:
+            logger.warning(f"Onboarding welcome SMS failed: {err}")
+
+    return {
+        "success": True,
+        "client_id": client_id,
+        "assigned_phone": assigned_phone,
+        "dispatch_rule_id": dispatch_rule_id,
+        "project": project,
+        "sms_sent": sms_sent,
+        "forwarding_instructions": (
+            f"Forward your existing business number to {assigned_phone} "
+            f"to start receiving AI-handled calls instantly."
+        ),
+        "message": "Onboarding completed successfully and project provisioned.",
+    }
+
+
+def send_activation_sms(profile: Dict[str, Any], public_url: str = "") -> bool:
+    """Send a Plivo SMS to the client's forwarding phone after successful Polar payment.
+    Contains their assigned number, carrier-specific activation dial code, and unique portal link.
+    Returns True on success, False if Plivo not configured (safe silent fallback).
+    """
+    from app.config import settings
+
+    plivo_auth_id = getattr(settings, "PLIVO_AUTH_ID", "")
+    plivo_auth_token = getattr(settings, "PLIVO_AUTH_TOKEN", "")
+    plivo_phone = getattr(settings, "PLIVO_PHONE_NUMBER", "")
+
+    if not (plivo_auth_id and plivo_auth_token and plivo_phone):
+        logger.warning("Plivo not configured — skipping activation SMS (set PLIVO_AUTH_ID, PLIVO_AUTH_TOKEN, PLIVO_PHONE_NUMBER in .env)")
+        return False
+
+    forwarding_phone = profile.get("forwarding_phone", "")
+    if not forwarding_phone:
+        logger.warning(f"No forwarding phone for client '{profile.get('id')}' — skipping SMS")
+        return False
+
+    assigned_phone = profile.get("assigned_phone", plivo_phone)
+    client_id = profile.get("id", "")
+    biz_name = profile.get("business_name", "your business")
+    carrier = (profile.get("carrier") or "verizon").lower()
+
+    # Build carrier-specific dial code from assigned digits
+    digits = "".join(filter(str.isdigit, assigned_phone))
+    carrier_codes = {
+        "verizon":  f"*71{digits}",
+        "att":      f"*61*{digits}#",
+        "tmobile":  f"**61*{digits}#",
+        "t-mobile": f"**61*{digits}#",
+    }
+    dial_code = carrier_codes.get(carrier, f"*71{digits}")
+    carrier_label = carrier.title().replace("Tmobile", "T-Mobile")
+
+    # Format assigned phone for display
+    if len(digits) == 11 and digits.startswith("1"):
+        digits_display = digits[1:]
+    else:
+        digits_display = digits
+    formatted = f"({digits_display[:3]}) {digits_display[3:6]}-{digits_display[6:]}" if len(digits_display) == 10 else assigned_phone
+
+    # Build portal URL
+    base = public_url.rstrip("/") if public_url else "https://agents.orxlabs.com"
+    portal_url = f"{base}/portal?client_id={client_id}&activated=1"
+
+    sms_body = (
+        f"🎉 Welcome to ORX Agents, {biz_name}!\n\n"
+        f"Your AI receptionist Riley is ready. Your dedicated line:\n"
+        f"📞 {formatted}\n\n"
+        f"To activate on {carrier_label}, open your Phone app and dial:\n"
+        f"  {dial_code}\n"
+        f"(tap the number to call it directly)\n\n"
+        f"Manage your receptionist:\n"
+        f"{portal_url}\n\n"
+        f"Reply STOP to opt out."
+    )
+
+    try:
+        import plivo
+        client = plivo.RestClient(plivo_auth_id, plivo_auth_token)
+        response = client.messages.create(
+            src=plivo_phone,
+            dst=forwarding_phone,
+            text=sms_body
+        )
+        logger.info(f"Activation SMS sent to {forwarding_phone} for '{biz_name}' (message_uuid={response[1].get('message_uuid', 'n/a')})")
+        return True
+    except ImportError:
+        logger.warning("plivo package not installed — run: pip install plivo")
+        return False
+    except Exception as e:
+        logger.error(f"Failed to send activation SMS to {forwarding_phone}: {e}")
+        return False
 
 def get_client_profile(client_id: str) -> Optional[Dict[str, Any]]:
     """Retrieves a client profile by ID."""
@@ -1162,69 +1530,259 @@ def disconnect_client_connection(client_id: Optional[str] = None) -> Dict[str, A
     return {"success": True, "connection_status": "paused"}
 
 # ---------------------------------------------------------------------------
-# Prompt Compiler for Any Industry
+# Marcus-Smart Master Prompt Compiler for Onboarded Clients
 # ---------------------------------------------------------------------------
 
+TRADE_METRICS: Dict[str, Dict[str, str]] = {
+    "hvac": {
+        "trade_title": "home comfort and climate control",
+        "trade_noun": "HVAC",
+        "trade_short": "heating or cooling",
+        "tech_title": "senior certified technician",
+        "pain_points": "the stress of a broken AC in summer heat, a dead furnace in freezing weather, water leaking through ceilings,",
+        "empathy_sample": "'Oh no, having no AC in this heat is absolutely brutal! Don\\'t worry at all, you called the right team and we\\'ll get someone out to cool your home down right away.'",
+        "diy_question": "Can\\'t I just buy Freon or add refrigerant myself?",
+        "diy_answer": "Refrigerant handling actually requires EPA certification and precision vacuum gauges, and if there\\'s a leak, adding Freon without sealing it will just leak out again. Our technicians pinpoint and repair the leak so your system runs at peak efficiency. Shall we get a tech scheduled?",
+        "emergency_label": "Gas smell / Carbon monoxide / Electrical burning",
+        "emergency_advice": "Please leave the building immediately and call nine-one-one from outside for your safety. Once you are safe, we will dispatch our emergency technician.",
+        "default_brands": "Carrier, Trane, Lennox, Rheem, and Goodman",
+        "default_fee": "eighty-nine dollars",
+    },
+    "plumbing": {
+        "trade_title": "residential plumbing and drain",
+        "trade_noun": "plumbing",
+        "trade_short": "plumbing or drain issue",
+        "tech_title": "licensed master plumber",
+        "pain_points": "the stress of active water leaks, burst pipes, overflowing drains, and water heaters flooding basements,",
+        "empathy_sample": "'Oh no, dealing with an active water leak is so stressful! Don\\'t worry, you called the right team and we\\'ll get a master plumber out to protect your home right away.'",
+        "diy_question": "Can\\'t I just pour chemical drain cleaner or snake it myself?",
+        "diy_answer": "Chemical cleaners often corrode pipes and don\\'t clear root intrusions or deep blockages. Our plumbers use specialized cameras and motorized augers so the line is cleared safely without damaging your pipes. Shall we get a plumber scheduled?",
+        "emergency_label": "Active water flooding / Burst pipe / Sewage backup",
+        "emergency_advice": "Please shut off your main water valve right away to prevent further damage. Once that is turned off, we\\'ll dispatch an emergency plumber to your address.",
+        "default_brands": "Kohler, Moen, Delta, Bradford White, and Rheem",
+        "default_fee": "seventy-nine dollars",
+    },
+    "electrical": {
+        "trade_title": "licensed electrical",
+        "trade_noun": "electrical",
+        "trade_short": "electrical issue",
+        "tech_title": "licensed master electrician",
+        "pain_points": "the safety hazards of tripping breakers, sparking outlets, power outages, and electrical burning smells,",
+        "empathy_sample": "'Oh no, electrical issues can be really alarming and dangerous! Don\\'t worry at all, you called the right team and we\\'ll get a master electrician out to make sure your home is completely safe.'",
+        "diy_question": "Can\\'t I just swap the breaker or rewire it myself?",
+        "diy_answer": "Working inside electrical panels carries serious shock and fire hazards if not done to National Electrical Code. Our licensed electricians test loads and ensure everything is permitted, grounded, and safe. Shall we get a technician scheduled?",
+        "emergency_label": "Sparks / Electrical fire smell / Buzzing panel / Downed wire",
+        "emergency_advice": "Please turn off that breaker if safe to reach, avoid touching any wires, and if there is active smoke, call nine-one-one immediately.",
+        "default_brands": "Square D, Siemens, Eaton, Leviton, and Lutron",
+        "default_fee": "eighty-nine dollars",
+    },
+    "roofing": {
+        "trade_title": "roofing and exterior restoration",
+        "trade_noun": "roofing",
+        "trade_short": "roof leak or storm damage",
+        "tech_title": "certified roofing specialist",
+        "pain_points": "the panic of water pouring through ceilings, storm damage, and missing shingles during heavy rain,",
+        "empathy_sample": "'Oh no, having water leak through your ceiling is awful! Don\\'t worry at all, you called the right team and we\\'ll get a roofing specialist out to protect your home right away.'",
+        "diy_question": "Can\\'t I just climb up and patch the roof myself?",
+        "diy_answer": "Steep roofs are a severe fall hazard, and improper sealant can void manufacturer shingle warranties or trap moisture inside the decking. Our certified inspectors do a complete safety inspection with photo documentation. Shall we get an inspection scheduled?",
+        "emergency_label": "Water actively pouring inside / Tree on roof / Heavy storm hole",
+        "emergency_advice": "Please place buckets and tarps inside to protect your floors, and if water is near light fixtures, shut off that breaker while we dispatch emergency tarping.",
+        "default_brands": "GAF, Owens Corning, CertainTeed, and Tamko",
+        "default_fee": "complimentary",
+    },
+    "dental_medical": {
+        "trade_title": "patient care coordination",
+        "trade_noun": "clinical",
+        "trade_short": "health or dental concern",
+        "tech_title": "provider",
+        "pain_points": "the misery of acute toothaches, sudden dental pain, and finding gentle care without waiting weeks,",
+        "empathy_sample": "'Oh no, dental pain is so miserable! Don\\'t worry at all, you called the right clinic and we will get you scheduled with our doctor to get you relief right away.'",
+        "diy_question": "Can\\'t I just take over-the-counter pills and wait?",
+        "diy_answer": "Pain relievers only mask symptoms temporarily, while infections can worsen quickly without clinical care. Our doctor can examine the tooth and provide lasting gentle relief. Shall we get an appointment reserved for you?",
+        "emergency_label": "Severe facial swelling / Knocked-out tooth / Uncontrolled bleeding",
+        "emergency_advice": "If you have swelling that affects breathing or swallowing, please go to the nearest emergency room immediately. Otherwise, hold clean gauze with pressure and we will reserve priority care.",
+        "default_brands": "major PPO dental insurance networks",
+        "default_fee": "complimentary consultation",
+    },
+    "general": {
+        "trade_title": "professional service",
+        "trade_noun": "service",
+        "trade_short": "service request",
+        "tech_title": "senior certified specialist",
+        "pain_points": "the frustration of unexpected breakdowns, property damage, and waiting on hold for hours,",
+        "empathy_sample": "'Oh no, dealing with unexpected service issues is so frustrating! Don\\'t worry at all, you called the right team and we will get a specialist out to take care of that for you right away.'",
+        "diy_question": "Can I just fix this myself?",
+        "diy_answer": "For your safety and warranty protection, proper diagnostics require commercial equipment. Our certified technician gives you a guaranteed flat-rate price on site before starting any work. Shall we get a visit scheduled?",
+        "emergency_label": "Active hazard / Water leak / Electrical fire / Life safety",
+        "emergency_advice": "Please ensure everyone is in a safe location immediately. If there is immediate danger to life or property, call nine-one-one right away.",
+        "default_brands": "all major manufacturers and brands",
+        "default_fee": "eighty-nine dollars",
+    }
+}
+
+
+def fee_to_spoken(fee_raw: str) -> str:
+    """Converts diagnostic fee input (e.g. '$89', '79', 'Free') into natural spoken English."""
+    if not fee_raw:
+        return "eighty-nine dollars"
+    fee_lower = str(fee_raw).lower().strip()
+    if "free" in fee_lower or "complimentary" in fee_lower or "$0" in fee_lower:
+        return "complimentary"
+    m = re.search(r"(\d+)", str(fee_raw))
+    if m:
+        n = int(m.group(1))
+        mapping = {
+            29: "twenty-nine dollars", 39: "thirty-nine dollars", 49: "forty-nine dollars",
+            59: "fifty-nine dollars", 69: "sixty-nine dollars", 75: "seventy-five dollars",
+            79: "seventy-nine dollars", 85: "eighty-five dollars", 89: "eighty-nine dollars",
+            95: "ninety-five dollars", 99: "ninety-nine dollars", 125: "one hundred twenty-five dollars",
+            149: "one hundred forty-nine dollars", 199: "one hundred ninety-nine dollars",
+        }
+        return mapping.get(n, f"{n} dollars")
+    return str(fee_raw).strip()
+
+
 def compile_agent_prompt(profile: Dict[str, Any]) -> str:
-    """Compiles a production-grade, natural-sounding voice AI prompt strictly
-    adapted to the user's business, industry, hours, transfer rules, and custom Q&As.
+    """Compiles a Marcus-grade, consultative, high-empathy voice AI prompt strictly
+    adapted to the user's business, industry, schedule, pricing policy, lead capture, and emergency rules.
+    Retains the proven Marcus & Riley conversational framework while customizing all client choices.
     """
-    biz_name = profile.get("business_name", "Our Company")
-    industry_id = profile.get("industry", "general")
-    address = profile.get("address", "")
-    forwarding_phone = profile.get("forwarding_phone", "")
-    hours = profile.get("hours", "Monday through Friday 8:00 AM to 6:00 PM")
-    transfer_rules = profile.get("transfer_rules", "Transfer immediately if caller requests human staff or has an emergency.")
-    services = profile.get("services", "Full residential and commercial services.")
-    custom_qa = profile.get("custom_qa", [])
+    biz_name = (profile.get("business_name") or profile.get("name") or "Our Company").strip()
+    raw_trade = (profile.get("trade") or profile.get("industry") or "hvac").lower().strip()
+    
+    trade_key = "hvac"
+    for k in TRADE_METRICS:
+        if k in raw_trade:
+            trade_key = k
+            break
+    if trade_key not in TRADE_METRICS:
+        trade_key = "general"
 
-    persona_name = profile.get("persona_name", "Riley")
-    pricing_policy = profile.get("pricing_policy", "We provide upfront estimates and our diagnostic fee is applied directly to repairs.")
-    booking_action = profile.get("booking_action", "Offer to schedule an arrival time window and collect the customer street address.")
-    shift_mode = profile.get("shift_mode", "24/7 Answering & Overflow")
+    metrics = TRADE_METRICS[trade_key]
+    persona_name = (profile.get("persona_name") or "Riley").strip()
+    address = (profile.get("address") or profile.get("service_area") or "").strip()
+    forwarding_phone = (profile.get("forwarding_phone") or profile.get("owner_phone") or "").strip()
+    
+    # Schedule & Timezone Configuration
+    schedule_cfg = profile.get("schedule_config") or {}
+    timezone_name = schedule_cfg.get("timezone") or profile.get("timezone") or "America/New_York (Eastern Time)"
+    
+    if schedule_cfg.get("hours_str"):
+        hours_str = schedule_cfg.get("hours_str")
+    elif schedule_cfg.get("daily_hours") and isinstance(schedule_cfg.get("daily_hours"), dict):
+        dh = schedule_cfg.get("daily_hours")
+        day_parts = []
+        for d in ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]:
+            info = dh.get(d, {})
+            if info.get("isOpen"):
+                day_parts.append(f"{d}: {info.get('open', '8:00 AM')}–{info.get('close', '6:00 PM')}")
+            else:
+                day_parts.append(f"{d}: Closed")
+        hours_str = ", ".join(day_parts)
+    elif profile.get("hours"):
+        hours_str = profile.get("hours")
+    else:
+        active_days = schedule_cfg.get("active_days") or profile.get("active_days") or ["Mon", "Tue", "Wed", "Thu", "Fri"]
+        open_time = schedule_cfg.get("open_time") or profile.get("open_time") or "8:00 AM"
+        close_time = schedule_cfg.get("close_time") or profile.get("close_time") or "6:00 PM"
+        hours_str = f"{', '.join(active_days)} from {open_time} to {close_time}"
 
+    # Google Calendar & Real-Time Availability Connection
+    cal_connected = bool(
+        profile.get("google_calendar_id")
+        or profile.get("calendar_id")
+        or (isinstance(profile.get("calendar"), dict) and profile["calendar"].get("is_connected"))
+    )
+    calendar_note = (
+        "Connected live to dispatch Google Calendar for real-time slot verification."
+        if cal_connected else
+        "Offer two discrete arrival windows based on standard operating hours."
+    )
+
+    # Core Services Offered
+    services_val = profile.get("services") or profile.get("service_options")
+    if isinstance(services_val, list):
+        services_text = ", ".join(services_val)
+    elif isinstance(services_val, str) and services_val.strip():
+        services_text = services_val.strip()
+    else:
+        services_text = "full diagnostics, repairs, preventive maintenance, system upgrades, and installations"
+
+    # Pricing & Diagnostic Fee Policy
+    raw_fee = profile.get("diagnostic_fee") or profile.get("pricing_preset") or profile.get("pricing_policy") or "$89"
+    spoken_fee = fee_to_spoken(str(raw_fee))
+
+    if spoken_fee == "complimentary" or "free" in str(raw_fee).lower():
+        fee_objection_answer = "We provide a 100% complimentary on-site inspection and estimate with zero obligation! Does that sound fair?"
+    else:
+        fee_objection_answer = (
+            f"Our diagnostic fee is a flat {spoken_fee}, which covers a comprehensive inspection by a {metrics['tech_title']}. "
+            f"And the best part is, we credit that full {spoken_fee} directly toward any repair you approve! Does that sound fair?"
+        )
+
+    # Opening Greeting
+    first_msg = (
+        profile.get("first_message")
+        or profile.get("greeting")
+        or f"Thank you for calling {biz_name}! This is {persona_name}. How can I help get your home taken care of today?"
+    )
+
+    # Emergency Transfer Line
+    transfer_addon = ""
+    if forwarding_phone:
+        transfer_addon = f" I am connecting you directly with our emergency line at {forwarding_phone} right now."
+
+    # Custom FAQs & QA
     custom_qa_lines = ""
-    if custom_qa:
-        for idx, qa in enumerate(custom_qa, 1):
-            q = qa.get("question", "").strip()
-            a = qa.get("answer", "").strip()
-            if q and a:
-                custom_qa_lines += f"- Caller Question: \"{q}\" -> Answer: \"{a}\"\n"
+    for qa in profile.get("custom_qa", []):
+        q = qa.get("question", "").strip()
+        a = qa.get("answer", "").strip()
+        if q and a:
+            custom_qa_lines += f"- '{q}': '{a}'\n"
 
-    prompt = f"""[Identity & Purpose]
-You are {persona_name}, the friendly, highly efficient, and trusted voice receptionist for {biz_name}.
-Your job is to answer customer phone calls, provide clear details on our services, schedule appointments or bookings, and connect callers to human staff when necessary.
-Our address is {address or 'available upon booking'}.
-Our business operating hours: {hours}.
-Shift Coverage: {shift_mode}.
+    location_line = f" Service territory and location: {address}." if address else ""
 
-[Spoken Voice Rules - Strictly Followed]
-- Speak in natural, everyday conversational American English.
-- Keep every answer to 1 to 2 short spoken sentences (strictly under 20 words per response).
-- Use natural contractions like "I'm", "we'll", "don't", "it's", and "let's".
-- Never use markdown formatting, bullet points, asterisks, or numbered lists.
-- Speak numbers phonetically: say "nine a.m." instead of "09:00", say "eighty-nine dollars" instead of "$89".
-- Ask only ONE single question at a time so the caller is never overwhelmed.
+    prompt = f"""<identity>
+You are {persona_name}, an articulate, genuinely warm, confident, and consultative voice receptionist for {biz_name}. You are an AI—transparent, warm, and proud of it if asked. Never pretend to be human, but never sound robotic.{location_line}
+Core mindset: You are a peer-level {metrics['trade_title']} consultant. You understand {metrics['pain_points']} and busy property owners who want an honest, fast, expert solution without high-pressure sales or being put on hold. Build genuine human connection first. Answer questions and objections directly with zero evasion. Lead the call proactively to triage their issue and book a certified technician directly into the schedule.
+Operating schedule: {hours_str} ({timezone_name}).
+Calendar integration: {calendar_note}
+Authorized services: {services_text}.
+</identity>
 
-[Our Core Services]
-{services}
+<conversational_rules>
+- EMPATHY & RAPPORT FIRST: When the caller shares their service need or asks how you are, react like a real human first before transacting ({metrics['empathy_sample']}).
+- STRICT SINGLE QUESTION: Exactly ONE question mark ('?') per turn. Never combine a confirmation ('is that right?') with a new question in the same turn! After asking your question, STOP and listen.
+- STRICT COMPLETION: ALWAYS finish your sentences cleanly. Never stop mid-thought or cut off.
+- BREVITY & FLOW: Speak in 1 to 2 punchy, natural spoken sentences (strictly under 25 words per turn). Use natural contractions ('we\\'ll', 'that\\'s', 'you\\'re', 'don\\'t', 'let\\'s').
+- DIRECT ANSWERS: If the caller asks a question (diagnostic fee, replacement cost, timing, DIY, licensing), ALWAYS answer it directly and transparently before asking your next question.
+- ZERO-FRICTION BOOKING: Lock in the appointment with Name, Cell Phone, and Physical Address. Do NOT ask for or require an email address over the phone. Cell phone is our primary dispatch channel—confirmations and live tracking are sent via SMS. If the caller happens to volunteer an email, absorb it warmly, but never prompt or press for one.
+- CONVERSATION MEMORY & MULTI-SLOT ABSORPTION: NEVER ask for information the caller already volunteered. If they gave their address, phone, or issue in an earlier turn, absorb all of them and advance to the next uncollected item.
+- FORMATTING: Spoken voice only—never use markdown, asterisks, bullet points, or lists.
+</conversational_rules>
 
-[Pricing & Diagnostic Policy]
-{pricing_policy}
+<booking_flow_state_machine>
+1. Warm Greeting & Empathy: '{first_msg}'
+2. Triage & Validate: Acknowledge the specific issue with real warmth, determine if it\\'s completely down or acting up, and transition: 'Got it. Let\\'s get a certified technician out to diagnose that for you. What is your street address so I can check our nearest opening?'
+3. Address Capture & Instant Confirmation: Confirm address declaratively: 'Got it, [Address]. We have an opening today between one and three, or tomorrow morning between eight and eleven. Which works better for you?'
+4. Scheduling Conflict Handling: If caller rejects proposed times, immediately adapt: 'No problem at all! What day or time window works best for your schedule?'
+5. Caller Name & Cell Capture: 'And what is your full name and the best cell number for dispatch arrival updates?'
+6. Complete 5-Point Recap & Confirmation: 'You are all set, [Name]! We have our technician dispatched to [Address] for your [Issue] on [Day] between [Time Window]. We just sent a confirmation text with live tracking to [Phone]. Does everything sound good?'
+7. Clean Sign-Off: 'Thank you for choosing {biz_name}. Stay comfortable, and have a wonderful day!'
+</booking_flow_state_machine>
 
-[Scheduling & Booking Protocol]
-{booking_action}
-
-[Call Transfer & Escalation Rules]
-Transfer trigger conditions:
-{transfer_rules}
-If a transfer condition is met: Say "I am connecting you with our on-call team right now. Please hold for just a moment." and execute transfer to {forwarding_phone or 'the owner cell'}.
-
-[Business FAQ & Knowledge]
-{custom_qa_lines if custom_qa_lines else '- Provide helpful, concise answers and offer to schedule service.'}
-
-[Turn Ending]
-Always end your turn with either a helpful booking question or a confirmation."""
+<objection_playbook>
+- 'How much is your diagnostic fee?' / 'Pricing': '{fee_objection_answer}'
+- 'Can you quote me a price over the phone?': 'I wish I could give you an exact price over the phone! But {metrics['trade_noun']} issues could be as simple as a small component or something deeper in the system. Our technician gives you a guaranteed flat-rate price on site before starting any work. Would afternoon or tomorrow morning work better?'
+- 'Can someone come out right now / immediately?': 'We treat active {metrics['trade_noun']} emergencies as high priority! Let me grab your address right now so I can check which on-call technician is closest to your neighborhood. What is your street address?'
+- 'Why are you more expensive than other companies?': 'Great question! We only send certified master technicians with fully stocked trucks, use factory-original parts, and back every repair with our comprehensive warranty. Would you like me to reserve our next opening for you?'
+- '{metrics['diy_question']}': '{metrics['diy_answer']}'
+- 'Are you an AI or a real person?': 'I\\'m {persona_name}, the AI voice coordinator for {biz_name}! I have live access to our technician dispatch board so you never have to wait on hold. How can I help with your {metrics['trade_short']} today?'
+- 'I need to check with my spouse/landlord first': 'Completely understand! I can hold our next priority opening for you for thirty minutes so nobody else takes it. What\\'s the best mobile number to text the details to?'
+- 'Do you service my brand / equipment?': 'Yes! Our technicians are certified across all major brands including {metrics['default_brands']}. What is your street address so we can get you on the schedule?'
+- 'Can you email me the receipt / confirmation?': 'We text your booking confirmation and live technician tracking directly to your mobile phone right now! That text includes a 1-tap link to view your receipt or enter an email address if you prefer.'
+- '{metrics['emergency_label']}': '{metrics['emergency_advice']}{transfer_addon}'
+{custom_qa_lines}</objection_playbook>"""
     return prompt.strip()
 
 # ---------------------------------------------------------------------------
@@ -1240,8 +1798,23 @@ def simulate_agent_turn(client_profile: Dict[str, Any], user_message: str, histo
 
     msg_lower = user_message.lower()
     is_transfer = False
-    if any(k in msg_lower for k in ["transfer", "human", "speak to owner", "manager", "emergency", "gas smell", "burst pipe", "leak"]):
+    telemetry_badge = "STANDARD INQUIRY"
+
+    # 1. Emergency Detection
+    emergency_keywords = [
+        "gas", "carbon monoxide", "burst pipe", "leak", "flood", "flooding", "spark", "sparking",
+        "burning", "fire", "emergency", "shut off", "bleeding", "smoke", "explosion", "hazard"
+    ]
+    if any(k in msg_lower for k in emergency_keywords):
         is_transfer = True
+        telemetry_badge = "EMERGENCY TRIAGE"
+    elif any(k in msg_lower for k in ["transfer", "human", "speak to owner", "manager", "operator"]):
+        is_transfer = True
+        telemetry_badge = "OPERATOR TRANSFER"
+    elif any(k in msg_lower for k in ["diy", "myself", "how to wire", "rewire", "which wire", "bypass", "diagnose my", "prescribe", "legal opinion", "do it myself", "fix it myself", "tell me how to fix"]):
+        telemetry_badge = "GUARDRAIL ENFORCED"
+    elif any(k in msg_lower for k in ["after hours", "midnight", "night", "11:45", "open now", "closed", "2 am", "sunday"]):
+        telemetry_badge = "SCHEDULE VERIFICATION"
 
     groq_key = settings.GROQ_API_KEY
     if groq_key:
@@ -1257,39 +1830,388 @@ def simulate_agent_turn(client_profile: Dict[str, Any], user_message: str, histo
             completion = client.chat.completions.create(
                 model=settings.GROQ_MODEL,
                 messages=messages,
-                temperature=0.5,
+                temperature=0.4,
                 max_tokens=100,
             )
             reply = completion.choices[0].message.content.strip()
             reply = reply.replace("*", "").replace("#", "").replace("- ", "")
+
+            # Check if model triggered an emergency escalation or transfer
+            if any(t in reply.lower() for t in ["connecting you", "transferring you", "on-call", "emergency team", "evacuate", "step outside"]):
+                is_transfer = True
+                if telemetry_badge == "STANDARD INQUIRY":
+                    telemetry_badge = "EMERGENCY TRIAGE"
+            elif telemetry_badge == "STANDARD INQUIRY" and any(t in reply.lower() for t in ["diy", "safety reasons", "cannot provide", "can't provide", "evaluate this in person", "certified technician"]):
+                telemetry_badge = "GUARDRAIL ENFORCED"
+
             return {
                 "response": reply,
                 "is_transfer": is_transfer,
+                "telemetry_badge": telemetry_badge,
                 "business_name": biz_name,
             }
         except Exception as e:
             logger.warning(f"Groq turn simulation fallback: {e}")
 
+    # 3. Gemini LLM fallback
+    gemini_key = getattr(settings, "GEMINI_API_KEY", None)
+    if gemini_key:
+        try:
+            from openai import OpenAI
+            g_client = OpenAI(api_key=gemini_key, base_url=getattr(settings, "GEMINI_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai/"))
+            messages = [{"role": "system", "content": system_prompt}]
+            if history:
+                for h in history[-4:]:
+                    messages.append({"role": h["role"], "content": h["content"]})
+            messages.append({"role": "user", "content": user_message})
+
+            completion = g_client.chat.completions.create(
+                model=getattr(settings, "GEMINI_MODEL", "gemini-3.1-flash-lite"),
+                messages=messages,
+                temperature=0.4,
+                max_tokens=100,
+            )
+            reply = completion.choices[0].message.content.strip()
+            reply = reply.replace("*", "").replace("#", "").replace("- ", "")
+
+            # Check if model triggered an emergency escalation or transfer
+            if any(t in reply.lower() for t in ["connecting you", "transferring you", "on-call", "emergency team", "evacuate", "step outside"]):
+                is_transfer = True
+                if telemetry_badge == "STANDARD INQUIRY":
+                    telemetry_badge = "EMERGENCY TRIAGE"
+            elif telemetry_badge == "STANDARD INQUIRY" and any(t in reply.lower() for t in ["diy", "safety reasons", "cannot provide", "can't provide", "evaluate this in person", "certified technician"]):
+                telemetry_badge = "GUARDRAIL ENFORCED"
+
+            return {
+                "response": reply,
+                "is_transfer": is_transfer,
+                "telemetry_badge": telemetry_badge,
+                "business_name": biz_name,
+            }
+        except Exception as e:
+            logger.warning(f"Gemini turn simulation fallback: {e}")
+
     # Fallback Responses
     if is_transfer:
-        reply = f"I understand completely. I am transferring you directly to our on-call team at {client_profile.get('forwarding_phone', 'our main line')} right now. Please hold for one second."
-    elif any(k in msg_lower for k in ["hour", "open", "close", "time", "sunday", "weekend"]):
-        reply = f"We are open {client_profile.get('hours', 'Monday through Friday from 8 a.m. to 6 p.m.')}. Would you like to schedule a service visit?"
+        if "gas" in msg_lower:
+            reply = f"For your safety, please step outside the building immediately. I am transferring you directly to our on-call emergency team at {client_profile.get('forwarding_phone', 'our main line')} right now."
+        elif "water" in msg_lower or "pipe" in msg_lower:
+            reply = f"Please shut off your main water valve right away to prevent further damage. I am transferring you to our emergency plumber at {client_profile.get('forwarding_phone', 'our main line')}."
+        else:
+            reply = f"I understand completely. I am transferring you directly to our on-call team at {client_profile.get('forwarding_phone', 'our main line')} right now. Please hold for one second."
+    elif telemetry_badge == "GUARDRAIL ENFORCED":
+        reply = f"For safety, warranty, and code compliance, our certified technicians cannot provide DIY repair instructions over the phone. We would be glad to send a technician out to inspect and fix this safely for you. Would you like me to check our schedule?"
+    elif telemetry_badge == "SCHEDULE VERIFICATION":
+        hours = client_profile.get("hours", "Monday through Friday from 8:00 AM to 6:00 PM")
+        reply = f"Our standard office hours are {hours}. For after-hours emergencies, our on-call technicians are available, or I can book you the first priority slot for tomorrow morning. How can I help?"
     elif any(k in msg_lower for k in ["price", "cost", "fee", "rate", "quote"]):
-        reply = f"We provide upfront estimates for all our services, and our standard diagnostic fee is applied to your repair. What type of service do you need?"
+        pricing = client_profile.get("pricing_policy", "Our diagnostic fee is applied directly toward your repair if approved.")
+        reply = f"{pricing} What type of service are you looking to have done?"
     elif any(k in msg_lower for k in ["where", "address", "location"]):
         addr = client_profile.get("address", "")
-        reply = f"We are located at {addr or 'the address on file'} and we dispatch technicians directly to your location. Where are you located?"
+        reply = f"We are based at {addr or 'our main office'} and dispatch our fully equipped mobile service vans directly to your location. What is your street address?"
     elif any(k in msg_lower for k in ["book", "schedule", "appointment", "come over", "visit"]):
-        reply = f"I can get that scheduled right away for {biz_name}! What day and time window works best for you?"
+        reply = f"I can get an arrival window scheduled for you right away for {biz_name}! What day works best for you?"
     else:
         reply = f"Thanks for checking with {biz_name}. We can certainly take care of that for you. Would you like me to book a technician or answer any other questions?"
 
     return {
         "response": reply,
         "is_transfer": is_transfer,
+        "telemetry_badge": telemetry_badge,
         "business_name": biz_name,
     }
+
+def generate_call_demo_script(profile: Dict[str, Any], scenario_id: Optional[str] = None) -> Dict[str, Any]:
+    """Generates realistic dual-voice telephone call demos testing different operational
+    challenges: routine booking, after-hours schedule enforcement, out-of-scope guardrail
+    handling, and high-stakes emergency triage.
+    """
+    biz_name = profile.get("business_name") or "Apex Services"
+    trade = (profile.get("trade") or profile.get("industry") or "hvac").lower()
+    pricing = profile.get("pricing_policy") or "Diagnostic fee applied to repair"
+    booking = profile.get("booking_action") or "Book arrival window"
+    persona_name = profile.get("persona_name") or "Riley"
+    persona_voice = profile.get("persona_voice") or "aura-asteria-en"
+    customer_voice = "aura-angus-en"
+    active_scenario = (scenario_id or "routine_booking").lower()
+
+    # Resolve pricing statement
+    if "free" in pricing.lower():
+        pricing_text = "We provide completely free on-site inspections with zero upfront fee or obligation."
+    elif "diagnostic" in pricing.lower() or "fee" in pricing.lower():
+        if "$" in pricing:
+            pricing_text = f"Our standard dispatch fee is {pricing} and is credited directly toward your repair."
+        else:
+            pricing_text = "Our standard diagnostic fee is credited directly toward your repair if you approve the work."
+    elif "quote" in pricing.lower() or "inspection" in pricing.lower():
+        pricing_text = "Our technician will inspect the issue on-site and provide an upfront, transparent quote before starting any work."
+    else:
+        pricing_text = f"Regarding our pricing: {pricing}."
+
+    # Build 4 distinct challenging scenarios
+    all_scenarios: Dict[str, Dict[str, Any]] = {
+        # -------------------------------------------------------------------
+        # SCENARIO 1: Routine Service & Booking (In-Hours)
+        # -------------------------------------------------------------------
+        "routine_booking": {
+            "scenario_id": "routine_booking",
+            "scenario_title": "⚡ 1. Routine Service & Booking (In-Hours)",
+            "scenario_tag": "In-Hours • Standard Booking",
+            "scenario_desc": "Customer calls during standard operating hours inquiring about service, quoting your exact pricing policy, and securing an arrival window.",
+            "customer_name": "David Miller (Homeowner)",
+            "caller_id": "+1 (206) 555-0192",
+            "issue_title": "Urgent Climate Issue / Service Call",
+            "telemetry": {
+                "time_status": "IN-HOURS (2:15 PM Local)",
+                "topic_status": "AUTHORIZED SERVICE TOPIC",
+                "policy_check": "100% Policy Match",
+                "action_taken": "2-Hour Arrival Window Confirmed & SMS Dispatched",
+            },
+            "turns": [
+                {
+                    "speaker": "customer",
+                    "name": "David (Customer)",
+                    "voice": customer_voice,
+                    "text": f"Hi there, my system is acting up and blowing warm air. Do you guys have anyone available today, and what do you charge to come out?"
+                },
+                {
+                    "speaker": "agent",
+                    "name": f"{persona_name} (Receptionist)",
+                    "voice": persona_voice,
+                    "text": f"Thank you for calling {biz_name}! I'm sorry to hear your system is acting up. We have a technician available in your area today between 1:00 PM and 5:00 PM. {pricing_text} What is your street address?"
+                },
+                {
+                    "speaker": "customer",
+                    "name": "David (Customer)",
+                    "voice": customer_voice,
+                    "text": "That sounds very fair. I'm at 742 Evergreen Terrace. Can you get someone over?"
+                },
+                {
+                    "speaker": "agent",
+                    "name": f"{persona_name} (Receptionist)",
+                    "voice": persona_voice,
+                    "text": "Got it, 742 Evergreen Terrace. May I have your full name and the best cell phone number for arrival updates?"
+                },
+                {
+                    "speaker": "customer",
+                    "name": "David (Customer)",
+                    "voice": customer_voice,
+                    "text": "Yes, my name is David Miller, and my mobile is 206-555-0192."
+                },
+                {
+                    "speaker": "agent",
+                    "name": f"{persona_name} (Receptionist)",
+                    "voice": persona_voice,
+                    "text": f"Perfect, David! You're locked in for today between 1:00 and 5:00 PM at 742 Evergreen Terrace for your AC system. {pricing_text} I've sent a priority confirmation text with live technician tracking to 206-555-0192. Does everything sound good?"
+                },
+                {
+                    "speaker": "customer",
+                    "name": "David (Customer)",
+                    "voice": customer_voice,
+                    "text": "That's completely perfect. Thanks so much for making this so easy!"
+                },
+                {
+                    "speaker": "agent",
+                    "name": f"{persona_name} (Receptionist)",
+                    "voice": persona_voice,
+                    "text": f"You're very welcome! Thank you for choosing {biz_name}. Have a wonderful day!"
+                }
+            ],
+            "outcome": {
+                "customer_name": "David Miller",
+                "customer_phone": "+1 (206) 555-0192",
+                "dispatch_delivery": "Instant SMS (Live Tracking + 1-Tap Receipt)",
+                "captured_issue": "System Diagnostic & AC Warm Air",
+                "pricing_quoted": pricing,
+                "scheduled_slot": "Today 1:00 PM – 5:00 PM Window",
+                "customer_address": "742 Evergreen Terrace",
+                "status": "Technician Dispatched (100% Policy Match)"
+            }
+        },
+
+        # -------------------------------------------------------------------
+        # SCENARIO 2: After-Hours Call at 11:45 PM (Schedule Enforcement)
+        # -------------------------------------------------------------------
+        "after_hours_test": {
+            "scenario_id": "after_hours_test",
+            "scenario_title": "🌙 2. After-Hours Call at 11:45 PM (Schedule Test)",
+            "scenario_tag": "After-Hours • Schedule Enforcement",
+            "scenario_desc": "Customer calls late at night. Riley automatically detects after-hours mode, checks for emergency urgency, quotes your after-hours protocol, and locks in the first morning priority slot.",
+            "customer_name": "Marcus Vance (Property Owner)",
+            "caller_id": "+1 (415) 555-0834",
+            "issue_title": "Late-Night Service Request (11:45 PM)",
+            "telemetry": {
+                "time_status": "AFTER-HOURS (11:45 PM Local)",
+                "topic_status": "SCHEDULE PROTOCOL ENFORCED",
+                "policy_check": "100% Schedule Match",
+                "action_taken": "Priority 8:00 AM Morning Window Reserved & SMS Alert Sent",
+            },
+            "turns": [
+                {
+                    "speaker": "customer",
+                    "name": "Marcus (Customer)",
+                    "voice": customer_voice,
+                    "text": f"Hello? I know it's really late, almost midnight, but our system completely stopped working. Are you guys open right now?"
+                },
+                {
+                    "speaker": "agent",
+                    "name": f"{persona_name} (Receptionist)",
+                    "voice": persona_voice,
+                    "text": f"Thank you for calling {biz_name}. Our main office is currently closed for the night, but our after-hours dispatch is active. Are you experiencing an active emergency like a gas odor or water leak, or would you like our first priority slot tomorrow morning?"
+                },
+                {
+                    "speaker": "customer",
+                    "name": "Marcus (Customer)",
+                    "voice": customer_voice,
+                    "text": "No gas smell or leak, it's just really uncomfortable. First thing in the morning would be awesome."
+                },
+                {
+                    "speaker": "agent",
+                    "name": f"{persona_name} (Receptionist)",
+                    "voice": persona_voice,
+                    "text": f"Understood. I have reserved our first priority arrival window tomorrow morning between 8:00 AM and 10:00 AM for you. {pricing_text} What is your street address?"
+                },
+                {
+                    "speaker": "customer",
+                    "name": "Marcus (Customer)",
+                    "voice": customer_voice,
+                    "text": "I'm at 1042 Bayside Avenue. Thanks for picking up at this hour!"
+                },
+                {
+                    "speaker": "agent",
+                    "name": f"{persona_name} (Receptionist)",
+                    "voice": persona_voice,
+                    "text": f"Got it, 1042 Bayside Avenue. You're all set for tomorrow at 8:00 AM, and I've texted a confirmation to your phone. Have a safe night!"
+                }
+            ],
+            "outcome": {
+                "captured_issue": "Non-Emergency After-Hours Intake",
+                "pricing_quoted": pricing,
+                "scheduled_slot": "Tomorrow Morning 8:00 AM – 10:00 AM",
+                "customer_address": "1042 Bayside Avenue",
+                "status": "After-Hours Priority Booked (Zero Hallucination)"
+            }
+        },
+
+        # -------------------------------------------------------------------
+        # SCENARIO 3: Boundary & Out-of-Scope Challenge
+        # -------------------------------------------------------------------
+        "boundary_challenge": {
+            "scenario_id": "boundary_challenge",
+            "scenario_title": "🛑 3. Out-of-Scope Boundary Test (High EQ)",
+            "scenario_tag": "Guardrail Test • Zero Hallucination",
+            "scenario_desc": "Customer tries to press Riley for dangerous DIY repair steps or demand an exact written contract price over the phone. Riley upholds safety policies with high emotional intelligence.",
+            "customer_name": "Kevin Larson (Caller)",
+            "caller_id": "+1 (650) 555-0219",
+            "issue_title": "DIY Repair Request / Blind Price Demand",
+            "telemetry": {
+                "time_status": "IN-HOURS (10:15 AM Local)",
+                "topic_status": "GUARDRAIL ACTIVATED (DECLINED DIY)",
+                "policy_check": "100% Guardrail Match",
+                "action_taken": "Safety Boundary Upheld & On-Site Evaluation Offered",
+            },
+            "turns": [
+                {
+                    "speaker": "customer",
+                    "name": "Kevin (Caller)",
+                    "voice": customer_voice,
+                    "text": "Hi, I'm looking at my unit right now. Can you just tell me which wires to connect or how to recharge it myself so I don't have to pay for a technician?"
+                },
+                {
+                    "speaker": "agent",
+                    "name": f"{persona_name} (Receptionist)",
+                    "voice": persona_voice,
+                    "text": f"I completely understand wanting to save time, but for your personal safety, equipment warranty, and code compliance, {biz_name} does not provide DIY repair instructions over the phone. High voltage and pressurized systems can be very dangerous."
+                },
+                {
+                    "speaker": "customer",
+                    "name": "Kevin (Caller)",
+                    "voice": customer_voice,
+                    "text": "Alright, fair point. But can you guarantee me right now exactly how much it will cost to fix before you come out?"
+                },
+                {
+                    "speaker": "agent",
+                    "name": f"{persona_name} (Receptionist)",
+                    "voice": persona_voice,
+                    "text": f"Every system issue is unique, so our certified technician must inspect the unit in person to give you an accurate, written flat-rate quote before any work starts. {pricing_text} Would you like me to book an inspection?"
+                },
+                {
+                    "speaker": "customer",
+                    "name": "Kevin (Caller)",
+                    "voice": customer_voice,
+                    "text": "Yeah, that makes sense. Let's do that. Do you have someone today?"
+                },
+                {
+                    "speaker": "agent",
+                    "name": f"{persona_name} (Receptionist)",
+                    "voice": persona_voice,
+                    "text": f"Yes, we can have our technician there this afternoon between 1:00 PM and 4:00 PM. What is your address?"
+                }
+            ],
+            "outcome": {
+                "captured_issue": "DIY Instruction Refused / Safety Protected",
+                "pricing_quoted": pricing,
+                "scheduled_slot": "Today 1:00 PM – 4:00 PM Window",
+                "customer_address": "Pending Customer Address",
+                "status": "Guardrail Enforced Perfectly (Safety Compliant)"
+            }
+        },
+
+        # -------------------------------------------------------------------
+        # SCENARIO 4: High-Stakes Emergency Escalation
+        # -------------------------------------------------------------------
+        "emergency_triage": {
+            "scenario_id": "emergency_triage",
+            "scenario_title": "🚨 4. High-Stakes Emergency Triage",
+            "scenario_tag": "Emergency Priority • Immediate Safety Action",
+            "scenario_desc": "Caller reports an acute property/life emergency (gas odor / severe flooding / sparking electrical hazard). Riley immediately issues safety instructions and initiates emergency on-call transfer.",
+            "customer_name": "Elena Rostova (Panicked Caller)",
+            "caller_id": "+1 (312) 555-0941",
+            "issue_title": "Acute Emergency / Active Hazard",
+            "telemetry": {
+                "time_status": "PRIORITY OVERRIDE",
+                "topic_status": "EMERGENCY TRIGGER MATCHED",
+                "policy_check": "100% Emergency Escalation",
+                "action_taken": "Safety Guidance Delivered & Call Transferred to On-Call Tech",
+            },
+            "turns": [
+                {
+                    "speaker": "customer",
+                    "name": "Elena (Caller)",
+                    "voice": customer_voice,
+                    "text": f"Help! There is water pouring through my ceiling and I smell gas near the utility closet! What do I do?!"
+                },
+                {
+                    "speaker": "agent",
+                    "name": f"{persona_name} (Receptionist)",
+                    "voice": persona_voice,
+                    "text": f"Please remain calm and step outside the building immediately for your safety. Do not touch any electrical switches or light anything."
+                },
+                {
+                    "speaker": "customer",
+                    "name": "Elena (Caller)",
+                    "voice": customer_voice,
+                    "text": "Okay, I'm heading outside to my front yard right now. Please hurry!"
+                },
+                {
+                    "speaker": "agent",
+                    "name": f"{persona_name} (Receptionist)",
+                    "voice": persona_voice,
+                    "text": f"Good, stay outside. I am immediately connecting you with our emergency on-call supervisor right now, and dispatching our closest emergency unit. Please hold while I transfer you."
+                }
+            ],
+            "outcome": {
+                "captured_issue": "Gas Odor & Active Ceiling Water Intrusion",
+                "pricing_quoted": "Emergency On-Call Dispatch",
+                "scheduled_slot": "IMMEDIATE EMERGENCY DISPATCH",
+                "customer_address": "Front Yard (Evacuated)",
+                "status": "Transferred to On-Call Supervisor Line"
+            }
+        }
+    }
+
+    return all_scenarios.get(active_scenario, all_scenarios["routine_booking"])
 
 # ---------------------------------------------------------------------------
 # Polar Subscription & Checkout Helper

@@ -1,0 +1,17 @@
+{
+  "client_id": "cli_ec8eped",
+  "project_name": "Serenity Air Heating & Air Conditioning Project",
+  "business_name": "Serenity Air Heating & Air Conditioning",
+  "industry": "hvac",
+  "address": "201 W Stewart Ave, Puyallup, WA 98371",
+  "forwarding_phone": "(253) 255-5682",
+  "assigned_phone": "+1 (833) 420-5227",
+  "owner_phone": "(253) 255-5682",
+  "owner_email": "",
+  "timezone": "America/New_York",
+  "status": "active",
+  "trigger_source": "onboarding",
+  "created_at": "2026-09-18 20:51:37",
+  "updated_at": "2026-09-18 20:51:37",
+  "sms_notifications_enabled": 1
+}

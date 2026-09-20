@@ -1,0 +1,19 @@
+{
+  "client_id": "cli_ec8eped",
+  "calendar_id": "primary",
+  "service_account_json": "",
+  "calendar_webhook_url": "",
+  "sync_enabled": 1,
+  "morning_slot_capacity": 2,
+  "afternoon_slot_capacity": 2,
+  "evening_slot_capacity": 2,
+  "is_connected": 0,
+  "last_tested_at": null,
+  "last_status": "untested",
+  "last_error": null,
+  "oauth_access_token": "",
+  "oauth_refresh_token": "",
+  "oauth_token_expiry": 0,
+  "oauth_user_email": "",
+  "auth_type": "oauth"
+}

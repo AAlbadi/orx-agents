@@ -10,6 +10,8 @@ services:
     env_file:
       - .env
     volumes:
+      # Persist client databases, recordings, and configurations
+      - ./data:/app/data
       # Persist downloaded models and local caches outside the container
       - kokoro-cache:/root/.cache/pipecat/kokoro-onnx
       - whisper-cache:/root/.cache/whisper
