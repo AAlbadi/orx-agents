@@ -2277,18 +2277,15 @@
       gap: 6px;
     }
 
-    /* Scenario Navigation Bar */
+    /* Scenario Navigation Bar - Minimalist 2-Tab View */
     .scenario-nav-bar {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 6px;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
       background: #1C1B18;
       padding: 6px;
       border-radius: 10px;
       margin-bottom: 14px;
-    }
-    @media (max-width: 700px) {
-      .scenario-nav-bar { grid-template-columns: repeat(2, 1fr); }
     }
     .scenario-tab-btn {
       background: transparent;
@@ -4683,19 +4680,13 @@
           <h2 class="focus-title">🎧 Test-Drive Your AI Receptionist: Hear Live Call Demo</h2>
           <p class="focus-sub">Listen to your AI receptionist answer real customer calls using your exact trade, hours, and pricing rules.</p>
 
-          <!-- Challenging Scenario Selection Pills -->
+          <!-- Minimalist 2-Tab Scenario Selection -->
           <div class="scenario-nav-bar" id="scenarioNavBar">
             <button type="button" class="scenario-tab-btn active" data-scenario="routine_booking">
               <span>⚡ 1. Routine Service Call</span>
             </button>
             <button type="button" class="scenario-tab-btn" data-scenario="after_hours_test">
-              <span>🌙 2. After-Hours Call (11:45 PM)</span>
-            </button>
-            <button type="button" class="scenario-tab-btn" data-scenario="boundary_challenge">
-              <span>🛑 3. Out-of-Scope / DIY Test</span>
-            </button>
-            <button type="button" class="scenario-tab-btn" data-scenario="emergency_triage">
-              <span>🚨 4. Urgent Emergency Call</span>
+              <span>🌙 2. After-Hours Call</span>
             </button>
           </div>
 
@@ -4899,10 +4890,10 @@
           <div class="pay-card">
             <div class="pay-badge-popular">⚡ 60-Second Setup • Zero Contract • Cancel Anytime</div>
             <div class="pay-hero-price">$20.00<span style="font-size: 20px; font-weight: 600; color: var(--text-muted); font-family: inherit;">/mo</span></div>
-            <div class="pay-price-sub">Includes 60 minutes/month (~20 calls) • then only $0.25/min overage • cancel anytime</div>
+            <div class="pay-price-sub">Includes 50 minutes/month (~18 calls) • then only $0.25/min overage • cancel anytime</div>
 
             <ul class="pay-features-list">
-              <li class="pay-feature-item"><span class="pay-check-icon">✓</span> <span><strong>60 Minutes / Month Included</strong> (then only $0.25/min overage)</span></li>
+              <li class="pay-feature-item"><span class="pay-check-icon">✓</span> <span><strong>50 Minutes / Month Included</strong> (then only $0.25/min overage)</span></li>
               <li class="pay-feature-item"><span class="pay-check-icon">✓</span> <span><strong>24/7/365 Call Answering</strong> in under 2 seconds (Deepgram Nova-3 &amp; Flux)</span></li>
               <li class="pay-feature-item"><span class="pay-check-icon">✓</span> <span><strong>Custom-trained on your trade</strong> with your exact pricing &amp; dispatch rules</span></li>
               <li class="pay-feature-item"><span class="pay-check-icon">✓</span> <span><strong>Dedicated US phone line</strong> provisioned immediately</span></li>

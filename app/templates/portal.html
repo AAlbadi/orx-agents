@@ -1721,13 +1721,13 @@
           </div>
           <div style="padding: 16px; border-radius: var(--radius-md); background: var(--bg-canvas); border: 1px solid var(--border);">
             <div style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Included Allowance</div>
-            <div style="font-size: 18px; font-weight: 800; color: var(--text-main); margin-top: 4px;">60 Minutes</div>
+            <div style="font-size: 18px; font-weight: 800; color: var(--text-main); margin-top: 4px;">50 Minutes</div>
             <div style="font-size: 11.5px; color: var(--text-tertiary); margin-top: 2px;">$0.25/min overage rate</div>
           </div>
           <div style="padding: 16px; border-radius: var(--radius-md); background: var(--bg-canvas); border: 1px solid var(--border);">
             <div style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Estimated Month Total</div>
             <div style="font-size: 20px; font-weight: 800; color: #059669; margin-top: 4px;" id="subMonthCost">$20.00</div>
-            <div style="font-size: 11.5px; color: var(--text-tertiary); margin-top: 2px;" id="subMonthMinutes">0 min used (60 min included)</div>
+            <div style="font-size: 11.5px; color: var(--text-tertiary); margin-top: 2px;" id="subMonthMinutes">0 min used (50 min included)</div>
           </div>
         </div>
 
@@ -2526,7 +2526,7 @@
         if (el("statAppointmentsSub")) el("statAppointmentsSub").textContent = `${s.appointments_this_week || 0} this week`;
 
         const totalMins = s.total_minutes || 0;
-        const incMins = s.included_minutes || 60;
+        const incMins = s.included_minutes || 50;
         const overageMins = s.overage_minutes || 0;
         const estCost = s.estimated_cost != null ? s.estimated_cost : 20.00;
 

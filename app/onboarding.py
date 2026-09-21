@@ -3988,7 +3988,7 @@ def create_polar_checkout_session(plan_id: str, client_id: str, success_url: str
 
 def report_usage_event_to_polar(client_id: str, minutes: float, event_name: str = "call_minute") -> bool:
     """Ingests a usage event into Polar for metered billing aggregation.
-    Polar sums these events during the billing cycle and automatically bills overage above 60 minutes at $0.25/min."""
+    Polar sums these events during the billing cycle and automatically bills overage above 50 minutes at $0.25/min."""
     token = settings.POLAR_ACCESS_TOKEN
     if not token or minutes <= 0:
         return False

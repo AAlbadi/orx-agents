@@ -2678,7 +2678,7 @@ async def api_admin_list_clients():
         total_minutes = round(total_seconds / 60.0, 1)
         # Pricing model: $20/mo Starter Plan + 50 free minutes + $0.25/min overage
         base_fee = 20.00
-        included_mins = 60.0
+        included_mins = 50.0
         overage_rate = 0.25
         overage_mins = max(0.0, round(total_minutes - included_mins, 1))
         overage_cost = round(overage_mins * overage_rate, 2)
@@ -2830,7 +2830,7 @@ async def api_admin_client_full(client_id: str):
     # Usage & Cost computation ($20/mo + 50 free minutes + $0.25/min)
     total_minutes = round(total_seconds / 60.0, 1)
     base_fee = 20.00
-    included_mins = 60.0
+    included_mins = 50.0
     overage_rate = 0.25
     overage_mins = max(0.0, round(total_minutes - included_mins, 1))
     overage_cost = round(overage_mins * overage_rate, 2)
@@ -3117,9 +3117,9 @@ async def api_project_stats(client_id: str):
         cur.execute("SELECT COUNT(DISTINCT caller_phone) as cnt FROM call_logs WHERE caller_phone IS NOT NULL")
         stats["unique_callers"] = cur.fetchone()["cnt"]
 
-        # Billing ($20/mo Starter Plan: includes 60 min, then $0.25/min overage)
+        # Billing ($20/mo Starter Plan: includes 50 min, then $0.25/min overage)
         base_fee = 20.00
-        included_mins = 60.0
+        included_mins = 50.0
         overage_rate = 0.25
         total_mins = stats.get("total_minutes", 0.0)
         overage_mins = max(0.0, round(total_mins - included_mins, 1))
