@@ -5157,6 +5157,33 @@
       industryCatalog: {}
     };
 
+    function getCleanSpokenBizName(targetTrade) {
+      let name = (state.bizName || "").trim();
+      const cleanDigits = name.replace(/\D/g, "");
+      const nonPhoneChars = name.replace(/[\d\s\(\)\-\+\.]/g, "");
+      const trade = targetTrade || state.trade || "hvac";
+      const tradeDefaults = {
+        hvac: "Comfort Breeze Heating and Air",
+        plumbing: "Apex Plumbing & Drain",
+        electrical: "VoltCraft Electric",
+        roofing: "Apex Roofing Solutions",
+        dental_medical: "Gentle Dental Care",
+        auto: "Precision Auto Care",
+        legal: "Apex Legal Group",
+        restaurant: "The Bistro Grill",
+        realestate: "Apex Realty Partners",
+        salon_spa: "Luxe Beauty Studio",
+        general: "Apex Services"
+      };
+      if (cleanDigits.length >= 7 && nonPhoneChars.length === 0) {
+        return tradeDefaults[trade] || "Comfort Breeze Heating and Air";
+      }
+      if (!name || name.toLowerCase() === "my business" || name.toLowerCase() === "our company" || name.toLowerCase() === "apex services") {
+        return tradeDefaults[trade] || "Comfort Breeze Heating and Air";
+      }
+      return name;
+    }
+
     // Common Timezones Catalog
     const timezonesList = [
       { value: "America/New_York", label: "Eastern Time (US & Canada - ET)" },
@@ -5562,6 +5589,11 @@
       }
       if (!state.bizName) {
         state.bizName = inPhoneQuery.value.trim() || "My Business";
+      }
+      const cleanDigits = (state.bizName || "").replace(/\D/g, "");
+      const nonPhone = (state.bizName || "").replace(/[\d\s\(\)\-\+\.]/g, "");
+      if (cleanDigits.length >= 7 && nonPhone.length === 0) {
+        state.bizName = getCleanSpokenBizName(state.trade);
       }
 
       updateSmsStepUI();
@@ -6923,7 +6955,7 @@
       }
 
       btnElem.classList.add("playing");
-      const biz = state.bizName || "our company";
+      const biz = getCleanSpokenBizName();
       const sampleText = customSample || `Thank you for calling ${biz}! This is your virtual receptionist. How can I help you today?`;
       const url = `/api/test-speech?text=${encodeURIComponent(sampleText)}&voice=${encodeURIComponent(voiceName)}&speed=1.0`;
 
@@ -6945,27 +6977,27 @@
 
     document.getElementById("btnAuditionRiley")?.addEventListener("click", (e) => {
       e.stopPropagation();
-      playKokoroAudition(document.getElementById("btnAuditionRiley"), "flux-meghan-en", `Thank you for calling ${state.bizName || 'our company'}. This is Riley. How may I assist you today?`);
+      playKokoroAudition(document.getElementById("btnAuditionRiley"), "flux-meghan-en", `Thank you for calling ${getCleanSpokenBizName()}. This is Riley. How may I assist you today?`);
     });
 
     document.getElementById("btnAuditionAna")?.addEventListener("click", (e) => {
       e.stopPropagation();
-      playKokoroAudition(document.getElementById("btnAuditionAna"), "flux-heather-en", `Hi there! Thanks for calling ${state.bizName || 'our company'}. This is Ana. What can we help you with today?`);
+      playKokoroAudition(document.getElementById("btnAuditionAna"), "flux-heather-en", `Hi there! Thanks for calling ${getCleanSpokenBizName()}. This is Ana. What can we help you with today?`);
     });
 
     document.getElementById("btnAuditionSarah")?.addEventListener("click", (e) => {
       e.stopPropagation();
-      playKokoroAudition(document.getElementById("btnAuditionSarah"), "flux-sienna-en", `Good day! Thanks for reaching out to ${state.bizName || 'our company'}. My name is Sarah. Are you scheduling an appointment today?`);
+      playKokoroAudition(document.getElementById("btnAuditionSarah"), "flux-sienna-en", `Good day! Thanks for reaching out to ${getCleanSpokenBizName()}. My name is Sarah. Are you scheduling an appointment today?`);
     });
 
     document.getElementById("btnAuditionMichael")?.addEventListener("click", (e) => {
       e.stopPropagation();
-      playKokoroAudition(document.getElementById("btnAuditionMichael"), "flux-bruce-en", `Thanks for calling ${state.bizName || 'our company'}. This is Michael. How can we get your service taken care of today?`);
+      playKokoroAudition(document.getElementById("btnAuditionMichael"), "flux-bruce-en", `Thanks for calling ${getCleanSpokenBizName()}. This is Michael. How can we get your service taken care of today?`);
     });
 
     document.getElementById("btnAuditionDavid")?.addEventListener("click", (e) => {
       e.stopPropagation();
-      playKokoroAudition(document.getElementById("btnAuditionDavid"), "flux-cliff-en", `Hello! You've reached ${state.bizName || 'our company'}. This is David. How can I assist you right away?`);
+      playKokoroAudition(document.getElementById("btnAuditionDavid"), "flux-cliff-en", `Hello! You've reached ${getCleanSpokenBizName()}. This is David. How can I assist you right away?`);
     });
 
     // Wire Diagnostic Fee Amount Input Box
@@ -7224,13 +7256,33 @@
     let callTimerSecs = 0;
     let isTheaterRunning = false;
     let cachedAudioBlobs = [];
+    let currentTheaterRunId = 0;
+    let cancelCurrentTurn = null;
 
     function stopCallSimulation() {
+      currentTheaterRunId++;
       isTheaterRunning = false;
+
+      // Cancel current turn promise immediately
+      if (cancelCurrentTurn) {
+        const fn = cancelCurrentTurn;
+        cancelCurrentTurn = null;
+        try { fn(); } catch(e){}
+      }
+
+      // Hard-kill any audio playback immediately
       if (callAudioPlaying) {
-        try { callAudioPlaying.pause(); } catch(e){}
+        try {
+          callAudioPlaying.onended = null;
+          callAudioPlaying.onerror = null;
+          callAudioPlaying.onloadedmetadata = null;
+          callAudioPlaying.pause();
+          callAudioPlaying.currentTime = 0;
+          callAudioPlaying.src = "";
+        } catch(e){}
       }
       callAudioPlaying = null;
+
       if (callTimerInterval) {
         clearInterval(callTimerInterval);
         callTimerInterval = null;
@@ -7275,6 +7327,8 @@
 
     async function compileAndLaunchCallTheater() {
       stopCallSimulation();
+      const thisRunId = ++currentTheaterRunId;
+      isTheaterRunning = true;
       showBox(4);
 
       const dialogueList = document.getElementById("theaterDialogueList");
@@ -7364,6 +7418,8 @@
         console.error("Failed to load script", e);
       }
 
+      if (!isTheaterRunning || currentTheaterRunId !== thisRunId) return;
+
       if (!scriptData || !scriptData.turns || scriptData.turns.length === 0) {
         if (voiceSubtitleText) voiceSubtitleText.textContent = "Error loading call demo. Please try again.";
         dialogueList.innerHTML = `<div style="text-align: center; color: #EF4444; font-size: 12px; padding: 20px 0;">Error loading call demo. Please try again.</div>`;
@@ -7394,7 +7450,6 @@
         }
       }
 
-      isTheaterRunning = true;
       const turns = scriptData.turns;
       cachedAudioBlobs = new Array(turns.length).fill(null);
 
@@ -7404,32 +7459,37 @@
         toggleTranscriptLabel.textContent = `View Full Transcript (${turns.length} turns)`;
       }
 
-      // Contrasting Deepgram Flux voice for customer turn to avoid vocal collision
-      const custVoice = (state.personaVoice === "flux-cliff-en" ? "flux-bruce-en" : "flux-cliff-en");
+      // Contrasting voice for customer to guarantee zero vocal collision
+      const custVoice = (state.personaVoice === "flux-bruce-en" ? "flux-cliff-en" : "flux-bruce-en");
       const recepVoice = state.personaVoice || "flux-meghan-en";
 
-      // Pre-fetch all audio turns in parallel
-      turns.forEach((turn, idx) => {
-        const voiceToUse = turn.voice || (turn.speaker === "customer" ? custVoice : recepVoice);
-        fetch(`/api/test-speech?text=${encodeURIComponent(turn.text)}&voice=${encodeURIComponent(voiceToUse)}&speed=1.0`)
+      // Helper function to prefetch audio into memory blob
+      const prefetchTurnAudio = (idx) => {
+        if (idx < 0 || idx >= turns.length || cachedAudioBlobs[idx]) return;
+        const turnItem = turns[idx];
+        const voiceToUse = turnItem.voice || (turnItem.speaker === "customer" ? custVoice : recepVoice);
+        fetch(`/api/test-speech?text=${encodeURIComponent(turnItem.text)}&voice=${encodeURIComponent(voiceToUse)}&speed=1.0`)
           .then(res => res.blob())
           .then(blob => {
-            if (isTheaterRunning) {
+            if (isTheaterRunning && currentTheaterRunId === thisRunId) {
               cachedAudioBlobs[idx] = URL.createObjectURL(blob);
             }
           })
-          .catch(err => {
-            console.warn(`Audio fetch failed for turn ${idx}, will fallback`, err);
-          });
-      });
+          .catch(err => console.warn(`Audio prefetch error turn ${idx}:`, err));
+      };
 
-      // Wait until Turn 1 audio is loaded in memory before ringing the call
-      let waitStart = Date.now();
-      while (!cachedAudioBlobs[0] && isTheaterRunning && (Date.now() - waitStart < 2500)) {
-        await new Promise(r => setTimeout(r, 30));
+      // Pre-fetch initial turns in parallel
+      for (let j = 0; j < Math.min(4, turns.length); j++) {
+        prefetchTurnAudio(j);
       }
 
-      if (!isTheaterRunning) return;
+      // Wait until Turn 1 audio is loaded in memory before ringing the call (zero start lag)
+      let waitStart = Date.now();
+      while (!cachedAudioBlobs[0] && isTheaterRunning && currentTheaterRunId === thisRunId && (Date.now() - waitStart < 2500)) {
+        await new Promise(r => setTimeout(r, 25));
+      }
+
+      if (!isTheaterRunning || currentTheaterRunId !== thisRunId) return;
 
       dialogueList.innerHTML = "";
 
@@ -7441,33 +7501,45 @@
       `;
 
       callTimerInterval = setInterval(() => {
+        if (!isTheaterRunning || currentTheaterRunId !== thisRunId) {
+          clearInterval(callTimerInterval);
+          return;
+        }
         callTimerSecs++;
         const mins = String(Math.floor(callTimerSecs / 60)).padStart(2, "0");
         const secs = String(callTimerSecs % 60).padStart(2, "0");
         timerElem.textContent = `${mins}:${secs}`;
       }, 1000);
 
-      // Sequentially play each audio turn
+      // Sequentially play each audio turn with guaranteed zero overlap
       for (let i = 0; i < turns.length; i++) {
-        if (!isTheaterRunning) break;
+        if (!isTheaterRunning || currentTheaterRunId !== thisRunId) break;
         const turn = turns[i];
 
+        // Keep prefetch queue 3 turns ahead
+        prefetchTurnAudio(i + 1);
+        prefetchTurnAudio(i + 2);
+        prefetchTurnAudio(i + 3);
+
+        // If current turn audio is still loading, wait up to 1200ms
         let audioWaitStart = Date.now();
-        while (!cachedAudioBlobs[i] && isTheaterRunning && (Date.now() - audioWaitStart < 2000)) {
-          await new Promise(r => setTimeout(r, 30));
+        while (!cachedAudioBlobs[i] && isTheaterRunning && currentTheaterRunId === thisRunId && (Date.now() - audioWaitStart < 1200)) {
+          await new Promise(r => setTimeout(r, 25));
         }
-        if (!isTheaterRunning) break;
+        if (!isTheaterRunning || currentTheaterRunId !== thisRunId) break;
 
         const voiceForTurn = turn.voice || (turn.speaker === "customer" ? custVoice : recepVoice);
         const audioUrl = cachedAudioBlobs[i] || `/api/test-speech?text=${encodeURIComponent(turn.text)}&voice=${encodeURIComponent(voiceForTurn)}&speed=1.0`;
 
-        await playSynchronizedTurn(turn, audioUrl, dialogueList);
-        if (!isTheaterRunning) break;
+        await playSynchronizedTurn(turn, audioUrl, dialogueList, thisRunId);
+        if (!isTheaterRunning || currentTheaterRunId !== thisRunId) break;
 
-        await new Promise(r => setTimeout(r, 180));
+        // Natural conversational breath pause (200ms) - no overlap
+        await new Promise(r => setTimeout(r, 200));
+        if (!isTheaterRunning || currentTheaterRunId !== thisRunId) break;
       }
 
-      if (isTheaterRunning) {
+      if (isTheaterRunning && currentTheaterRunId === thisRunId) {
         clearInterval(callTimerInterval);
         callTimerInterval = null;
         if (waveAnimInterval) {
@@ -7520,12 +7592,60 @@
       }
     }
 
-    function playSynchronizedTurn(turn, audioUrl, dialogueList) {
+    function playSynchronizedTurn(turn, audioUrl, dialogueList, runId) {
       return new Promise((resolve) => {
+        if (!isTheaterRunning || currentTheaterRunId !== runId) {
+          resolve();
+          return;
+        }
+
+        let isFinished = false;
+        let watchdogTimer = null;
+
+        const finishTurn = () => {
+          if (isFinished) return;
+          isFinished = true;
+          cancelCurrentTurn = null;
+
+          if (watchdogTimer) {
+            clearTimeout(watchdogTimer);
+            watchdogTimer = null;
+          }
+          if (waveAnimInterval) {
+            clearInterval(waveAnimInterval);
+            waveAnimInterval = null;
+          }
+          bars.forEach(b => b.style.height = "5px");
+          if (voiceStageCenter) voiceStageCenter.classList.remove("speaking");
+
+          showBubbleNow();
+          const bubble = turnDiv.querySelector(".turn-bubble");
+          const wave = turnDiv.querySelector(".turn-wave");
+          if (bubble) bubble.classList.remove("speaking");
+          if (wave) wave.style.display = "none";
+
+          if (callAudioPlaying) {
+            try {
+              callAudioPlaying.onended = null;
+              callAudioPlaying.onerror = null;
+              callAudioPlaying.onloadedmetadata = null;
+              callAudioPlaying.pause();
+              callAudioPlaying.currentTime = 0;
+            } catch(e){}
+            callAudioPlaying = null;
+          }
+
+          resolve();
+        };
+
+        cancelCurrentTurn = () => {
+          finishTurn();
+        };
+
         const isCustomer = turn.speaker === "customer";
         const avatar = isCustomer ? "👤" : (state.personaName === "Michael" ? "👔" : "🌸");
 
-        // Update 2026 Voice Stage Visualizer
+        // Update Voice Stage Visualizer
         const voiceStageCenter = document.getElementById("voiceStageCenter");
         const voiceOrb = document.getElementById("voiceOrb");
         const voiceSpeakerName = document.getElementById("voiceSpeakerName");
@@ -7546,7 +7666,7 @@
         if (voiceSpeakerName) voiceSpeakerName.textContent = turn.name || (isCustomer ? "Customer" : (state.personaName || "Riley (AI)"));
         if (voiceSubtitleText) voiceSubtitleText.textContent = turn.text;
 
-        // Start 2026 Dynamic Wave Equalizer Animation
+        // Wave Equalizer Animation
         if (waveAnimInterval) clearInterval(waveAnimInterval);
         waveAnimInterval = setInterval(() => {
           bars.forEach((bar, idx) => {
@@ -7571,8 +7691,6 @@
           </div>
         `;
 
-        callAudioPlaying = new Audio(audioUrl);
-
         let bubbleAppended = false;
         const showBubbleNow = () => {
           if (!bubbleAppended) {
@@ -7582,53 +7700,69 @@
           }
         };
 
-        const finishTurn = () => {
-          if (waveAnimInterval) {
-            clearInterval(waveAnimInterval);
-            waveAnimInterval = null;
-          }
-          bars.forEach(b => b.style.height = "5px");
-          if (voiceStageCenter) voiceStageCenter.classList.remove("speaking");
-
-          showBubbleNow();
-          const bubble = turnDiv.querySelector(".turn-bubble");
-          const wave = turnDiv.querySelector(".turn-wave");
-          if (bubble) bubble.classList.remove("speaking");
-          if (wave) wave.style.display = "none";
+        // Halt any existing audio before starting new turn
+        if (callAudioPlaying) {
+          try {
+            callAudioPlaying.onended = null;
+            callAudioPlaying.onerror = null;
+            callAudioPlaying.pause();
+            callAudioPlaying.currentTime = 0;
+          } catch(e){}
           callAudioPlaying = null;
-          resolve();
-        };
+        }
 
-        callAudioPlaying.onplay = () => {
+        const audio = new Audio(audioUrl);
+        callAudioPlaying = audio;
+
+        audio.onplay = () => {
           showBubbleNow();
         };
 
-        callAudioPlaying.onended = finishTurn;
-        callAudioPlaying.onerror = () => {
-          console.warn("Audio turn failed to play, continuing transcript");
+        audio.onended = () => {
           finishTurn();
         };
 
-        const wordCount = turn.text.split(" ").length;
-        const maxDurationMs = Math.max(3000, (wordCount / 2.2) * 1000 + 2500);
-        const timeoutId = setTimeout(() => {
+        audio.onerror = (e) => {
+          console.warn("Audio turn playback error, continuing:", e);
           finishTurn();
-        }, maxDurationMs);
+        };
 
-        callAudioPlaying.play().then(() => {
+        // Watchdog only fires if audio is stalled (duration + 2s buffer)
+        audio.onloadedmetadata = () => {
+          if (isFinished) return;
+          if (audio.duration && !isNaN(audio.duration) && audio.duration > 0) {
+            if (watchdogTimer) clearTimeout(watchdogTimer);
+            watchdogTimer = setTimeout(() => {
+              finishTurn();
+            }, Math.round(audio.duration * 1000) + 2000);
+          }
+        };
+
+        // Safe fallback watchdog
+        const wordCount = (turn.text || "").split(/\s+/).length;
+        const fallbackMs = Math.max(5000, Math.round((wordCount / 1.8) * 1000) + 4000);
+        watchdogTimer = setTimeout(() => {
+          finishTurn();
+        }, fallbackMs);
+
+        audio.play().then(() => {
           showBubbleNow();
-        }).catch(() => {
-          clearTimeout(timeoutId);
+        }).catch((err) => {
+          console.warn("Audio play blocked or aborted:", err);
           finishTurn();
         });
       });
     }
 
-    document.getElementById("btnReplayCall").addEventListener("click", () => {
+    document.getElementById("btnReplayCall")?.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       compileAndLaunchCallTheater();
     });
 
-    document.getElementById("btnToggleDemoPlay")?.addEventListener("click", () => {
+    document.getElementById("btnToggleDemoPlay")?.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       if (isTheaterRunning) {
         stopCallSimulation();
       } else {
@@ -8099,7 +8233,7 @@
       }, 1000);
 
       // Play Opening Receptionist Greeting
-      const initialGreeting = `Thank you for calling ${state.bizName || "Comfort Breeze Heating and Air"}! This is ${state.personaName || "Riley"}. How can I help you today?`;
+      const initialGreeting = `Thank you for calling ${getCleanSpokenBizName()}! This is ${state.personaName || "Riley"}. How can I help you today?`;
 
       simHistory = [{ role: "assistant", content: initialGreeting }];
       appendSimBubble("agent", initialGreeting);

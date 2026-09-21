@@ -2983,6 +2983,25 @@ def harmonize_business_name_for_trade(biz_name: str, target_trade: str) -> str:
     """Ensures business name doesn't contradict the active trade in simulation scripts."""
     if not biz_name or biz_name.strip().lower() in ("our company", "my business", "apex services"):
         return biz_name or "Our Company"
+
+    # If the business name is composed mostly of phone digits (e.g. "(454) 545-4554"), default to trade standard
+    clean_digits = re.sub(r"\D", "", biz_name)
+    non_phone_chars = re.sub(r"[\d\s\(\)\-\+\.]", "", biz_name)
+    if len(clean_digits) >= 7 and len(non_phone_chars) == 0:
+        trade_defaults = {
+            "hvac": "Comfort Breeze Heating and Air",
+            "plumbing": "Apex Plumbing & Drain",
+            "electrical": "VoltCraft Electric",
+            "roofing": "Apex Roofing Solutions",
+            "dental_medical": "Gentle Dental Care",
+            "auto": "Precision Auto Care",
+            "legal": "Apex Legal Group",
+            "restaurant": "The Bistro Grill",
+            "realestate": "Apex Realty Partners",
+            "salon_spa": "Luxe Beauty Studio",
+            "general": "Apex Services"
+        }
+        return trade_defaults.get(target_trade, "Comfort Breeze Heating and Air")
     
     # Check if biz_name contains keywords for ANY trade other than target_trade
     for trade, patterns in TRADE_KEYWORDS.items():
