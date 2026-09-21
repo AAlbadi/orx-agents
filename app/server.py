@@ -1581,7 +1581,15 @@ async def api_simulate_agent_turn(payload: Dict[str, Any] = Body(...)):
             "after_hours_action": payload.get("after_hours_action") or payload.get("night_action") or (payload.get("schedule_config") or {}).get("after_hours_action", ""),
             "night_action": payload.get("night_action") or payload.get("after_hours_action") or (payload.get("schedule_config") or {}).get("night_action", ""),
             "answering_coverage": payload.get("answering_coverage") or (payload.get("schedule_config") or {}).get("answering_coverage", ""),
+            "fee_amount": payload.get("fee_amount") or payload.get("diagnostic_fee") or 89,
+            "diagnostic_fee": payload.get("fee_amount") or payload.get("diagnostic_fee") or 89,
+            "human_transfer_policy": payload.get("human_transfer_policy") or "life_safety_emergencies",
+            "call_termination_policy": payload.get("call_termination_policy") or "natural_booking_complete",
         }
+    else:
+        for k in ["fee_amount", "diagnostic_fee", "human_transfer_policy", "call_termination_policy", "pricing_policy", "booking_action", "trade", "industry", "business_name"]:
+            if k in payload and payload[k] is not None:
+                profile[k] = payload[k]
     message = payload.get("message") or payload.get("user_text") or payload.get("query", "")
     history = payload.get("history", [])
     result = simulate_agent_turn(profile, message, history)

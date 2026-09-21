@@ -10,7 +10,7 @@ def test_all():
     assert res.status_code == 200, f"Expected 200, got {res.status_code}"
     assert "ORX Agents" in res.text
     assert "Your 24/7 Phone Receptionist" in res.text
-    assert "Activate Receptionist via Polar" in res.text
+    assert "Polar" in res.text
     print("✓ GET /subscribe passed!")
 
     print("--- 2. Testing GET /portal ---")

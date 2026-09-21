@@ -1801,24 +1801,38 @@ TRADE_METRICS: Dict[str, Dict[str, str]] = {
 }
 
 
-def fee_to_spoken(fee_raw: str) -> str:
-    """Converts diagnostic fee input (e.g. '$89', '79', 'Free') into natural spoken English."""
-    if not fee_raw:
-        return ""
+def fee_to_spoken(fee_raw) -> str:
+    """Converts diagnostic fee input (e.g. '$89', '79', 'Free', 89) into natural spoken English."""
+    if fee_raw is None or fee_raw == "":
+        return "eighty-nine dollars"
     fee_lower = str(fee_raw).lower().strip()
-    if "free" in fee_lower or "complimentary" in fee_lower or "$0" in fee_lower:
+    if "free" in fee_lower or "complimentary" in fee_lower or "$0" in fee_lower or fee_lower == "0":
         return "complimentary"
     m = re.search(r"(\d+)", str(fee_raw))
     if m:
         n = int(m.group(1))
-        mapping = {
-            29: "twenty-nine dollars", 35: "thirty-five dollars", 39: "thirty-nine dollars", 45: "forty-five dollars", 49: "forty-nine dollars",
-            59: "fifty-nine dollars", 65: "sixty-five dollars", 69: "sixty-nine dollars", 75: "seventy-five dollars",
-            79: "seventy-nine dollars", 85: "eighty-five dollars", 89: "eighty-nine dollars",
-            95: "ninety-five dollars", 99: "ninety-nine dollars", 120: "one hundred twenty dollars", 125: "one hundred twenty-five dollars",
-            149: "one hundred forty-nine dollars", 150: "one hundred fifty dollars", 199: "one hundred ninety-nine dollars",
-        }
-        return mapping.get(n, f"{n} dollars")
+        if n == 0:
+            return "complimentary"
+        ones = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+                "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"]
+        tens = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"]
+        if n < 20:
+            words = ones[n]
+        elif n < 100:
+            words = tens[n // 10] + ("-" + ones[n % 10] if n % 10 else "")
+        elif n < 1000:
+            rem = n % 100
+            h = ones[n // 100] + " hundred"
+            if rem == 0:
+                words = h
+            elif rem < 20:
+                words = f"{h} {ones[rem]}".strip()
+            else:
+                words = f"{h} {tens[rem // 10]}" + ("-" + ones[rem % 10] if rem % 10 else "")
+        else:
+            words = str(n)
+        return f"{words} dollars"
+    return "eighty-nine dollars"
 def clean_timezone(tz_raw: Optional[str]) -> str:
     """Extract standard IANA timezone name from strings like 'Local (Asia/Muscat)' or 'America/New_York (Eastern Time)'."""
     if not tz_raw:
@@ -1887,7 +1901,7 @@ def evaluate_client_schedule_status(profile: Dict[str, Any], test_now: Optional[
     full_day_names = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     day_name = days_order[now.weekday()]
     now_mins = now.hour * 60 + now.minute
-    now_display = now.strftime("%A, %I:%M %p").replace(" 0", " ")
+    now_display = now.strftime("%A, %B %d, %Y at %I:%M %p").replace(" 0", " ")
 
     # Parse and normalize daily hours
     raw_dh = sched_cfg.get("daily_hours") or sched_cfg.get("dailyHours") or {}
@@ -2340,7 +2354,7 @@ def compile_agent_prompt(profile: Dict[str, Any]) -> str:
         or profile.get("greeting")
         or f"Thank you for calling {biz_name}! This is {persona_name}. How can I help you today?"
     )
-    if any(p in first_msg.lower() for p in ["comfortable today", "taken care of today", "scheduled today"]):
+    if any(p in first_msg.lower() for p in ["comfortable today", "taken care of today", "scheduled today", "active leak", "power your", "routine visit", "matter today", "dining information", "view a property"]):
         first_msg = f"Thank you for calling {biz_name}! This is {persona_name}. How can I help you today?"
 
     # Emergency Transfer Line
@@ -2444,7 +2458,7 @@ ADDRESS CAPTURE & CONFIRMATION PROTOCOL:
 - When completing the booking in the final recap, ALWAYS use the confirmed address directly: 'You\\'re all set, [Name]! We have our team scheduled for [Confirmed Address]...' NEVER ask 'And just to confirm, what is your service address?'.
 
 PHONE NUMBER CAPTURE & CONFIRMATION PROTOCOL:
-- When the caller provides their mobile number, IMMEDIATELY read it back digit-by-digit and ask ONLY for confirmation: 'Perfect — I have six one two, seven one six, nine nine eight nine. Did I get that right?' (STOP and wait for confirmation).
+- When the caller provides their mobile number, IMMEDIATELY read it back digit-by-digit and ask ONLY for confirmation: 'Perfect — I have seven one three, five five five, zero one eight four. Did I get that right?' (STOP and wait for confirmation).
 - Once confirmed, proceed to the recap.
 </field_confirmation_protocol>
 
@@ -2455,11 +2469,12 @@ Forwarding Phone: {forwarding_phone if forwarding_phone else "Emergency Dispatch
 </human_transfer_policy>
 
 <call_termination_directives>
-1. 15-Minute Safety Cap: All calls are strictly capped at 15 minutes.
+1. 15-Minute Safety Cap: All calls are strictly capped at 15 minutes to preserve line availability.
 2. Natural Farewell: When caller or agent says sign-off ("thanks that's all", "goodbye", "have a wonderful day"), conclude gracefully and end call.
-3. Automated System / AI Robocall Loop Detection: If the caller is detected to be an automated voicemail greeting, IVR bot, or AI, state "Automated system detected. Ending call." and hang up immediately.
-4. Keypad Selection IVR Options: If the incoming line presents a keypad menu ("press 1 for sales", "select from the following options"), state "This direct line does not support automated keypad menu selections. Goodbye." and terminate call immediately.
-5. Transfer Completed: When transferring the caller under the Human Transfer Policy, inform them clearly ("I am connecting you directly with our dispatch team right now. Please stay on the line.") and execute the transfer handoff.
+3. Immediate Polite Farewell on Caller Opt-out / Disinterest: If the caller states they are not interested, calling by mistake, shopping around and do not want an appointment, or declines service, respond politely ("No problem at all! If you ever need assistance in the future, don't hesitate to give us a call. Have a wonderful day!") and end call.
+4. Automated System / AI Robocall Loop Detection: If the caller is detected to be an automated voicemail greeting, IVR bot, or AI, state "Automated system detected. Ending call." and hang up immediately.
+5. Keypad Selection IVR Options: If the incoming line presents a keypad menu ("press 1 for sales", "select from the following options"), state "This direct line does not support automated keypad menu selections. Goodbye." and terminate call immediately.
+6. Transfer Completed: When transferring the caller under the Human Transfer Policy, inform them clearly ("I am connecting you directly with our dispatch team right now. Please stay on the line.") and execute the transfer handoff.
 </call_termination_directives>
 
 <answering_coverage_policy>
@@ -2680,7 +2695,7 @@ def simulate_agent_turn(client_profile: Dict[str, Any], user_message: str, histo
             telemetry_badge = "SCHEDULE VERIFICATION"
 
     groq_key = settings.GROQ_API_KEY
-    greeting_msg = client_profile.get("first_message") or f"Thank you for calling {biz_name}! This is {persona_name}. How can I help you today?"
+    greeting_msg = f"Thank you for calling {biz_name}! This is {persona_name}. How can I help you today?"
 
     if groq_key:
         try:
@@ -3115,20 +3130,33 @@ def generate_call_demo_script(profile: Dict[str, Any], scenario_id: Optional[str
         custom_services_str = ""
         primary_service = ""
 
-    # Pricing text helper
-    if "free" in pricing.lower() or "complimentary" in pricing.lower() or "$0" in pricing:
-        pricing_text = "and our consultation and initial assessment are completely free — zero upfront cost, no obligation."
-        pricing_spoken = "The initial consultation is completely free, with no obligation whatsoever."
-    elif "$" in pricing or any(c.isdigit() for c in pricing):
-        m = re.search(r"(\$?\d+)", pricing)
-        fee_disp = m.group(1) if m else pricing
-        if not fee_disp.startswith("$") and fee_disp.isdigit():
-            fee_disp = f"${fee_disp}"
-        pricing_text = f"the initial diagnostic fee is {fee_disp}, and that fee gets credited right back toward your repair if you move forward."
-        pricing_spoken = f"The initial fee is {fee_disp}, and it's credited back to you if you move forward with the work — so it's basically free if you go ahead."
+    # Dynamic spoken fee resolution
+    raw_fee = profile.get("fee_amount") or profile.get("diagnostic_fee")
+    if not raw_fee and "$" in pricing:
+        m_fee = re.search(r"\$(\d+)", pricing)
+        if m_fee:
+            raw_fee = int(m_fee.group(1))
+    if raw_fee is not None and str(raw_fee).strip() != "":
+        spoken_fee = fee_to_spoken(raw_fee)
     else:
-        pricing_text = "we give you a written flat-rate quote upfront before starting any work so there are zero surprises."
-        pricing_spoken = "We give you a written quote right there upfront — no surprises, all transparent."
+        spoken_fee = fee_to_spoken(89)
+
+    if "free" in pricing.lower() or "complimentary" in pricing.lower() or "$0" in pricing or spoken_fee == "complimentary":
+        fee_agent_answer = "Our initial inspection and estimate are completely complimentary with zero obligation! Does that sound fair?"
+        ah_fee_agent_answer = "Glad there's no safety hazard! Here's what we can do — I'll reserve our very first priority slot tomorrow morning between eight and ten AM so a technician is at your door first thing. Our initial inspection is completely complimentary with zero upfront cost! Does that work for you?"
+        pricing_spoken = "The initial consultation is completely free, with no obligation whatsoever."
+        pricing_text = "and our consultation and initial assessment are completely free — zero upfront cost, no obligation."
+    else:
+        fee_agent_answer = (
+            f"Our diagnostic fee is a flat {spoken_fee}, which covers a full comprehensive inspection of your system by a certified technician. "
+            f"And the best part is, if you decide to move forward with the repair, we credit that full {spoken_fee} directly toward the cost of the repair! Does that sound fair?"
+        )
+        ah_fee_agent_answer = (
+            f"Glad there's no safety hazard! Here's what we can do — I'll reserve our very first priority slot tomorrow morning between eight and ten AM so a technician is at your door first thing. "
+            f"Our diagnostic fee is a flat {spoken_fee}, and we credit that full amount directly toward the repair! Does that work for you?"
+        )
+        pricing_spoken = f"The diagnostic fee is a flat {spoken_fee}, and it's credited back to you if you move forward with the repair."
+        pricing_text = f"the initial diagnostic fee is a flat {spoken_fee}, and that fee gets credited right back toward your repair if you move forward."
 
     is_text_details_booking = any(k in booking.lower() for k in ["text", "reach out", "callback", "owner schedules", "lead capture", "details"])
     owner_phone_display = profile.get("sms_phone") or profile.get("phone") or "+1 (555) 234-5678"
@@ -3138,144 +3166,112 @@ def generate_call_demo_script(profile: Dict[str, Any], scenario_id: Optional[str
     # ════════════════════════════════════════════════════════════════════════
     TRADE_DEMO_DATA = {
         "hvac": {
-            "title": "AC Not Cooling — Full Diagnostic",
+            "title": "AC Not Cooling — Diagnostic Service",
             "caller_name": "David (Homeowner)",
             "caller_name_full": "David Thompson",
             "caller_phone": "+1 (713) 555-0184",
             "caller_phone_raw": "713-555-0184",
+            "caller_phone_display": "(713) 555-0184",
             "customer_address": "419 Maple Drive",
             "location_display": "419 Maple Drive",
-            "routine_slot": "Today 2:00 PM – 5:00 PM Window",
+            "routine_slot": "Tomorrow 8:00 AM – 11:00 AM Window",
             "routine_status": "Service Window Confirmed — SMS Sent",
             "owner_alert_title": "⚡ New Service Job Booked",
-            "booking_confirm_line": f"You're all set, David! I have our technician scheduled for your arrival window today between two and five PM at 419 Maple Drive. They'll text fifteen minutes before arriving. I just sent confirmation to your cell!",
-            "sms_body_routine": f"Hi David! You're confirmed with {biz_name} for today, 2–5 PM at 419 Maple Drive. Our technician will text 15 min before arrival. Reply anytime with questions.",
-            "daytime_cust_problem": "Hi! Yeah, my AC has been running all afternoon but the house is just not cooling down. It's blowing air but it feels kinda warm. Do you guys handle that?",
-            "daytime_agent_service": f"Oh no, dealing with AC trouble is such a headache! We can definitely help you with that. That definitely sounds like something a technician should inspect. Would you like to check our available appointment windows?",
-            "daytime_cust_price_q": "Yeah, quick question though — what do you charge just to come out and look? Because last company I called wanted ninety-five dollars just to show up.",
-            "daytime_agent_price_a": f"I completely understand! {pricing_spoken} Our technician does a thorough inspection and gives you a clear, upfront quote before starting any work. No surprises at all.",
-            "daytime_cust_area_q": f"Okay that actually sounds way better. I'm over on Maple Drive in {city_disp} — is that in your service area? Sometimes companies say they cover {city_disp} and then they don't.",
-            "daytime_agent_area_a": f"Oh absolutely, Maple Drive is right in our service area! We have an opening later today between two and five, or tomorrow morning. Which arrival window works better for your schedule?",
-            "daytime_cust_name_turn": "Later today works great for me. My name is Sarah Thompson, and my cell is 713-555-0184. One more thing — if it turns out my unit is totally shot, do you guys also do full replacements or just repairs?",
-            "daytime_agent_scope_a": f"Oh definitely! We handle both repairs and full replacements" + (f" including {custom_services_str}" if custom_services_str else "") + ", so whatever your tech finds, we've got you covered with upfront options.",
+            "booking_confirm_line": f"You're all set, David! We have a certified technician scheduled for 419 Maple Drive tomorrow morning between eight and eleven. We're texting confirmation and tracking to (713) 555-0184. Does everything sound good?",
+            "sms_body_routine": f"Hi David! You're confirmed with {biz_name} for tomorrow, 8–11 AM at 419 Maple Drive. Our technician will text 15 min before arrival. Reply anytime with questions.",
+            "daytime_cust_problem": "My AC isn't working.",
+            "daytime_agent_service": "Oh no, dealing with AC trouble is such a headache! What seems to be happening with the system—is it blowing warm air, making a strange sound, or completely shut off?",
+            "daytime_cust_clarify": "Don't know, it's just not blowing cold air.",
+            "daytime_agent_consult": "I understand, it's frustrating when you can't quite pinpoint the issue! Got it, that definitely sounds like something one of our technicians should inspect to diagnose properly. We can get you on the schedule so our team can come out and take care of that for you. Would you like to check our available appointment times?",
             "ah_slot": "Tomorrow 8:00 AM – 10:00 AM Priority Window",
             "ah_status": "After-Hours Priority Booked — Tech Alerted",
             "owner_alert_ah_title": "🌙 After-Hours HVAC Service Request",
-            "ah_booking_line": f"You're all set, Marcus! I've reserved our priority eight to ten AM window for you tomorrow at 1042 Bayside Avenue, and alerted our on-call team. Confirmation is on your phone.",
+            "ah_booking_line": f"You're all set, Marcus! I've reserved our priority eight to ten AM window for you tomorrow at 1042 Bayside Avenue, and alerted our on-call team. Confirmation and arrival tracking are on your phone. Does everything sound good?",
             "sms_body_ah": f"Hi Marcus! You're confirmed with {biz_name} for tomorrow, 8–10 AM at 1042 Bayside Avenue. Our technician will text 15 min before arrival. Reply anytime.",
             "ah_cust_problem": "Oh wow, someone actually picked up. Look, it's almost midnight and my AC completely stopped working. It's eighty-two degrees inside and I've got my kids here. I didn't think anyone would answer at this hour.",
             "ah_agent_triage": "I understand, having the AC stop working late at night with kids in the house is stressful. Let's make sure you're safe first — are you noticing any burning smell or strange noises from the unit?",
-            "ah_cust_clarify": "No, no smell or anything — it just stopped blowing cold air entirely. What can you actually do for me right now? And what do you charge to come out after hours?",
-            "ah_agent_solution": f"Glad there's no safety hazard! Here's what we can do — I'll reserve our very first priority slot tomorrow morning, eight to ten AM, so your tech is out early. {pricing_spoken} And I'll alert our on-call team right now.",
-            "ah_cust_address_q": "Okay that works. I'm at 1042 Bayside Avenue — do you actually service out there, or are you going to tell me that's too far?",
-            "ah_agent_address_a": f"Bayside Avenue in {city_disp} is right in our service area, no problem at all! Can I grab your name and best cell number for the priority confirmation?",
-            "ah_cust_info_turn": "Marcus Vance, cell is 415-555-0834. And hey — what if the whole unit needs replacing?",
-            "ah_agent_scope_a": "We carry equipment for both repairs and full replacements on the truck, so you're covered either way without having to call around.",
+            "ah_cust_clarify": "No, no smell or anything — it just stopped blowing cold air entirely. What can you actually do for me right now? And what's the cost?",
         },
         "plumbing": {
-            "title": "Water Heater Active Leak & Diagnostic",
+            "title": "Water Heater Issue & Diagnostic",
             "caller_name": "David (Homeowner)",
             "caller_name_full": "David Miller",
             "caller_phone": "+1 (512) 555-0198",
             "caller_phone_raw": "512-555-0198",
+            "caller_phone_display": "(512) 555-0198",
             "customer_address": "724 Oak Crest Lane",
             "location_display": "724 Oak Crest Lane",
-            "routine_slot": "Today 2:00 PM – 5:00 PM Window",
+            "routine_slot": "Tomorrow 8:00 AM – 11:00 AM Window",
             "routine_status": "Plumber Dispatched — SMS Sent",
             "owner_alert_title": "⚡ New Plumbing Job Booked",
-            "booking_confirm_line": f"You're all set, David! I have our licensed plumber scheduled for your arrival window today between two and five PM at 724 Oak Crest Lane. They'll text fifteen minutes before arriving. I just sent confirmation to your cell!",
-            "sms_body_routine": f"Hi David! You're confirmed with {biz_name} for today, 2–5 PM at 724 Oak Crest Lane. Our plumber will text 15 min before arrival. Reply anytime with questions.",
-            "daytime_cust_problem": "Hi there! I just walked into my garage and there's water pooling around the bottom of my water heater. It's actively dripping from the tank. Do you guys repair water heaters?",
-            "daytime_agent_service": "Oh no, water leaks are definitely stressful! We can certainly help with that. Is the water just dripping slowly into the drain pan, or is it spreading onto the floor?",
-            "daytime_cust_price_q": "It's a steady drip right now, pooling into the pan. What do you charge to send someone out to inspect it? I don't want to pay a fortune just for someone to look.",
-            "daytime_agent_price_a": f"I completely understand! {pricing_spoken} Our plumber does a thorough diagnostic and gives you a clear, guaranteed quote before touching anything. No surprises.",
-            "daytime_cust_area_q": f"That's fair. I'm at 724 Oak Crest Lane in {city_disp} — do you have plumbers that cover {city_disp}?",
-            "daytime_agent_area_a": f"Oh absolutely, Oak Crest Lane is right in our service area! We have arrival windows open today between two and five, or tomorrow morning. Which window works better for you?",
-            "daytime_cust_name_turn": "Later today works best. My name is David Miller, cell is 512-555-0198. Quick question — if the tank is cracked and rusted out, do you guys replace the whole water heater or will I have to find another company?",
-            "daytime_agent_scope_a": f"Definitely! Our trucks are fully stocked for both repairs and same-day replacements" + (f" including {custom_services_str}" if custom_services_str else "") + ", so we can take care of it in one visit.",
+            "booking_confirm_line": f"You're all set, David! We have a licensed plumber scheduled for 724 Oak Crest Lane tomorrow morning between eight and eleven. We're texting confirmation and tracking to (512) 555-0198. Does everything sound good?",
+            "sms_body_routine": f"Hi David! You're confirmed with {biz_name} for tomorrow, 8–11 AM at 724 Oak Crest Lane. Our plumber will text 15 min before arrival. Reply anytime with questions.",
+            "daytime_cust_problem": "My water heater isn't working.",
+            "daytime_agent_service": "Oh no, dealing with water heater trouble is definitely stressful! What seems to be happening—is it leaking water, making a strange sound, or not producing hot water?",
+            "daytime_cust_clarify": "Don't know, there's water pooling around the bottom and no hot water.",
+            "daytime_agent_consult": "I understand, that definitely sounds like something our licensed plumber should inspect to diagnose properly. We can get you on the schedule so our team can take care of that for you. Would you like to check our available appointment times?",
             "ah_slot": "Tomorrow 8:00 AM – 10:00 AM Priority Window",
             "ah_status": "After-Hours Urgent Triage — Plumber Alerted",
             "owner_alert_ah_title": "🌙 After-Hours Plumbing Alert",
-            "ah_booking_line": f"You're all set, Marcus! I've reserved our priority eight to ten AM slot for you tomorrow at 1042 Bayside Avenue, and alerted our master plumber. Confirmation is on your phone.",
+            "ah_booking_line": f"You're all set, Marcus! I've reserved our priority eight to ten AM window for you tomorrow at 1042 Bayside Avenue, and alerted our master plumber. Confirmation is on your phone. Does everything sound good?",
             "sms_body_ah": f"Hi Marcus! You're confirmed with {biz_name} for tomorrow, 8–10 AM at 1042 Bayside Avenue. Our plumber will text 15 min before arrival. Reply anytime.",
             "ah_cust_problem": "Hello? I know it's late, almost midnight, but my kitchen sink is completely backed up and gurgling dirty water into the basin. Can someone help?",
             "ah_agent_triage": "I hear you — a late-night kitchen backup is definitely frustrating! First, is water overflowing onto your cabinets or floor, or is it contained inside the sink bowl?",
-            "ah_cust_clarify": "It's sitting in the sink for now, not overflowing yet. But I'm scared to run any water in the house. What can we do tonight?",
-            "ah_agent_solution": f"Good — keep all taps off for tonight so nothing overflows. Since it's contained, I'll reserve our very first priority slot tomorrow morning, eight to ten AM. Our plumber will have the motorized auger ready. {pricing_spoken}",
-            "ah_cust_address_q": "Okay that's a relief. I'm at 1042 Bayside Avenue — will they definitely make it out first thing?",
-            "ah_agent_address_a": f"Yes, 1042 Bayside Avenue in {city_disp} will be our plumber's first stop! Can I grab your name and cell number for the priority dispatch?",
-            "ah_cust_info_turn": "Marcus Vance, cell is 415-555-0834. And you guys do full drain camera inspections too right?",
-            "ah_agent_scope_a": "Yes, we have high-definition sewer cameras right on the truck to inspect the main line completely.",
+            "ah_cust_clarify": "It's sitting in the sink for now, not overflowing yet. What can you do for me right now? And what's the cost?",
         },
         "electrical": {
-            "title": "Breaker Tripping & Panel Diagnostic",
+            "title": "Circuit Breaker Tripping & Diagnostic",
             "caller_name": "Robert (Property Owner)",
             "caller_name_full": "Robert Davis",
             "caller_phone": "+1 (404) 555-0177",
             "caller_phone_raw": "404-555-0177",
+            "caller_phone_display": "(404) 555-0177",
             "customer_address": "812 Highland View",
             "location_display": "812 Highland View",
-            "routine_slot": "Today 2:00 PM – 5:00 PM Window",
+            "routine_slot": "Tomorrow 8:00 AM – 11:00 AM Window",
             "routine_status": "Electrician Dispatched — SMS Sent",
             "owner_alert_title": "⚡ New Electrical Job Booked",
-            "booking_confirm_line": f"You're all set, Robert! I've scheduled our certified electrician for your arrival window today between two and five PM at 812 Highland View. They'll text fifteen minutes before arriving. I just sent confirmation to your mobile!",
-            "sms_body_routine": f"Hi Robert! You're confirmed with {biz_name} for today, 2–5 PM at 812 Highland View. Our electrician will text 15 min before arrival. Reply anytime with questions.",
-            "daytime_cust_problem": "Hello! Our main circuit breaker keeps tripping every time we turn on our microwave or run the dryer. Half the kitchen lost power. Do you have licensed electricians available?",
-            "daytime_agent_service": "Oh wow, losing power to the kitchen is definitely frustrating! We can certainly help. Do you notice any burning smell, buzzing, or heat coming from the panel?",
-            "daytime_cust_price_q": "No burning smell, just clicks off. What do you charge to come diagnose the panel? Some electricians charge crazy hourly rates without telling you upfront.",
-            "daytime_agent_price_a": f"We don't do hourly surprises at all! {pricing_spoken} Our electrician conducts a full safety evaluation and gives you an upfront flat quote before doing any work.",
-            "daytime_cust_area_q": f"That sounds honest. I'm over at 812 Highland View in {city_disp} — can you get an electrician out to {city_disp}?",
-            "daytime_agent_area_a": f"Yes, Highland View is right in our primary service area! We have arrival windows open today between two and five, or tomorrow morning. Which window works better for your schedule?",
-            "daytime_cust_name_turn": "Later today is great. Robert Davis, mobile is 404-555-0177. If my breaker panel turns out to be old and needs a full 200-amp upgrade, do you do panel replacements too?",
-            "daytime_agent_scope_a": f"Yes, absolutely! We do panel upgrades, rewiring" + (f", {custom_services_str}" if custom_services_str else "") + ", and handle all city permits from start to finish.",
+            "booking_confirm_line": f"You're all set, Robert! We have a certified electrician scheduled for 812 Highland View tomorrow morning between eight and eleven. We're texting confirmation and tracking to (404) 555-0177. Does everything sound good?",
+            "sms_body_routine": f"Hi Robert! You're confirmed with {biz_name} for tomorrow, 8–11 AM at 812 Highland View. Our electrician will text 15 min before arrival. Reply anytime with questions.",
+            "daytime_cust_problem": "My breaker keeps tripping.",
+            "daytime_agent_service": "Oh no, dealing with electrical issues is so frustrating! What seems to be happening—is a breaker tripping, lights flickering, or did a whole room lose power?",
+            "daytime_cust_clarify": "Don't know, half the kitchen just lost power whenever we turn on an appliance.",
+            "daytime_agent_consult": "I understand, that definitely sounds like something our certified electrician should inspect for safety. We can get you on the schedule so our team can come out. Would you like to check our available appointment times?",
             "ah_slot": "Tomorrow 8:00 AM Priority Safety Slot",
             "ah_status": "After-Hours Hazard Triage — Electrician Alerted",
             "owner_alert_ah_title": "🌙 After-Hours Electrical Hazard Alert",
-            "ah_booking_line": f"You're all set, Marcus! I've reserved our first priority eight AM slot tomorrow at 1042 Bayside Avenue, and our master electrician is on alert. Confirmation is on its way to your cell.",
+            "ah_booking_line": f"You're all set, Marcus! I've reserved our first priority eight AM slot tomorrow at 1042 Bayside Avenue, and our master electrician is on alert. Confirmation is on your phone. Does everything sound good?",
             "sms_body_ah": f"Hi Marcus! You're confirmed with {biz_name} for tomorrow at 8:00 AM at 1042 Bayside Avenue. Our electrician will text 15 min before arrival. Reply anytime.",
             "ah_cust_problem": "Hi! It's almost midnight and my breaker box started making a faint buzzing sound, and the living room lights are flickering. I'm really nervous about an electrical fire.",
             "ah_agent_triage": "Thank you for calling — safety is our top priority. First, do you see any visible sparks, smoke, or is the panel hot to the touch?",
-            "ah_cust_clarify": "No smoke or sparks, but the breaker switch feels warm. Should I touch it or leave it alone?",
-            "ah_agent_solution": f"Please do NOT touch the warm breaker or force it. Keep the panel door closed. I'm reserving our first priority slot tomorrow at eight AM, and alerting our on-call master electrician right now. {pricing_spoken}",
-            "ah_cust_address_q": "Okay I turned off the light switch. I'm at 1042 Bayside Avenue — do you service out here?",
-            "ah_agent_address_a": f"Bayside Avenue in {city_disp} is fully in our territory! Can I grab your name and cell number so our on-call tech can reach you directly?",
-            "ah_cust_info_turn": "Marcus Vance, cell is 415-555-0834. Thanks for taking this seriously at midnight.",
-            "ah_agent_scope_a": "That's why our twenty-four-seven line exists, Marcus. You did the right thing calling — we'll make sure your home is safe first thing.",
+            "ah_cust_clarify": "No smoke or sparks, but the breaker switch feels warm. What can you do for me right now? And what's the cost?",
         },
         "roofing": {
-            "title": "Loose Shingles & Ceiling Leak Inspection",
+            "title": "Ceiling Leak & Shingle Inspection",
             "caller_name": "Tom (Homeowner)",
             "caller_name_full": "Tom Reynolds",
             "caller_phone": "+1 (303) 555-0162",
             "caller_phone_raw": "303-555-0162",
+            "caller_phone_display": "(303) 555-0162",
             "customer_address": "518 Pine Valley Road",
             "location_display": "518 Pine Valley Road",
-            "routine_slot": "Today 1:00 PM – 4:00 PM Window",
+            "routine_slot": "Tomorrow 8:00 AM – 11:00 AM Window",
             "routine_status": "Roof Inspection Booked — SMS Sent",
             "owner_alert_title": "⚡ New Roof Inspection Booked",
-            "booking_confirm_line": f"You're all set, Tom! I've scheduled our senior roofing estimator for your window today between one and four PM at 518 Pine Valley Road for your free inspection. They'll text fifteen minutes before arriving. I just sent confirmation to your mobile!",
-            "sms_body_routine": f"Hi Tom! You're confirmed with {biz_name} for today, 1–4 PM at 518 Pine Valley Road for your complimentary roof inspection. Our estimator will text 15 min before arrival. Reply anytime.",
-            "daytime_cust_problem": "Hi! I found a few loose shingles in my yard this morning and noticed a small water ring on my upstairs ceiling. Do you do roof inspections?",
-            "daytime_agent_service": "I understand, loose shingles and ceiling water marks definitely need prompt inspection before water can cause any further drywall damage. We offer comprehensive roof evaluations. Would you like to check our available times?",
-            "daytime_cust_price_q": "Yes, what do you charge just to come inspect the roof and take photos?",
-            "daytime_agent_price_a": f"Good news! {pricing_spoken} Our 21-point roof inspection is 100% complimentary, with full photos of your shingles and flashing so you see exactly what's going on.",
-            "daytime_cust_area_q": f"Wow, free inspection with photos? I'm at 518 Pine Valley Road in {city_disp} — is that within your service area?",
-            "daytime_agent_area_a": f"Yes, Pine Valley Road is right in our primary service area! We have an opening today between one and four, or tomorrow morning. Which window works better for you?",
-            "daytime_cust_name_turn": "This afternoon works great. Tom Reynolds, mobile is 303-555-0162. One question — if it requires an insurance claim for wind damage, do you work with insurance adjusters directly?",
-            "daytime_agent_scope_a": f"Yes, we work directly with insurance adjusters on claims and handle everything from spot repairs to full replacements" + (f" including {custom_services_str}" if custom_services_str else "") + ".",
+            "booking_confirm_line": f"You're all set, Tom! We have our roofing specialist scheduled for 518 Pine Valley Road tomorrow morning between eight and eleven. We're texting confirmation and tracking to (303) 555-0162. Does everything sound good?",
+            "sms_body_routine": f"Hi Tom! You're confirmed with {biz_name} for tomorrow, 8–11 AM at 518 Pine Valley Road. Our specialist will text 15 min before arrival. Reply anytime with questions.",
+            "daytime_cust_problem": "I think my roof is leaking.",
+            "daytime_agent_service": "Oh no, dealing with a roof leak is definitely stressful! What seems to be happening—are you seeing water dripping from the ceiling, loose shingles, or water stains?",
+            "daytime_cust_clarify": "Don't know, I found shingles in the yard and noticed a small water ring spreading on my upstairs ceiling.",
+            "daytime_agent_consult": "I understand, that definitely needs prompt inspection before water can cause further drywall damage. We offer comprehensive roof evaluations. Would you like to check our available times?",
             "ah_slot": "Tomorrow 7:30 AM First Light Roof Response",
             "ah_status": "Roof Leak Triage — Crew Alerted for 7:30 AM",
             "owner_alert_ah_title": "🌙 After-Hours Roof Leak Emergency Dispatched",
-            "ah_booking_line": f"You're all set, Marcus! I've locked in our emergency crew for first light tomorrow at seven-thirty AM at 1042 Bayside Avenue to inspect and tarp the area. Confirmation is on your phone.",
+            "ah_booking_line": f"You're all set, Marcus! I've locked in our emergency crew for first light tomorrow at seven-thirty AM at 1042 Bayside Avenue to inspect and tarp the area. Confirmation is on your phone. Does everything sound good?",
             "sms_body_ah": f"Hi Marcus! You're confirmed with {biz_name} for tomorrow at 7:30 AM at 1042 Bayside Avenue for emergency tarping and inspection. Reply anytime with questions.",
             "ah_cust_problem": "Hello? It's late at night and water is actively dripping through my upstairs bedroom ceiling into a bowl. What can I do right now?",
             "ah_agent_triage": "I'm sorry you're dealing with a leak late at night. First, is the water dripping near any ceiling light fixtures or electrical switches?",
-            "ah_cust_clarify": "No, it's about four feet away from the light, right in the center of the drywall. The bucket is catching it for now.",
-            "ah_agent_solution": f"Keep that bucket in place, and if the ceiling starts sagging, poke a tiny pinhole in the center to relieve pressure. Our crew can't climb roofs in the dark for safety, but I'll lock you in for our very first seven-thirty AM slot so our team can tarp the roof at daylight. {pricing_spoken}",
-            "ah_cust_address_q": "Thank you so much. I'm at 1042 Bayside Avenue — can you definitely get someone out at first light?",
-            "ah_agent_address_a": f"Yes, Bayside Avenue in {city_disp} will be our first morning stop! Can I get your full name and mobile number to alert the roofing crew?",
-            "ah_cust_info_turn": "Marcus Vance, cell is 415-555-0834. And you guys do emergency tarping and insurance documentation?",
-            "ah_agent_scope_a": "Yes, our trucks carry heavy-duty tarps and safety harnesses, and we document everything for your insurer.",
+            "ah_cust_clarify": "No, it's about four feet away from the light, right in the center of the drywall. What can you do for me right now? And what's the cost?",
         },
         "dental_medical": {
             "title": "Acute Toothache & Emergency Care",
@@ -3477,38 +3473,30 @@ def generate_call_demo_script(profile: Dict[str, Any], scenario_id: Optional[str
         },
         "general": {
             "title": "Facility Repair & On-Site Consultation",
-            "caller_name": "Mark (Client)",
-            "caller_name_full": "Mark Stevenson",
-            "caller_phone": "+1 (555) 234-5678",
-            "caller_phone_raw": "555-234-5678",
+            "caller_name": "David (Property Owner)",
+            "caller_name_full": "David Thompson",
+            "caller_phone": "+1 (713) 555-0184",
+            "caller_phone_raw": "713-555-0184",
+            "caller_phone_display": "(713) 555-0184",
             "customer_address": "419 Commercial Boulevard",
             "location_display": "419 Commercial Boulevard",
-            "routine_slot": "Today 1:00 PM – 4:00 PM Window",
+            "routine_slot": "Tomorrow 8:00 AM – 11:00 AM Window",
             "routine_status": "Consultation Confirmed — SMS Sent",
             "owner_alert_title": "⚡ New Commercial Service Visit Booked",
-            "booking_confirm_line": f"You're all set, Mark! I've scheduled our commercial service specialist for your window today between one and four PM at 419 Commercial Boulevard. They'll text fifteen minutes before arriving. I just sent confirmation to your cell!",
-            "sms_body_routine": f"Hi Mark! You're confirmed with {biz_name} for today, 1–4 PM at 419 Commercial Boulevard. Our service specialist will text 15 min before arrival. Reply to this text anytime with questions.",
-            "daytime_cust_problem": "Hi! We have an urgent maintenance issue at our facility that needs an on-site inspection and a repair estimate. Do you guys provide on-site diagnostic visits?",
-            "daytime_agent_service": "Yes, absolutely — we can send a service specialist to inspect your facility and provide a clear written estimate. What specific equipment or area is malfunctioning?",
-            "daytime_cust_price_q": "It's an equipment breakdown affecting our workspace. What do you charge for the initial on-site evaluation?",
-            "daytime_agent_price_a": f"We provide upfront, transparent flat-rate pricing — {pricing_spoken} Our specialist inspects the issue on site and gives you a written quote before starting any work.",
-            "daytime_cust_area_q": f"We are located at 419 Commercial Boulevard in {city_disp} — can you have a specialist out here?",
-            "daytime_agent_area_a": f"Yes, Commercial Boulevard is within our primary service coverage. We have arrival windows open today between one and four PM, or tomorrow morning. Would this afternoon work for your team?",
-            "daytime_cust_name_turn": "This afternoon works for our building engineer. Mark Stevenson, mobile is 555-234-5678. Do you also provide annual preventative maintenance contracts for commercial facilities?",
-            "daytime_agent_scope_a": "Yes, we provide preventative maintenance agreements, rapid repairs, and equipment replacements tailored to your facility.",
+            "booking_confirm_line": f"You're all set, David! We have our service specialist scheduled for 419 Commercial Boulevard tomorrow morning between eight and eleven. We're texting confirmation and tracking to (713) 555-0184. Does everything sound good?",
+            "sms_body_routine": f"Hi David! You're confirmed with {biz_name} for tomorrow, 8–11 AM at 419 Commercial Boulevard. Our service specialist will text 15 min before arrival. Reply to this text anytime with questions.",
+            "daytime_cust_problem": "We have an urgent maintenance issue at our facility.",
+            "daytime_agent_service": "Oh no, dealing with maintenance issues is definitely stressful! What seems to be happening with the facility—is equipment down, a plumbing issue, or an electrical issue?",
+            "daytime_cust_clarify": "Don't know, half the building's workspace lighting and power outlets suddenly shut off.",
+            "daytime_agent_consult": "I understand, that definitely sounds like something our specialist should inspect to diagnose properly. We can get you on the schedule so our team can take care of that for you. Would you like to check our available appointment times?",
             "ah_slot": "Tomorrow 8:00 AM Priority Maintenance Slot",
             "ah_status": "After-Hours Request Logged — Supervisor Alerted",
             "owner_alert_ah_title": "🌙 After-Hours Commercial Facility Alert",
-            "ah_booking_line": f"You're all set, Marcus! I've reserved our priority eight AM slot tomorrow at 1042 Bayside Avenue, and alerted our on-call supervisor. Our specialist will text when en route in the morning. Confirmation is on your phone.",
+            "ah_booking_line": f"You're all set, Marcus! I've reserved our priority eight AM slot tomorrow at 1042 Bayside Avenue, and alerted our on-call supervisor. Confirmation is on your phone. Does everything sound good?",
             "sms_body_ah": f"Hi Marcus! You're confirmed with {biz_name} for tomorrow morning at 8:00 AM at 1042 Bayside Avenue. Our specialist will text 15 min before arrival. Reply anytime with questions.",
             "ah_cust_problem": "Hello? It's late, almost midnight, but we have an urgent maintenance issue at our building and need to know if someone can come out first thing in the morning.",
             "ah_agent_triage": "Thank you for calling our twenty-four-seven line. First, is there an active life-safety hazard, water leak, or electrical danger at the property?",
-            "ah_cust_clarify": "No immediate life safety hazard, but we need it resolved before staff arrives tomorrow morning.",
-            "ah_agent_solution": f"Understood. I will reserve our very first priority slot tomorrow morning at eight AM and alert our on-call supervisor right now. {pricing_spoken}",
-            "ah_cust_address_q": "Our building is at 1042 Bayside Avenue — will the technician be there right at eight?",
-            "ah_agent_address_a": f"Yes, 1042 Bayside Avenue in {city_disp} will be our priority first stop! Can I get your full name and best mobile number?",
-            "ah_cust_info_turn": "Marcus Vance, cell is 415-555-0834.",
-            "ah_agent_scope_a": "Logged for Marcus Vance. Our supervisor has been notified, and our technician will text you when en route in the morning.",
+            "ah_cust_clarify": "No immediate life safety hazard, but we need it resolved before staff arrives tomorrow morning. What can you do for me right now? And what's the cost?",
         }
     }
 
@@ -3575,7 +3563,7 @@ def generate_call_demo_script(profile: Dict[str, Any], scenario_id: Optional[str
                     "speaker": "agent",
                     "name": f"{persona_name} (Receptionist)",
                     "voice": persona_voice,
-                    "text": f"Thank you for calling {biz_name}, this is {persona_name}! How can I help you today?"
+                    "text": f"Thank you for calling {biz_name}! This is {persona_name}. How can I help you today?"
                 },
                 {
                     "speaker": "customer",
@@ -3593,19 +3581,31 @@ def generate_call_demo_script(profile: Dict[str, Any], scenario_id: Optional[str
                     "speaker": "customer",
                     "name": tdata["caller_name"],
                     "voice": customer_voice,
-                    "text": tdata["daytime_cust_price_q"]
+                    "text": tdata.get("daytime_cust_clarify", "Don't know, it's just not working properly.")
                 },
                 {
                     "speaker": "agent",
                     "name": f"{persona_name} (Receptionist)",
                     "voice": persona_voice,
-                    "text": f"{tdata['daytime_agent_price_a']} Does that sound fair?"
+                    "text": tdata.get("daytime_agent_consult", f"I understand, it's frustrating when you can't quite pinpoint the issue! Got it, that definitely sounds like something one of our technicians should inspect to diagnose properly. We can get you on the schedule so our team can come out and take care of that for you. Would you like to check our available appointment times?")
                 },
                 {
                     "speaker": "customer",
                     "name": tdata["caller_name"],
                     "voice": customer_voice,
-                    "text": "Okay, that sounds completely fair. Let's get someone scheduled."
+                    "text": "Yeah. But, like, what's the cost?"
+                },
+                {
+                    "speaker": "agent",
+                    "name": f"{persona_name} (Receptionist)",
+                    "voice": persona_voice,
+                    "text": fee_agent_answer
+                },
+                {
+                    "speaker": "customer",
+                    "name": tdata["caller_name"],
+                    "voice": customer_voice,
+                    "text": "Yeah, I guess. That sounds fair."
                 },
                 {
                     "speaker": "agent",
@@ -3629,55 +3629,43 @@ def generate_call_demo_script(profile: Dict[str, Any], scenario_id: Optional[str
                     "speaker": "customer",
                     "name": tdata["caller_name"],
                     "voice": customer_voice,
-                    "text": "Yes, that's right."
+                    "text": "Yes."
                 },
                 {
                     "speaker": "agent",
                     "name": f"{persona_name} (Receptionist)",
                     "voice": persona_voice,
-                    "text": "We have an opening later today between two and five, or tomorrow morning between eight and eleven. Which arrival window works better for your schedule?"
+                    "text": "We have an opening today between one and three, or tomorrow morning between eight and eleven. Which arrival window works better for your schedule?"
                 },
                 {
                     "speaker": "customer",
                     "name": tdata["caller_name"],
                     "voice": customer_voice,
-                    "text": "Later today works great for me."
+                    "text": "Tomorrow morning works best."
                 },
                 {
                     "speaker": "agent",
                     "name": f"{persona_name} (Receptionist)",
                     "voice": persona_voice,
-                    "text": "Wonderful! What is your full name and the best cell number for dispatch arrival updates?"
+                    "text": "Perfect, we'll get you set for tomorrow morning between eight and eleven. And what is your full name and the best cell number for dispatch arrival updates?"
                 },
                 {
                     "speaker": "customer",
                     "name": tdata["caller_name"],
                     "voice": customer_voice,
-                    "text": f"{tdata.get('caller_name_full', tdata['caller_name'].split(' (')[0])}, and my cell is {tdata.get('caller_phone_raw', '713-555-0184')}."
+                    "text": f"{tdata.get('caller_name_full', 'David Thompson')}, phone number is {tdata.get('caller_phone_display', '(713) 555-0184')}."
                 },
                 {
                     "speaker": "agent",
                     "name": f"{persona_name} (Receptionist)",
                     "voice": persona_voice,
-                    "text": f"Perfect — I have {phone_to_spoken_words(tdata['caller_phone'])}. Did I get that right?"
+                    "text": f"Got it, {tdata.get('caller_name_full', 'David').split()[0]}! Perfect — I have {phone_to_spoken_words(tdata['caller_phone'])}. Did I get that right?"
                 },
                 {
                     "speaker": "customer",
                     "name": tdata["caller_name"],
                     "voice": customer_voice,
-                    "text": "Yes, that's it! And if it turns out my unit is totally shot, do you guys also do full replacements or just repairs?"
-                },
-                {
-                    "speaker": "agent",
-                    "name": f"{persona_name} (Receptionist)",
-                    "voice": persona_voice,
-                    "text": tdata["daytime_agent_scope_a"]
-                },
-                {
-                    "speaker": "customer",
-                    "name": tdata["caller_name"],
-                    "voice": customer_voice,
-                    "text": "Awesome, that's such a relief to hear!"
+                    "text": "Yes, that's it!"
                 },
                 {
                     "speaker": "agent",
@@ -3689,14 +3677,14 @@ def generate_call_demo_script(profile: Dict[str, Any], scenario_id: Optional[str
                     "speaker": "customer",
                     "name": tdata["caller_name"],
                     "voice": customer_voice,
-                    "text": "Wow, thank you so much! That was so easy and smooth."
+                    "text": "Yes, sounds great! Goodbye."
                 },
                 {
                     "speaker": "agent",
                     "name": f"{persona_name} (Receptionist)",
                     "voice": persona_voice,
-                    "text": "You're very welcome! Have a wonderful day, and we'll see you soon!"
-                },
+                    "text": f"Thank you for choosing {biz_name}! Have a wonderful day!"
+                }
             ],
             "outcome": {
                 "customer_name": tdata["caller_name"].split(" (")[0],
@@ -3765,13 +3753,13 @@ def generate_call_demo_script(profile: Dict[str, Any], scenario_id: Optional[str
                     "speaker": "agent",
                     "name": f"{persona_name} (Receptionist)",
                     "voice": persona_voice,
-                    "text": tdata["ah_agent_solution"]
+                    "text": ah_fee_agent_answer
                 },
                 {
                     "speaker": "customer",
                     "name": "Marcus (Caller)",
                     "voice": customer_voice,
-                    "text": "Okay that works. Let's reserve that morning priority slot."
+                    "text": "Okay, that works. Let's reserve that morning priority slot."
                 },
                 {
                     "speaker": "agent",
@@ -3813,25 +3801,13 @@ def generate_call_demo_script(profile: Dict[str, Any], scenario_id: Optional[str
                     "speaker": "agent",
                     "name": f"{persona_name} (Receptionist)",
                     "voice": persona_voice,
-                    "text": f"Perfect — I have {phone_to_spoken_words('+1 (415) 555-0834')}. Did I get that right?"
+                    "text": f"Perfect, Marcus — I have {phone_to_spoken_words('+1 (415) 555-0834')}. Did I get that right?"
                 },
                 {
                     "speaker": "customer",
                     "name": "Marcus (Caller)",
                     "voice": customer_voice,
-                    "text": "Yes, that's it! And hey — what if the whole unit needs replacing?"
-                },
-                {
-                    "speaker": "agent",
-                    "name": f"{persona_name} (Receptionist)",
-                    "voice": persona_voice,
-                    "text": tdata["ah_agent_scope_a"]
-                },
-                {
-                    "speaker": "customer",
-                    "name": "Marcus (Caller)",
-                    "voice": customer_voice,
-                    "text": "Great, that definitely takes a lot of stress off."
+                    "text": "Yes, that's it!"
                 },
                 {
                     "speaker": "agent",
@@ -3843,14 +3819,14 @@ def generate_call_demo_script(profile: Dict[str, Any], scenario_id: Optional[str
                     "speaker": "customer",
                     "name": "Marcus (Caller)",
                     "voice": customer_voice,
-                    "text": "Thank you so much. It's such a relief knowing someone is scheduled for the morning."
+                    "text": "Yes, sounds great! Thank you so much for answering at midnight."
                 },
                 {
                     "speaker": "agent",
                     "name": f"{persona_name} (Receptionist)",
                     "voice": persona_voice,
-                    "text": "Rest easy tonight, Marcus. We've got you covered first thing!"
-                },
+                    "text": "Rest easy tonight, Marcus. We've got you covered first thing! Have a good night."
+                }
             ],
             "outcome": {
                 "customer_name": "Marcus Vance",

@@ -3693,6 +3693,45 @@
       color: #FFF;
       border-color: #EF4444;
     }
+    .btn-live-sim-close {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #E2E8F0;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+    .btn-live-sim-close:hover {
+      background: rgba(255, 255, 255, 0.22);
+      color: #FFF;
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+    .btn-recap-exit {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1.5px solid rgba(255, 255, 255, 0.2);
+      color: #F8FAFC;
+      font-size: 13.5px;
+      font-weight: 700;
+      padding: 12px 18px;
+      border-radius: 12px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .btn-recap-exit:hover {
+      background: rgba(255, 255, 255, 0.22);
+      border-color: rgba(255, 255, 255, 0.4);
+      color: #FFF;
+    }
 
     /* Active Call Body */
     .live-sim-call-body {
@@ -4631,6 +4670,45 @@
                 </div>
               </div>
             </div>
+
+            <!-- Part 3: When Should Riley Transfer to Human -->
+            <div class="qa-card" style="margin-top: 14px;">
+              <div class="qa-header">
+                <div class="qa-num">3</div>
+                <div class="qa-title">When should your AI receptionist transfer the call to a human?</div>
+              </div>
+              <div class="qa-desc">Live call bounce and human handoff rule:</div>
+              <div class="qa-options-grid" id="humanTransferGrid">
+                <div class="qa-opt-card active" data-transfer="life_safety_emergencies">
+                  <div class="qa-opt-radio"></div>
+                  <div>
+                    <div class="qa-opt-title">🚨 Life &amp; Safety Emergencies Only (Recommended)</div>
+                    <div class="qa-opt-sub">Immediate transfer for severe emergencies; handles bookings autonomously.</div>
+                  </div>
+                </div>
+                <div class="qa-opt-card" data-transfer="caller_demands_human">
+                  <div class="qa-opt-radio"></div>
+                  <div>
+                    <div class="qa-opt-title">👤 When Caller Asks or Demands a Human</div>
+                    <div class="qa-opt-sub">If customer asks to speak with owner/manager, transfers right away.</div>
+                  </div>
+                </div>
+                <div class="qa-opt-card" data-transfer="unresolved_queries">
+                  <div class="qa-opt-radio"></div>
+                  <div>
+                    <div class="qa-opt-title">🔍 Complex or Out-of-Scope Questions</div>
+                    <div class="qa-opt-sub">Transfers if caller asks technical inquiries outside listed services and pricing.</div>
+                  </div>
+                </div>
+                <div class="qa-opt-card" data-transfer="never_transfer_take_message">
+                  <div class="qa-opt-radio"></div>
+                  <div>
+                    <div class="qa-opt-title">📴 Never Transfer — Take Detailed SMS Message</div>
+                    <div class="qa-opt-sub">Stays on the call, captures full details, and texts you an instant priority alert.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- QUESTION 5: Pricing & Booking Rules -->
@@ -4684,6 +4762,21 @@
               <div class="qa-custom-wrap" id="customPricingWrap" style="display: none;">
                 <input type="text" class="qa-custom-input" id="customPricingInput" placeholder="e.g. $89 service fee, or $100/hr labor...">
               </div>
+
+              <!-- Diagnostic Fee Amount Input Box -->
+              <div id="diagFeeWrap" style="margin-top: 12px; background: var(--bg-subtle, #F8FAFC); border: 1.5px solid var(--border, #CBD5E1); border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 18px;">💵</span>
+                  <div>
+                    <div style="font-size: 12.5px; font-weight: 700; color: var(--text-main, #1E293B);">Diagnostic / Service Fee Amount:</div>
+                    <div style="font-size: 11px; color: var(--text-muted, #64748B);">Credited 100% toward any approved repair</div>
+                  </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span style="font-size: 14px; font-weight: 800; color: var(--text-main, #1E293B);">$</span>
+                  <input type="number" id="diagFeeAmount" value="89" min="0" max="999" style="width: 75px; height: 36px; border: 1.5px solid var(--border, #CBD5E1); border-radius: 8px; padding: 0 8px; font-size: 14px; font-weight: 800; text-align: center; color: var(--text-main, #1E293B); background: #FFF;" />
+                </div>
+              </div>
             </div>
 
             <!-- Part B: Booking -->
@@ -4709,6 +4802,38 @@
                   <div>
                     <div class="qa-opt-title">Text me caller details — you will reach out to schedule</div>
                     <div class="qa-opt-sub">Your AI receptionist tells the customer you will reach out to arrange a booking day, and texts you their info so you decide if you want the job.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Part 3: When to End Call & Call Termination Policies -->
+            <div class="qa-card" style="margin-top: 16px;">
+              <div class="qa-header">
+                <div class="qa-num">3</div>
+                <div class="qa-title">When should your AI receptionist conclude and end the call?</div>
+              </div>
+              <div class="qa-desc">Safety caps and natural conversation sign-off:</div>
+              <div class="qa-options-grid" id="endCallPolicyGrid">
+                <div class="qa-opt-card active" data-endpolicy="natural_booking_complete">
+                  <div class="qa-opt-radio"></div>
+                  <div>
+                    <div class="qa-opt-title">✨ Natural Farewell on Confirmation (Recommended)</div>
+                    <div class="qa-opt-sub">Gracefully ends after 5-point booking confirmation or message recap.</div>
+                  </div>
+                </div>
+                <div class="qa-opt-card" data-endpolicy="immediate_farewell_opt_out">
+                  <div class="qa-opt-radio"></div>
+                  <div>
+                    <div class="qa-opt-title">👋 Polite Immediate Sign-Off on Opt-Out</div>
+                    <div class="qa-opt-sub">Ends cordially if caller is shopping around, declines, or called by mistake.</div>
+                  </div>
+                </div>
+                <div class="qa-opt-card" data-endpolicy="strict_15min_safety_cap">
+                  <div class="qa-opt-radio"></div>
+                  <div>
+                    <div class="qa-opt-title">🛡️ 15-Min Cap &amp; Anti-Robocall IVR Drop</div>
+                    <div class="qa-opt-sub">Hard 15-minute max duration and immediate disconnect on automated bot loops.</div>
                   </div>
                 </div>
               </div>
@@ -4981,6 +5106,9 @@
     // State
     const state = {
       step: 1,
+      feeAmount: 89,
+      humanTransferPolicy: "life_safety_emergencies",
+      callTerminationPolicy: "natural_booking_complete",
       playbookSubStep: 1,
       query: "",
       bizName: "",
@@ -5056,77 +5184,77 @@
     const tradeData = {
       hvac: {
         name: "HVAC & Climate Control",
-        greeting: "Thank you for calling {biz}. This is {pname}, your virtual receptionist. How can I help get your heating or AC taken care of today?",
+        greeting: "Thank you for calling {biz}! This is {pname}. How can I help you today?",
         services: ["AC Repair & Installation", "Heating & Furnace Repair", "Seasonal System Tune-Ups", "Heat Pump Service", "Emergency Diagnostics", "Duct Cleaning & Air Quality", "Commercial HVAC Service", "Thermostat & Smart Controls"],
         triggers: ["Gas smell or carbon monoxide alert", "Active water leak from indoor AC unit", "No heat in freezing weather", "Caller specifically asks for owner", "Commercial priority emergency"],
         pricingDesc: "We have an $89 diagnostic fee that is credited directly toward your repair if approved."
       },
       plumbing: {
         name: "Plumbing & Drain Services",
-        greeting: "Thanks for calling {biz}. This is {pname}. Do you have an active leak, or are you scheduling routine service?",
+        greeting: "Thank you for calling {biz}! This is {pname}. How can I help you today?",
         services: ["Emergency Drain Clearing", "Water Heater Repair & Replacement", "Burst Pipe & Leak Detection", "Toilet, Faucet & Sink Repair", "Sewer Line Camera Inspection & Jetting", "Garbage Disposal Installation", "Whole-Home Repiping", "Water Filtration & Softeners"],
         triggers: ["Active water flooding or burst pipe", "Raw sewage backing up into building", "Water heater leaking or smoking", "Total loss of water supply to property", "Caller specifically asks for owner"],
         pricingDesc: "We have a $79 service dispatch fee that is applied directly toward repair costs if approved."
       },
       electrical: {
         name: "Electrical Services",
-        greeting: "Thanks for calling {biz}. This is {pname}, your virtual assistant. How can we help power your home or business today?",
+        greeting: "Thank you for calling {biz}! This is {pname}. How can I help you today?",
         services: ["200-Amp Electrical Panel Upgrades", "EV Home Charger Installation", "Recessed Lighting & Ceiling Fans", "Outlet, GFCI & Switch Repair", "Whole-Home Rewiring & Safety Inspections", "Emergency Power Outage Diagnostics", "Standby Generator Installation"],
         triggers: ["Sparks, smoke, or electrical burning smell", "Total power loss isolated to property", "Breaker panel humming, hot to touch, or buzzing", "Downed overhead electrical wire", "Caller asks for licensed electrician"],
         pricingDesc: "We have an $89 diagnostic inspection fee that is applied directly toward repair costs if approved."
       },
       roofing: {
         name: "Roofing & Gutters",
-        greeting: "Thank you for calling {biz}. This is {pname}. Do you have an active roof leak, or are you looking for an estimate?",
+        greeting: "Thank you for calling {biz}! This is {pname}. How can I help you today?",
         services: ["Emergency Roof Leak Repair", "Storm, Wind & Hail Damage Inspection", "Asphalt Shingle Roof Replacement", "Seamless Gutter Installation & Guards", "Metal & Tile Roof Installation", "Commercial Flat Roof Coating", "Chimney Flashing & Skylight Repair"],
         triggers: ["Water actively pouring through ceiling or sheetrock", "Tree limb punctured through roof deck", "Tarps required immediately due to storm", "Insurance claims adjuster on site today"],
         pricingDesc: "We provide a complimentary 21-point roof inspection and insurance estimate with zero obligation."
       },
       dental_medical: {
         name: "Clinic / Dental",
-        greeting: "Thank you for calling {biz}. My name is {pname}. Are you scheduling a routine visit, or calling regarding urgent care?",
+        greeting: "Thank you for calling {biz}! This is {pname}. How can I help you today?",
         services: ["Routine Hygiene Cleaning & Exam", "Emergency Toothache & Dental Exam", "Dental Crowns, Bridges & Tooth Fillings", "Root Canal Therapy", "Invisalign & Clear Aligners", "Cosmetic Teeth Whitening", "Dental Implants & Restorations"],
         triggers: ["Severe facial swelling or acute dental trauma", "Knocked-out permanent adult tooth", "Post-surgical heavy bleeding beyond 2 hours", "Referring doctor or pharmacy calling"],
         pricingDesc: "We provide complimentary new patient consultations and bill in-network PPO insurance plans directly."
       },
       auto: {
         name: "Auto Repair",
-        greeting: "Thanks for calling {biz}. This is {pname}. How can we help get your vehicle serviced or running smoothly today?",
+        greeting: "Thank you for calling {biz}! This is {pname}. How can I help you today?",
         services: ["Brake Pad & Rotor Replacement", "Synthetic Oil Change & Filter Service", "Computer Check Engine Light Diagnostic", "Transmission Fluid & Clutch Repair", "Tire Mounting, Balancing & Alignment", "AC Recharge & Climate Repair", "Battery, Starter & Alternator Diagnostics"],
         triggers: ["Tow truck driver en route delivering vehicle", "Vehicle stalled or stranded in active traffic", "Customer currently approving repair order on hoist", "Insurance claims appraiser calling"],
         pricingDesc: "We offer an $89 complete digital vehicle scan credited directly toward your repair."
       },
       legal: {
         name: "Law Firm",
-        greeting: "Thank you for calling {biz}. This is {pname}, the intake coordinator. How can we assist with your legal matter today?",
+        greeting: "Thank you for calling {biz}! This is {pname}. How can I help you today?",
         services: ["Complimentary Case Evaluation", "Personal Injury & Auto Accident Claims", "Family Law, Divorce & Child Custody", "Criminal Defense & Traffic Offenses", "Estate Planning, Wills & Revocable Trusts", "Business Formation, LLCs & Contracts"],
         triggers: ["Caller currently in police custody or jail booking", "Court deadline or emergency hearing within 24 hours", "Presiding judge or opposing counsel calling", "Existing retained client with urgent matter"],
         pricingDesc: "We provide a complimentary, confidential 20-minute case evaluation with zero upfront fee."
       },
       restaurant: {
         name: "Restaurant",
-        greeting: "Good day! Thank you for calling {biz}. This is {pname}. How may I help with table reservations or dining information?",
+        greeting: "Thank you for calling {biz}! This is {pname}. How can I help you today?",
         services: ["Dinner Table Reservations (1-6 guests)", "Large Group Dining & Buyouts (7+ guests)", "Private Dining Room Bookings", "Full-Service Offsite Catering", "Daily Specials & Allergy Questions", "Online Takeout & Curbside Pickup"],
         triggers: ["Food delivery vendor or purveyor at loading dock", "Event host calling regarding tonight's reservation", "Urgent severe allergen inquiry from seated table", "Health inspector or municipal official on site"],
         pricingDesc: "Full seasonal dining menus and custom private catering quotes are provided upon request."
       },
       realestate: {
         name: "Real Estate",
-        greeting: "Hello! Thank you for calling {biz}. This is {pname}. Are you looking to buy, sell, or view a property today?",
+        greeting: "Thank you for calling {biz}! This is {pname}. How can I help you today?",
         services: ["Private Home & Condo Showings", "Free Home Valuation & Market Analysis", "First-Time Homebuyer Consultations", "Residential Property Management", "Commercial Real Estate Leasing", "Open House Schedule & Tour Info"],
         triggers: ["Pre-approved buyer submitting written offer today", "Title company or escrow officer on closing deadline", "Homeowner client listing property immediately", "Lockbox or showing access issue at occupied property"],
         pricingDesc: "We provide complimentary property valuation reports and buyer consultations with zero upfront fees."
       },
       salon_spa: {
         name: "Salon / Spa",
-        greeting: "Hi! Thanks for calling {biz}. This is {pname}. How can I assist you with scheduling your appointment today?",
+        greeting: "Thank you for calling {biz}! This is {pname}. How can I help you today?",
         services: ["Signature Haircut, Wash & Blowout", "Custom Balayage, Highlights & Color", "Keratin Treatment & Deep Conditioning", "Bridal & Special Event Styling", "Gel & Acrylic Manicures and Pedicures", "Eyelash Extensions & Brow Lamination", "Deep Tissue & Swedish Massage"],
         triggers: ["Client running 15+ minutes late for booked appointment", "Bridal party coordinator needing same-day adjustment", "Stylist or therapist calling out sick", "Beauty supply distributor delivery"],
         pricingDesc: "Transparent tier-based service pricing is quoted during scheduling based on hair length and stylist tier."
       },
       general: {
         name: "Other Trade",
-        greeting: "Thank you for calling {biz}. This is {pname}. How may I help you today?",
+        greeting: "Thank you for calling {biz}! This is {pname}. How can I help you today?",
         services: ["General Service & On-Site Repairs", "Free In-Person or Phone Estimate", "Routine Scheduled Preventative Maintenance", "Urgent Same-Day Dispatch", "Project Planning & Consultation", "Commercial Accounts & Maintenance Contracts"],
         triggers: ["Active hazard or time-critical emergency", "Caller specifically asks for the business owner", "High-priority corporate contract account", "Municipal official or inspector calling"],
         pricingDesc: "We provide upfront, transparent estimates before any work commences with zero surprise fees."
@@ -6845,6 +6973,33 @@
       playKokoroAudition(document.getElementById("btnAuditionDavid"), "flux-cliff-en", `Hello! You've reached ${state.bizName || 'our company'}. This is David. How can I assist you right away?`);
     });
 
+    // Wire Diagnostic Fee Amount Input Box
+    const diagFeeAmount = document.getElementById("diagFeeAmount");
+    if (diagFeeAmount) {
+      diagFeeAmount.addEventListener("input", (e) => {
+        const val = parseInt(e.target.value, 10);
+        state.feeAmount = isNaN(val) ? 89 : val;
+      });
+    }
+
+    // Wire Human Transfer Policy Grid
+    document.querySelectorAll("#humanTransferGrid .qa-opt-card").forEach(card => {
+      card.addEventListener("click", () => {
+        document.querySelectorAll("#humanTransferGrid .qa-opt-card").forEach(c => c.classList.remove("active"));
+        card.classList.add("active");
+        state.humanTransferPolicy = card.dataset.transfer || "life_safety_emergencies";
+      });
+    });
+
+    // Wire End Call Policy Grid
+    document.querySelectorAll("#endCallPolicyGrid .qa-opt-card").forEach(card => {
+      card.addEventListener("click", () => {
+        document.querySelectorAll("#endCallPolicyGrid .qa-opt-card").forEach(c => c.classList.remove("active"));
+        card.classList.add("active");
+        state.callTerminationPolicy = card.dataset.endpolicy || "natural_booking_complete";
+      });
+    });
+
     // Q1: Pricing Policy Selection
     const customPricingWrap = document.getElementById("customPricingWrap");
     const customPricingInput = document.getElementById("customPricingInput");
@@ -7167,7 +7322,11 @@
           custom_topics: state.customTopics,
           schedule_config: state.scheduleConfig,
           transfer_rules: state.emergencyTriggers.join("; "),
-          assigned_phone: state.assignedPhone
+          assigned_phone: state.assignedPhone,
+          fee_amount: state.feeAmount || 89,
+          diagnostic_fee: state.feeAmount || 89,
+          human_transfer_policy: state.humanTransferPolicy || "life_safety_emergencies",
+          call_termination_policy: state.callTerminationPolicy || "natural_booking_complete"
         })
       }).catch(e => console.warn("Background profile save note:", e));
 
@@ -7185,7 +7344,11 @@
             booking_action: state.bookingAction,
             persona_name: state.personaName,
             persona_voice: state.personaVoice,
-            schedule_config: state.scheduleConfig
+            schedule_config: state.scheduleConfig,
+            fee_amount: state.feeAmount || 89,
+            diagnostic_fee: state.feeAmount || 89,
+            human_transfer_policy: state.humanTransferPolicy || "life_safety_emergencies",
+            call_termination_policy: state.callTerminationPolicy || "natural_booking_complete"
           })
         });
         scriptData = await res.json();
@@ -7899,11 +8062,7 @@
       }, 1000);
 
       // Play Opening Receptionist Greeting
-      const t = tradeData[state.trade] || tradeData.general;
-      const greetingTemplate = t.greeting || "Thank you for calling {biz}! This is {pname}. How can I help you today?";
-      const initialGreeting = greetingTemplate
-        .replace("{biz}", state.bizName || "Our Company")
-        .replace("{pname}", state.personaName || "Riley");
+      const initialGreeting = `Thank you for calling ${state.bizName || "Comfort Breeze Heating and Air"}! This is ${state.personaName || "Riley"}. How can I help you today?`;
 
       appendSimBubble("agent", initialGreeting);
       speakSimReply(initialGreeting, () => {
@@ -8074,7 +8233,11 @@
             transfer_rules: Array.isArray(state.emergencyTriggers) ? state.emergencyTriggers.join("; ") : (state.emergencyTriggers || ""),
             persona_name: state.personaName,
             persona_voice: state.personaVoice,
-            forwarding_phone: state.phone || "+1 (555) 234-5678"
+            forwarding_phone: state.phone || "+1 (555) 234-5678",
+            fee_amount: state.feeAmount || 89,
+            diagnostic_fee: state.feeAmount || 89,
+            human_transfer_policy: state.humanTransferPolicy || "life_safety_emergencies",
+            call_termination_policy: state.callTerminationPolicy || "natural_booking_complete"
           })
         });
 
@@ -8124,7 +8287,50 @@
       document.getElementById("liveVoiceSimModal").style.display = "none";
     }
 
+    function closeLiveVoiceSim() {
+      if (currentTurnAudio) {
+        try { currentTurnAudio.pause(); } catch(e) {}
+        currentTurnAudio = null;
+      }
+      if (simRecognition) {
+        try { simRecognition.abort(); } catch(e) {}
+      }
+      clearInterval(simTimerInterval);
+      simTimerInterval = null;
+      simIsSpeaking = false;
+      simIsMicActive = true;
+      const modal = document.getElementById("liveVoiceSimModal");
+      if (modal) {
+        modal.style.display = "none";
+      }
+    }
+    window.closeLiveVoiceSim = closeLiveVoiceSim;
+
     function initLiveSimListeners() {
+      // Close & Exit modal buttons
+      const btnClose = document.getElementById("btnLiveSimClose");
+      if (btnClose) btnClose.addEventListener("click", closeLiveVoiceSim);
+
+      const btnRecapExit = document.getElementById("btnRecapExit");
+      if (btnRecapExit) btnRecapExit.addEventListener("click", closeLiveVoiceSim);
+
+      // Modal backdrop click to smoothly exit
+      const modal = document.getElementById("liveVoiceSimModal");
+      if (modal) {
+        modal.addEventListener("click", (e) => {
+          if (e.target === modal) {
+            closeLiveVoiceSim();
+          }
+        });
+      }
+
+      // Escape key to smoothly exit
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && modal && modal.style.display !== "none") {
+          closeLiveVoiceSim();
+        }
+      });
+
       // Open modal buttons
       const btnHero = document.getElementById("btnOpenVoiceSim");
       if (btnHero) btnHero.addEventListener("click", openLiveVoiceSim);
@@ -8225,6 +8431,10 @@
             <span>🔴</span>
             <span>End Call</span>
           </button>
+          <button type="button" class="btn-live-sim-close" id="btnLiveSimClose" title="Exit to Setup Page" onclick="closeLiveVoiceSim()">
+            <span>✕</span>
+            <span>Exit</span>
+          </button>
         </div>
       </div>
 
@@ -8302,6 +8512,9 @@
         </div>
 
         <div class="recap-actions-row">
+          <button type="button" class="btn-recap-exit" id="btnRecapExit" onclick="closeLiveVoiceSim()">
+            <span>← Back to Setup Page</span>
+          </button>
           <button type="button" class="btn-recap-test-again" id="btnRecapTestAgain">
             <span>🔄 Call Again (Reset 5 Min)</span>
           </button>
