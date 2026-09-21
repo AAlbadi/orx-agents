@@ -2321,6 +2321,7 @@ def compile_agent_prompt(profile: Dict[str, Any]) -> str:
         emergency_triggers_str = metrics.get("emergency_label", "Gas odor, carbon monoxide, active flooding, burst pipes, electrical sparks or fire")
 
     # Pricing & Diagnostic Fee Policy
+    pricing_policy_str = str(profile.get("pricing_policy") or "").lower().strip()
     raw_fee = (
         profile.get("fee_amount")
         or profile.get("diagnostic_fee")
@@ -2333,9 +2334,9 @@ def compile_agent_prompt(profile: Dict[str, Any]) -> str:
     if not spoken_fee and profile.get("pricing_policy"):
         spoken_fee = fee_to_spoken(str(profile.get("pricing_policy")))
 
-    if "free" in raw_fee_str or "complimentary" in raw_fee_str or "$0" in raw_fee_str:
+    if "free" in pricing_policy_str or "complimentary" in pricing_policy_str or "$0" in pricing_policy_str or "free" in raw_fee_str or "complimentary" in raw_fee_str or "$0" in raw_fee_str:
         fee_objection_answer = "We provide a 100% complimentary on-site inspection and estimate with zero obligation! Does that sound fair?"
-    elif "upfront" in raw_fee_str or "inspection after" in raw_fee_str:
+    elif "upfront" in pricing_policy_str or "inspection after" in pricing_policy_str or "upfront" in raw_fee_str or "inspection after" in raw_fee_str:
         fee_objection_answer = f"Our {metrics['tech_title']} evaluates the system in person and gives you a guaranteed upfront flat-rate price before any work begins! Does that sound fair?"
     elif spoken_fee:
         fee_objection_answer = (
@@ -3146,6 +3147,11 @@ def generate_call_demo_script(profile: Dict[str, Any], scenario_id: Optional[str
         ah_fee_agent_answer = "Glad there's no safety hazard! Here's what we can do — I'll reserve our very first priority slot tomorrow morning between eight and ten AM so a technician is at your door first thing. Our initial inspection is completely complimentary with zero upfront cost! Does that work for you?"
         pricing_spoken = "The initial consultation is completely free, with no obligation whatsoever."
         pricing_text = "and our consultation and initial assessment are completely free — zero upfront cost, no obligation."
+    elif "upfront" in pricing.lower() or "inspection after" in pricing.lower():
+        fee_agent_answer = "Our technician evaluates the system on-site and provides a guaranteed upfront flat-rate price before any work begins! Does that sound fair?"
+        ah_fee_agent_answer = "Glad there's no safety hazard! Here's what we can do — I'll reserve our very first priority slot tomorrow morning between eight and ten AM so a technician evaluates on-site and provides a guaranteed upfront price before any work begins. Does that work for you?"
+        pricing_spoken = "Our technician provides a guaranteed upfront price after evaluating on-site."
+        pricing_text = "our technician evaluates everything on-site and provides a guaranteed upfront price before any work starts."
     else:
         fee_agent_answer = (
             f"Our diagnostic fee is a flat {spoken_fee}, which covers a full comprehensive inspection of your system by a certified technician. "

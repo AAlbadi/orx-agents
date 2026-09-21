@@ -4732,9 +4732,14 @@
               <div class="qa-options-grid" id="pricingOptionsGrid">
                 <div class="qa-opt-card active" data-pricing="Diagnostic fee applied to repair">
                   <div class="qa-opt-radio"></div>
-                  <div>
+                  <div style="flex: 1;">
                     <div class="qa-opt-title">Diagnostic fee credited toward repair (Recommended)</div>
                     <div class="qa-opt-sub">Visit fee is deducted from the final repair bill.</div>
+                    <div id="diagFeeWrap" style="margin-top: 8px; display: flex; align-items: center; gap: 8px;" onclick="event.stopPropagation()">
+                      <span style="font-size: 12px; font-weight: 700; color: #065F46;">Fee Amount: $</span>
+                      <input type="number" id="diagFeeAmount" value="89" min="0" max="999" placeholder="89" style="width: 75px; height: 28px; border: 1.5px solid #10B981; border-radius: 6px; padding: 0 8px; font-size: 13px; font-weight: 700; text-align: center; color: #065F46; background: #FFF;" onclick="event.stopPropagation()" />
+                      <span style="font-size: 11px; color: #047857;">(optional)</span>
+                    </div>
                   </div>
                 </div>
                 <div class="qa-opt-card" data-pricing="100% Free on-site estimate">
@@ -4761,21 +4766,6 @@
               </div>
               <div class="qa-custom-wrap" id="customPricingWrap" style="display: none;">
                 <input type="text" class="qa-custom-input" id="customPricingInput" placeholder="e.g. $89 service fee, or $100/hr labor...">
-              </div>
-
-              <!-- Diagnostic Fee Amount Input Box -->
-              <div id="diagFeeWrap" style="margin-top: 12px; background: var(--bg-subtle, #F8FAFC); border: 1.5px solid var(--border, #CBD5E1); border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <span style="font-size: 18px;">💵</span>
-                  <div>
-                    <div style="font-size: 12.5px; font-weight: 700; color: var(--text-main, #1E293B);">Diagnostic / Service Fee Amount:</div>
-                    <div style="font-size: 11px; color: var(--text-muted, #64748B);">Credited 100% toward any approved repair</div>
-                  </div>
-                </div>
-                <div style="display: flex; align-items: center; gap: 6px;">
-                  <span style="font-size: 14px; font-weight: 800; color: var(--text-main, #1E293B);">$</span>
-                  <input type="number" id="diagFeeAmount" value="89" min="0" max="999" style="width: 75px; height: 36px; border: 1.5px solid var(--border, #CBD5E1); border-radius: 8px; padding: 0 8px; font-size: 14px; font-weight: 800; text-align: center; color: var(--text-main, #1E293B); background: #FFF;" />
-                </div>
               </div>
             </div>
 
@@ -6078,6 +6068,10 @@
       if (customPricingWrap) {
         customPricingWrap.style.display = cardVal === "custom" ? "block" : "none";
       }
+      const diagFeeWrap = document.getElementById("diagFeeWrap");
+      if (diagFeeWrap) {
+        diagFeeWrap.style.display = (cardVal === "Diagnostic fee applied to repair") ? "flex" : "none";
+      }
     }
 
     function syncTopicFromPricing(keyword) {
@@ -6963,11 +6957,15 @@
     // Q1: Pricing Policy Selection
     const customPricingWrap = document.getElementById("customPricingWrap");
     const customPricingInput = document.getElementById("customPricingInput");
+    const diagFeeWrap = document.getElementById("diagFeeWrap");
     document.querySelectorAll("#pricingOptionsGrid .qa-opt-card").forEach(card => {
       card.addEventListener("click", () => {
         document.querySelectorAll("#pricingOptionsGrid .qa-opt-card").forEach(c => c.classList.remove("active"));
         card.classList.add("active");
         const val = card.dataset.pricing;
+        if (diagFeeWrap) {
+          diagFeeWrap.style.display = (val === "Diagnostic fee applied to repair") ? "flex" : "none";
+        }
         if (val === "custom") {
           customPricingWrap.style.display = "block";
           customPricingInput.focus();
