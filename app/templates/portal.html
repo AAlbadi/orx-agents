@@ -995,7 +995,7 @@
           <div style="display: flex; gap: 10px; font-size: 11.5px; font-weight: 700; color: #065F46; flex-wrap: wrap;">
             <span>✓ $20/mo Starter Plan</span>
             <span>•</span>
-            <span>✓ 50 Min Included</span>
+            <span>✓ 60 Min Included</span>
             <span>•</span>
             <span>✓ $0.25/min Overage</span>
             <span>•</span>
@@ -1721,13 +1721,13 @@
           </div>
           <div style="padding: 16px; border-radius: var(--radius-md); background: var(--bg-canvas); border: 1px solid var(--border);">
             <div style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Included Allowance</div>
-            <div style="font-size: 18px; font-weight: 800; color: var(--text-main); margin-top: 4px;">50 Minutes</div>
+            <div style="font-size: 18px; font-weight: 800; color: var(--text-main); margin-top: 4px;">60 Minutes</div>
             <div style="font-size: 11.5px; color: var(--text-tertiary); margin-top: 2px;">$0.25/min overage rate</div>
           </div>
           <div style="padding: 16px; border-radius: var(--radius-md); background: var(--bg-canvas); border: 1px solid var(--border);">
             <div style="font-size: 11.5px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Estimated Month Total</div>
             <div style="font-size: 20px; font-weight: 800; color: #059669; margin-top: 4px;" id="subMonthCost">$20.00</div>
-            <div style="font-size: 11.5px; color: var(--text-tertiary); margin-top: 2px;" id="subMonthMinutes">0 min used (50 min included)</div>
+            <div style="font-size: 11.5px; color: var(--text-tertiary); margin-top: 2px;" id="subMonthMinutes">0 min used (60 min included)</div>
           </div>
         </div>
 
@@ -1744,8 +1744,27 @@
         </div>
         <div id="cancelFeedback" style="display: none; font-size: 12px; padding: 10px 12px; border-radius: 8px; background: #FEF2F2; color: #991B1B; border: 1px solid #FCA5A5; margin-top: 12px;"></div>
       </section>
-    </div>
-
+    <!-- ── SMS Activity Log ─────────────────────────────── -->
+    <section class="card-section" style="margin-top: 20px;" id="smsLogSection">
+      <div class="section-head" style="display: flex; align-items: center; justify-content: space-between;">
+        <div>
+          <h2 class="section-title">💬 SMS Activity Log</h2>
+          <p class="section-sub">Outbound customer confirmations, calendar invite links, and live dispatch alerts.</p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <select id="smsFilterType" style="font-size: 12px; border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; background: var(--bg-card); color: var(--text-main); cursor: pointer;">
+            <option value="all">All Messages</option>
+            <option value="customer">Customer Messages</option>
+            <option value="owner_alert">Owner Alerts</option>
+          </select>
+          <span style="font-size: 12px; color: var(--text-tertiary);" id="smsLogStatus">Loading...</span>
+          <button type="button" id="btnRefreshSmsLog" style="background: var(--bg-card); border: 1px solid var(--border); padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; color: var(--text-main);">🔄 Refresh</button>
+        </div>
+      </div>
+      <div id="smsLogList" style="padding: 0 4px;">
+        <div style="text-align: center; padding: 24px; color: var(--text-tertiary); font-size: 13px;">Loading SMS activity...</div>
+      </div>
+    </section>
   </div>
 
   <!-- Video Tutorial Modal -->
@@ -2507,7 +2526,7 @@
         if (el("statAppointmentsSub")) el("statAppointmentsSub").textContent = `${s.appointments_this_week || 0} this week`;
 
         const totalMins = s.total_minutes || 0;
-        const incMins = s.included_minutes || 50;
+        const incMins = s.included_minutes || 60;
         const overageMins = s.overage_minutes || 0;
         const estCost = s.estimated_cost != null ? s.estimated_cost : 20.00;
 
@@ -3001,6 +3020,10 @@
         if (welcomeBanner) welcomeBanner.style.display = "flex";
       }
 
+      const targetCid = (p && p.id) || clientId || "";
+      window._portalClientId = targetCid;
+      if (targetCid) setTimeout(() => loadSmsLog(targetCid), 600);
+
       if (p) populateDashboardUI(p);
       else fetchDashboardProfile();
     }
@@ -3009,7 +3032,12 @@
       try {
         const res = await fetch(`/api/client/profile?client_id=${encodeURIComponent(clientId || "")}`);
         const data = await res.json();
-        if (data && data.profile) populateDashboardUI(data.profile);
+        if (data && data.profile) {
+          populateDashboardUI(data.profile);
+          const cid = data.profile.id || clientId || "";
+          window._portalClientId = cid;
+          if (cid) setTimeout(() => loadSmsLog(cid), 600);
+        }
       } catch(e){}
     }
 
@@ -3087,6 +3115,70 @@
       document.getElementById("loginOtpStep").style.display = "none";
     }
 
+    // ── SMS Activity Log ────────────────────────────────────────────
+    let _smsAllMessages = [];
+
+    async function loadSmsLog(projectId) {
+      const listEl = document.getElementById("smsLogList");
+      const statusEl = document.getElementById("smsLogStatus");
+      if (!listEl) return;
+      try {
+        const res = await fetch(`/api/portal/${encodeURIComponent(projectId)}/sms-log?limit=200`);
+        const data = await res.json();
+        _smsAllMessages = data.messages || [];
+        renderSmsLog(_smsAllMessages);
+        if (statusEl) statusEl.textContent = `${_smsAllMessages.length} message${_smsAllMessages.length !== 1 ? "s" : ""}`;
+      } catch (e) {
+        if (listEl) listEl.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-tertiary);font-size:13px;">Could not load SMS log.</div>`;
+        if (statusEl) statusEl.textContent = "Error";
+      }
+    }
+
+    function renderSmsLog(messages) {
+      const listEl = document.getElementById("smsLogList");
+      const filterVal = (document.getElementById("smsFilterType") || {}).value || "all";
+      if (!listEl) return;
+
+      const filtered = filterVal === "all" ? messages : messages.filter(m => m.type === filterVal);
+
+      if (!filtered.length) {
+        listEl.innerHTML = `<div style="text-align:center;padding:32px;color:var(--text-tertiary);font-size:13px;">No SMS messages yet. They'll appear here once your receptionist starts sending appointment confirmations and links.</div>`;
+        return;
+      }
+
+      const typeIcon = { customer: "👤", owner_alert: "🔔", marketing: "📣" };
+      const typeBg = { customer: "#EFF6FF", owner_alert: "#FEF3C7", marketing: "#F0FDF4" };
+      const typeBorder = { customer: "#BFDBFE", owner_alert: "#FDE68A", marketing: "#BBF7D0" };
+      const typeLabel = { customer: "Customer", owner_alert: "Alert", marketing: "Promo" };
+
+      listEl.innerHTML = filtered.map(m => {
+        const ts = m.timestamp ? new Date(m.timestamp.replace(" ", "T")).toLocaleDateString("en-US", {month:"short", day:"numeric", hour:"numeric", minute:"2-digit"}) : "";
+        const icon = typeIcon[m.type] || "💬";
+        const bg = typeBg[m.type] || "#F9FAFB";
+        const border = typeBorder[m.type] || "#E5E7EB";
+        const label = typeLabel[m.type] || "SMS";
+        const statusDot = m.status === "sent" || m.status === "simulated_success" ? "🟢" : (m.status === "failed" ? "🔴" : "🟡");
+        const text = (m.text || "").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>");
+        return `<div style="display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border);align-items:flex-start;">
+          <div style="flex-shrink:0;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;background:${bg};border:1px solid ${border};">${icon}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">
+              <span style="font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;background:${bg};color:var(--text-main);border:1px solid ${border};">${label}</span>
+              <span style="font-size:11.5px;font-weight:600;color:var(--text-secondary);font-family:monospace;">${m.to || "—"}</span>
+              <span style="font-size:10.5px;color:var(--text-tertiary);margin-left:auto;">${statusDot} ${ts}</span>
+            </div>
+            <div style="font-size:12.5px;color:var(--text-main);line-height:1.5;word-break:break-word;">${text}</div>
+          </div>
+        </div>`;
+      }).join("");
+    }
+
+    document.getElementById("smsFilterType")?.addEventListener("change", () => renderSmsLog(_smsAllMessages));
+    document.getElementById("btnRefreshSmsLog")?.addEventListener("click", () => {
+      const cid = window._portalClientId || clientId;
+      if (cid) loadSmsLog(cid);
+    });
+
     // Expose helpers globally
     window.switchPortalTab = switchPortalTab;
     window.scrollToSection = scrollToSection;
@@ -3104,6 +3196,7 @@
     window.handleSignOut = handleSignOut;
     window.showPhoneStep = showPhoneStep;
     window.autoFillDevCode = autoFillDevCode;
+    window.loadSmsLog = loadSmsLog;
   </script>
 </body>
 </html>

@@ -936,7 +936,7 @@ async def _finalize_session(room_name: str, status: str = "completed") -> Option
                     sms_text = (
                         f"Hey there! This is {caller_agent_name} from OrxLabs. Here is your 2-minute demo link: "
                         f"https://agents.orxlabs.com/subscribe?ref={ref_param} — Just fill in a little info about your shop (takes under 2 mins) to hear your custom sample call! "
-                        f"If you like it, it costs next to nothing — just $20/mo with 50 mins included (~20 calls), then $0.25/min extra and zero contracts (saving just 1 missed job pays for the entire year!). "
+                        f"If you like it, it costs next to nothing — just $20/mo with 60 mins included (~20 calls), then $0.25/min extra and zero contracts (saving just 1 missed job pays for the entire year!). "
                         f"Reply directly to this text if you have any questions!"
                     )
                     logger.info(f"[Marcus Outbound] Dispatching automated demo link SMS to {clean_target} ({target_biz})...")
