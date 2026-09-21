@@ -632,15 +632,21 @@ VOICE_FALLBACK_MAP: Dict[str, str] = {
     "bm_george": "aura-2-orion-en",
     "bm_lewis": "aura-2-andromeda-en",
     # Legacy flux aliases safely mapped to high-fidelity Aura models
-    "flux-heather-en": "aura-2-asteria-en",
+    "flux-meghan-en": "aura-2-asteria-en",
+    "flux-heather-en": "aura-2-athena-en",
     "flux-sienna-en": "aura-2-luna-en",
     "flux-alexis-en": "aura-2-stella-en",
     "flux-cliff-en": "aura-2-andromeda-en",
-    "flux-bruce-en": "aura-2-helios-en",
+    "flux-bruce-en": "aura-2-orion-en",
     "flux-colin-en": "aura-2-orion-en",
     "flux-wes-en": "aura-2-arcas-en",
     "flux-miles-en": "aura-2-perseus-en",
     "flux-gemma-en": "aura-2-stella-en",
+    "riley": "aura-2-asteria-en",
+    "ana": "aura-2-athena-en",
+    "sarah": "aura-2-luna-en",
+    "michael": "aura-2-orion-en",
+    "david": "aura-2-andromeda-en",
 }
 
 

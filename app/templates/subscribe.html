@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
 
   <style>
     :root {
@@ -8168,7 +8169,7 @@
     showBox(1);
 
     // =========================================================================
-    // 5-MINUTE CAPPED INTERACTIVE LIVE VOICE SIMULATION CONTROLLER
+    // 5-MINUTE CAPPED INTERACTIVE LIVE VOICE SIMULATION CONTROLLER (LIVEKIT WEBRTC ENGINE)
     // =========================================================================
     let simTimerSeconds = 300; // 5-minute cap (300 seconds)
     let simTimerInterval = null;
@@ -8179,6 +8180,9 @@
     let simCallStartTime = null;
     let simTurnsCount = 0;
     let currentTurnAudio = null;
+    let simLivekitRoom = null;
+    let simAudioEl = null;
+    let simCurrentRoomName = null;
 
     function extractCleanCity(addr) {
       if (!addr || typeof addr !== "string") return "";
@@ -8189,13 +8193,22 @@
       return parts[0] || "";
     }
 
-    function openLiveVoiceSim() {
+    async function openLiveVoiceSim() {
       // Immediately stop running demo theater and audition audios
       stopCallSimulation();
       if (currentAuditionAudio) {
         try { currentAuditionAudio.pause(); } catch(e){}
         currentAuditionAudio = null;
         document.querySelectorAll(".btn-persona-audition").forEach(b => b.classList.remove("playing"));
+      }
+
+      // Cleanup any previous room session
+      if (simLivekitRoom) {
+        try { simLivekitRoom.disconnect(); } catch(e){}
+        simLivekitRoom = null;
+      }
+      if (simAudioEl) {
+        try { simAudioEl.pause(); simAudioEl.srcObject = null; } catch(e){}
       }
 
       simTimerSeconds = 300;
@@ -8210,9 +8223,11 @@
       const recapView = document.getElementById("liveSimRecapView");
       const transcriptFeed = document.getElementById("liveSimTranscript");
       const bizNameEl = document.getElementById("modalBizName");
+      const statusText = document.getElementById("liveSimStatusText");
+      const stage = document.getElementById("liveSimStage");
 
       if (bizNameEl) {
-        bizNameEl.textContent = `${state.bizName || "Our Company"} • Inbound Line`;
+        bizNameEl.textContent = `${getCleanSpokenBizName()} • Inbound Line`;
       }
 
       transcriptFeed.innerHTML = "";
@@ -8232,9 +8247,160 @@
         }
       }, 1000);
 
-      // Play Opening Receptionist Greeting
-      const initialGreeting = `Thank you for calling ${getCleanSpokenBizName()}! This is ${state.personaName || "Riley"}. How can I help you today?`;
+      const spokenBiz = getCleanSpokenBizName();
+      const initialGreeting = `Thank you for calling ${spokenBiz}! This is ${state.personaName || "Riley"}. How can I help you today?`;
 
+      // 1. Primary Engine: LiveKit WebRTC Real-Time Audio (Matches Main Dashboard)
+      if (window.LivekitClient) {
+        if (statusText) statusText.textContent = "⚡ Connecting to LiveKit WebRTC (Sub-500ms)...";
+        try {
+          await connectLivekitVoiceSim(initialGreeting);
+          return;
+        } catch (err) {
+          console.warn("LiveKit connection notice, falling back to HTTP audio:", err);
+        }
+      }
+
+      // 2. Resilient Fallback: Ultra-Low Latency HTTP Mode with Deepgram Aura v1
+      startHttpFallbackVoiceSim(initialGreeting);
+    }
+
+    async function connectLivekitVoiceSim(initialGreeting) {
+      const roomName = "aria-onb-" + Math.random().toString(36).substring(2, 9);
+      simCurrentRoomName = roomName;
+      const statusText = document.getElementById("liveSimStatusText");
+      const stage = document.getElementById("liveSimStage");
+
+      // Compile custom profile prompt
+      let compiledPrompt = "";
+      try {
+        const pRes = await fetch("/api/onboarding/compile-prompt", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            business_name: state.bizName,
+            trade: state.trade,
+            pricing_policy: state.pricingPolicy,
+            booking_action: state.bookingAction,
+            hours: (state.scheduleConfig && state.scheduleConfig.hoursStr) || "Mon-Fri 8:00 AM - 6:00 PM",
+            allowed_topics: state.allowedTopics,
+            custom_topics: state.customTopics,
+            transfer_rules: Array.isArray(state.emergencyTriggers) ? state.emergencyTriggers.join("; ") : (state.emergencyTriggers || ""),
+            persona_name: state.personaName,
+            persona_voice: state.personaVoice,
+            forwarding_phone: state.phone || "+1 (555) 234-5678",
+            fee_amount: state.feeAmount || 89,
+            diagnostic_fee: state.feeAmount || 89,
+            human_transfer_policy: state.humanTransferPolicy || "life_safety_emergencies",
+            call_termination_policy: state.callTerminationPolicy || "natural_booking_complete"
+          })
+        });
+        const pData = await pRes.json();
+        compiledPrompt = pData.prompt || "";
+      } catch(e) {
+        console.warn("Prompt compile note:", e);
+      }
+
+      // Voice mapping for LiveKit agent (maps persona to low-latency Aura models)
+      const voiceMap = {
+        "flux-meghan-en": "aura-2-asteria-en",
+        "flux-heather-en": "aura-2-athena-en",
+        "flux-sienna-en": "aura-2-luna-en",
+        "flux-bruce-en": "aura-2-orion-en",
+        "flux-cliff-en": "aura-2-andromeda-en"
+      };
+      const lkVoice = voiceMap[state.personaVoice] || "aura-2-asteria-en";
+
+      // 1. Request LiveKit Token
+      const res = await fetch("/api/livekit/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          room: roomName,
+          assistant_id: state.clientId || "onboarding-prospect",
+          instructions: compiledPrompt,
+          greeting: initialGreeting,
+          llm_provider: "gemini",
+          llm_model: "gemini-3.1-flash-lite",
+          tts_voice: lkVoice,
+          stt_model: "nova-3"
+        })
+      });
+
+      if (!res.ok) throw new Error("Failed to allocate LiveKit room token");
+      const data = await res.json();
+      if (!data.token) throw new Error("No token returned by LiveKit endpoint");
+
+      if (!simAudioEl) {
+        simAudioEl = document.createElement("audio");
+        simAudioEl.autoplay = true;
+        document.body.appendChild(simAudioEl);
+      }
+
+      const LiveKit = window.LivekitClient;
+      simLivekitRoom = new LiveKit.Room({
+        adaptiveStream: true,
+        dynacast: true,
+        audioCaptureDefaults: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        }
+      });
+
+      simLivekitRoom.on(LiveKit.RoomEvent.TrackSubscribed, (track) => {
+        if (track.kind === "audio" || (LiveKit.TrackKind && track.kind === LiveKit.TrackKind.KindAudio)) {
+          track.attach(simAudioEl);
+          simAudioEl.play().catch(e => console.warn("LiveKit autoplay:", e));
+          if (stage) stage.classList.add("agent-speaking");
+          if (statusText) statusText.textContent = `🔊 ${state.personaName || "Riley"} is speaking...`;
+        }
+      });
+
+      simLivekitRoom.on(LiveKit.RoomEvent.TrackUnsubscribed, () => {
+        if (stage) stage.classList.remove("agent-speaking");
+        if (statusText) statusText.textContent = `🟢 LiveKit WebRTC Active — Speak freely`;
+      });
+
+      simLivekitRoom.on(LiveKit.RoomEvent.DataReceived, (payload) => {
+        try {
+          const str = new TextDecoder().decode(payload);
+          const msg = JSON.parse(str);
+          if (msg.type === "transcript" && msg.text) {
+            const isUser = (msg.speaker || "").toLowerCase().includes("user");
+            appendSimBubble(isUser ? "user" : "agent", msg.text);
+            simTurnsCount++;
+
+            if (isUser) {
+              if (stage) stage.classList.add("user-speaking");
+              if (statusText) statusText.textContent = `🎙️ "${msg.text}"`;
+            } else {
+              if (stage) {
+                stage.classList.remove("user-speaking");
+                stage.classList.add("agent-speaking");
+              }
+              if (statusText) statusText.textContent = `🔊 ${state.personaName || "Riley"} is speaking...`;
+            }
+          }
+        } catch(e) {}
+      });
+
+      simLivekitRoom.on(LiveKit.RoomEvent.Disconnected, () => {
+        endLiveVoiceSim("livekit_disconnected");
+      });
+
+      const targetWs = data.url || data.ws_url || (window.location.protocol === "https:" ? "wss://" : "ws://") + window.location.host + ":7880";
+      await simLivekitRoom.connect(targetWs, data.token);
+      await simLivekitRoom.localParticipant.setMicrophoneEnabled(true);
+
+      // Append initial greeting to chat bubbles
+      appendSimBubble("agent", initialGreeting);
+      simHistory = [{ role: "assistant", content: initialGreeting }];
+
+      if (statusText) statusText.textContent = `🟢 LiveKit WebRTC Active (Sub-500ms) — Speak freely`;
+    }
+
+    function startHttpFallbackVoiceSim(initialGreeting) {
       simHistory = [{ role: "assistant", content: initialGreeting }];
       appendSimBubble("agent", initialGreeting);
       speakSimReply(initialGreeting, () => {
@@ -8260,10 +8426,20 @@
 
     function appendSimBubble(speaker, text) {
       const feed = document.getElementById("liveSimTranscript");
-      if (!feed) return;
+      if (!feed || !text) return;
+
+      // Deduplicate last bubble if identical
+      const lastChild = feed.lastElementChild;
+      if (lastChild && lastChild.classList.contains(speaker)) {
+        const lastBody = lastChild.querySelector("div:last-child");
+        if (lastBody && lastBody.textContent.trim().toLowerCase() === text.trim().toLowerCase()) {
+          return;
+        }
+      }
+
       const bubble = document.createElement("div");
       bubble.className = `sim-feed-bubble ${speaker}`;
-      
+
       const speakerName = speaker === "agent" ? (state.personaName || "Riley") : "You (Caller)";
       const head = document.createElement("div");
       head.className = "sim-bubble-speaker";
@@ -8445,7 +8621,7 @@
         appendSimBubble("agent", reply);
         const inlineAudioSrc = data.audio_base64 ? `data:${data.audio_mime || "audio/mpeg"};base64,${data.audio_base64}` : null;
         speakSimReply(reply, () => {
-          if (simTimerSeconds > 0) {
+          if (simTimerSeconds > 0 && !simLivekitRoom) {
             startSimListening();
           }
         }, inlineAudioSrc);
@@ -8454,13 +8630,31 @@
         const fallback = "I understand completely! Let me get our technician scheduled to inspect that for you. What is your service address?";
         appendSimBubble("agent", fallback);
         speakSimReply(fallback, () => {
-          if (simTimerSeconds > 0) startSimListening();
+          if (simTimerSeconds > 0 && !simLivekitRoom) startSimListening();
         });
       }
     }
 
     function endLiveVoiceSim(reason) {
       clearInterval(simTimerInterval);
+
+      // Disconnect LiveKit WebRTC session & stop background agent
+      if (simLivekitRoom) {
+        try { simLivekitRoom.disconnect(); } catch(e){}
+        simLivekitRoom = null;
+      }
+      if (simCurrentRoomName) {
+        fetch("/api/livekit/stop", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ room: simCurrentRoomName })
+        }).catch(()=>{});
+        simCurrentRoomName = null;
+      }
+      if (simAudioEl) {
+        try { simAudioEl.pause(); simAudioEl.srcObject = null; } catch(e){}
+      }
+
       if (currentTurnAudio) {
         currentTurnAudio.pause();
         currentTurnAudio = null;
@@ -8486,6 +8680,21 @@
     }
 
     function closeLiveVoiceSim() {
+      if (simLivekitRoom) {
+        try { simLivekitRoom.disconnect(); } catch(e){}
+        simLivekitRoom = null;
+      }
+      if (simCurrentRoomName) {
+        fetch("/api/livekit/stop", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ room: simCurrentRoomName })
+        }).catch(()=>{});
+        simCurrentRoomName = null;
+      }
+      if (simAudioEl) {
+        try { simAudioEl.pause(); simAudioEl.srcObject = null; } catch(e){}
+      }
       if (currentTurnAudio) {
         try { currentTurnAudio.pause(); } catch(e) {}
         currentTurnAudio = null;
@@ -8559,10 +8768,13 @@
       if (micBtn) {
         micBtn.addEventListener("click", () => {
           simIsMicActive = !simIsMicActive;
+          if (simLivekitRoom && simLivekitRoom.localParticipant) {
+            simLivekitRoom.localParticipant.setMicrophoneEnabled(simIsMicActive);
+          }
           if (simIsMicActive) {
             micBtn.classList.remove("muted");
             document.getElementById("simMicLabel").textContent = "Mic Active";
-            startSimListening();
+            if (!simLivekitRoom) startSimListening();
           } else {
             micBtn.classList.add("muted");
             document.getElementById("simMicLabel").textContent = "Mic Muted";
@@ -8684,7 +8896,7 @@
           </div>
         </div>
         <div class="live-sim-notice-footer">
-          <span>🎧 Hands-free audio active. Real-time Deepgram & Kokoro TTS. Call is strictly capped at 5 minutes.</span>
+          <span>⚡ LiveKit WebRTC & Deepgram Nova-3 full-duplex streaming active. Sub-500ms voice turns. Call is strictly capped at 5 minutes.</span>
         </div>
       </div>
 
