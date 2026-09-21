@@ -4807,37 +4807,6 @@
               </div>
             </div>
 
-            <!-- Part 3: When to End Call & Call Termination Policies -->
-            <div class="qa-card" style="margin-top: 16px;">
-              <div class="qa-header">
-                <div class="qa-num">3</div>
-                <div class="qa-title">When should your AI receptionist conclude and end the call?</div>
-              </div>
-              <div class="qa-desc">Safety caps and natural conversation sign-off:</div>
-              <div class="qa-options-grid" id="endCallPolicyGrid">
-                <div class="qa-opt-card active" data-endpolicy="natural_booking_complete">
-                  <div class="qa-opt-radio"></div>
-                  <div>
-                    <div class="qa-opt-title">✨ Natural Farewell on Confirmation (Recommended)</div>
-                    <div class="qa-opt-sub">Gracefully ends after 5-point booking confirmation or message recap.</div>
-                  </div>
-                </div>
-                <div class="qa-opt-card" data-endpolicy="immediate_farewell_opt_out">
-                  <div class="qa-opt-radio"></div>
-                  <div>
-                    <div class="qa-opt-title">👋 Polite Immediate Sign-Off on Opt-Out</div>
-                    <div class="qa-opt-sub">Ends cordially if caller is shopping around, declines, or called by mistake.</div>
-                  </div>
-                </div>
-                <div class="qa-opt-card" data-endpolicy="strict_15min_safety_cap">
-                  <div class="qa-opt-radio"></div>
-                  <div>
-                    <div class="qa-opt-title">🛡️ 15-Min Cap &amp; Anti-Robocall IVR Drop</div>
-                    <div class="qa-opt-sub">Hard 15-minute max duration and immediate disconnect on automated bot loops.</div>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
 
           <!-- Sub-Step Navigation Action Bar -->
@@ -6988,15 +6957,6 @@
         document.querySelectorAll("#humanTransferGrid .qa-opt-card").forEach(c => c.classList.remove("active"));
         card.classList.add("active");
         state.humanTransferPolicy = card.dataset.transfer || "life_safety_emergencies";
-      });
-    });
-
-    // Wire End Call Policy Grid
-    document.querySelectorAll("#endCallPolicyGrid .qa-opt-card").forEach(card => {
-      card.addEventListener("click", () => {
-        document.querySelectorAll("#endCallPolicyGrid .qa-opt-card").forEach(c => c.classList.remove("active"));
-        card.classList.add("active");
-        state.callTerminationPolicy = card.dataset.endpolicy || "natural_booking_complete";
       });
     });
 

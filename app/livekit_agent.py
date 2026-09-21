@@ -1339,7 +1339,24 @@ async def _agent_room_worker(
                         schedule_call_termination(delay_seconds=2.5, reason="keypad_ivr_detected")
                         return
 
-                    # Smart Case 3: Caller Farewell / Concluded Call
+                    # Smart Case 3: Caller Opt-Out / Declining Service
+                    caller_opt_out_phrases = [
+                        "not interested", "don't want your service", "dont want your service",
+                        "don't need your service", "dont need your service", "never mind",
+                        "nevermind", "called by mistake", "wrong number", "don't want anyone",
+                        "dont want anyone", "don't come out", "dont come out", "i'll pass",
+                        "ill pass", "no thank you", "no thanks", "not looking for service",
+                        "shopping around and don't want", "not right now"
+                    ]
+                    if any(phrase in text_lower or phrase in text_norm for phrase in caller_opt_out_phrases):
+                        logger.info(
+                            f"[LiveKit Agent] Caller opt-out / disinterest detected for room '{room_name}'. "
+                            f"Scheduling graceful delayed hangup after polite farewell."
+                        )
+                        schedule_call_termination(delay_seconds=4.0, reason="caller_opt_out_disinterest")
+                        return
+
+                    # Smart Case 4: Caller Farewell / Concluded Call
                     caller_farewell_phrases = [
                         "goodbye", "bye", "bye for now", "have a good day", "have a great day",
                         "have a wonderful day", "that's all thank you", "that's all, thank you",
