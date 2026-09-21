@@ -4038,6 +4038,55 @@
       transform: translateY(-1px);
     }
 
+  
+    /* High-Converting Shiny Next Action Button */
+    .btn-shiny-next {
+      background: linear-gradient(135deg, #059669 0%, #10B981 50%, #047857 100%) !important;
+      color: #FFFFFF !important;
+      font-size: 15px !important;
+      font-weight: 800 !important;
+      padding: 14px 30px !important;
+      border-radius: var(--radius-sm) !important;
+      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.25) inset !important;
+      position: relative !important;
+      overflow: hidden !important;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 10px !important;
+      cursor: pointer !important;
+      letter-spacing: -0.01em !important;
+    }
+    .btn-shiny-next::after {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -60%;
+      width: 50%;
+      height: 200%;
+      background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.45) 50%,
+        rgba(255, 255, 255, 0) 100%
+      );
+      transform: rotate(25deg);
+      animation: buttonShimmer 2.8s infinite ease-in-out;
+      pointer-events: none;
+    }
+    @keyframes buttonShimmer {
+      0% { left: -60%; }
+      30%, 100% { left: 140%; }
+    }
+    .btn-shiny-next:hover {
+      transform: translateY(-2px) scale(1.02) !important;
+      box-shadow: 0 8px 30px rgba(16, 185, 129, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.35) inset !important;
+      filter: brightness(1.08) !important;
+    }
+    .btn-shiny-next:active {
+      transform: translateY(0) scale(1.0) !important;
+    }
+
   </style>
 </head>
 <body>
@@ -4680,6 +4729,35 @@
           <h2 class="focus-title">🎧 Test-Drive Your AI Receptionist: Hear Live Call Demo</h2>
           <p class="focus-sub">Listen to your AI receptionist answer real customer calls using your exact trade, hours, and pricing rules.</p>
 
+          <!-- Live 5-Minute Interactive Voice Simulation Card (Top Positioned) -->
+          <div class="live-voice-sandbox-card" style="margin-bottom: 20px;">
+            <div class="sandbox-header-row">
+              <div class="sandbox-live-pill">
+                <span class="live-pulse-dot"></span>
+                <span>Live Interactive Voice Test</span>
+              </div>
+              <span class="sandbox-timer-badge">⏱️ 5-Minute Call Cap</span>
+            </div>
+            
+            <div class="sandbox-info-body">
+              <div class="sandbox-avatar-orb">
+                <div class="sandbox-orb-inner">🎙️</div>
+              </div>
+              <div class="sandbox-info-text">
+                <div class="sandbox-title">Test <span class="receptionist-name-val">your AI receptionist</span> Yourself Over Real Audio</div>
+                <div class="sandbox-desc">
+                  Have a real, hands-free phone conversation with your AI receptionist. Ask about your prices, emergencies, hours, or scheduling to test how your AI receptionist enforces your exact rules before activating.
+                </div>
+              </div>
+            </div>
+
+            <button type="button" class="btn-speak-receptionist" id="btnOpenVoiceSim">
+              <span class="speak-mic-pulse">🎙️</span>
+              <span class="speak-btn-text">Speak with your AI Receptionist <span class="receptionist-name-val">Riley</span></span>
+              <span class="speak-btn-cap-pill">Try Live Mic ⚡</span>
+            </button>
+          </div>
+
           <!-- Minimalist 2-Tab Scenario Selection -->
           <div class="scenario-nav-bar" id="scenarioNavBar">
             <button type="button" class="scenario-tab-btn active" data-scenario="routine_booking">
@@ -4710,8 +4788,8 @@
               </div>
             </div>
 
-            <!-- AI Decision Telemetry HUD -->
-            <div class="telemetry-hud" id="theaterTelemetryHud">
+            <!-- AI Decision Telemetry HUD (hidden for minimalist view) -->
+            <div class="telemetry-hud" id="theaterTelemetryHud" style="display: none !important;">
               <div class="telemetry-item">
                 <span class="telemetry-label">Schedule Check:</span>
                 <span class="telemetry-value" id="hudTimeStatus">IN-HOURS (2:15 PM)</span>
@@ -4726,7 +4804,8 @@
               </div>
             </div>
 
-            <div class="call-scenario-tag" id="theaterScenarioTag" style="margin: 0 14px 10px 14px;">
+            <!-- Scenario Tag (hidden for minimalist view) -->
+            <div class="call-scenario-tag" id="theaterScenarioTag" style="display: none !important; margin: 0 14px 10px 14px;">
               <span>🚨</span>
               <span id="theaterScenarioText">Scenario: Urgent AC failure during 92°F heatwave</span>
             </div>
@@ -4843,10 +4922,7 @@
 
           <div class="focus-actions">
             <button type="button" class="btn-focus-back" id="btnBack3">← Back to Setup</button>
-            <button type="button" class="btn-box3-speak-receptionist" id="btnBox3OpenVoiceSim" style="margin: 0 8px; background: linear-gradient(135deg, #059669, #0D9488); color: #FFF; border: none; border-radius: var(--radius-sm); padding: 10px 18px; font-weight: 700; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(16,185,129,0.3);">
-              <span>🎙️ Speak with <span class="receptionist-name-val">your AI receptionist</span> (5-Min Test)</span>
-            </button>
-            <button type="button" class="btn-focus-next" id="btnNext3">
+            <button type="button" class="btn-focus-next btn-shiny-next" id="btnNext3">
               <span>Looks Great — Activate Plan →</span>
             </button>
           </div>
@@ -4856,35 +4932,6 @@
         <div class="focus-step" id="box4">
           <h2 class="focus-title">🚀 Launch Your AI Receptionist</h2>
           <p class="focus-sub">Never miss a high-paying job again. Your cell rings first — your AI receptionist answers when you're busy or on a ladder.</p>
-
-          <!-- Live 5-Minute Interactive Voice Simulation Card -->
-          <div class="live-voice-sandbox-card">
-            <div class="sandbox-header-row">
-              <div class="sandbox-live-pill">
-                <span class="live-pulse-dot"></span>
-                <span>Live Interactive Voice Test</span>
-              </div>
-              <span class="sandbox-timer-badge">⏱️ 5-Minute Call Cap</span>
-            </div>
-            
-            <div class="sandbox-info-body">
-              <div class="sandbox-avatar-orb">
-                <div class="sandbox-orb-inner">🎙️</div>
-              </div>
-              <div class="sandbox-info-text">
-                <div class="sandbox-title">Test <span class="receptionist-name-val">your AI receptionist</span> Yourself Over Real Audio</div>
-                <div class="sandbox-desc">
-                  Have a real, hands-free phone conversation with your AI receptionist. Ask about your prices, emergencies, hours, or scheduling to test how your AI receptionist enforces your exact rules before activating.
-                </div>
-              </div>
-            </div>
-
-            <button type="button" class="btn-speak-receptionist" id="btnOpenVoiceSim">
-              <span class="speak-mic-pulse">🎙️</span>
-              <span class="speak-btn-text">Speak with your AI Receptionist <span class="receptionist-name-val">Riley</span></span>
-              <span class="speak-btn-cap-pill">5-Min Live Simulation ⚡</span>
-            </button>
-          </div>
 
           <!-- Pricing Hero Card ($20/mo Starter Plan) -->
           <div class="pay-card">
@@ -8097,7 +8144,7 @@
       if (btnRecapAct) {
         btnRecapAct.addEventListener("click", () => {
           document.getElementById("liveVoiceSimModal").style.display = "none";
-          showBox(4);
+          showBox(5);
           const chk = document.getElementById("btnPolarCheckout");
           if (chk) chk.click();
         });
