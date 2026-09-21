@@ -2985,6 +2985,22 @@ def harmonize_business_name_for_trade(biz_name: str, target_trade: str) -> str:
     return biz_name
 
 
+def phone_to_spoken_words(phone_str: str) -> str:
+    digit_words = {
+        '0': 'zero', '1': 'one', '2': 'two', '3': 'three', '4': 'four',
+        '5': 'five', '6': 'six', '7': 'seven', '8': 'eight', '9': 'nine'
+    }
+    digits = [c for c in str(phone_str) if c.isdigit()]
+    if len(digits) == 11 and digits[0] == '1':
+        digits = digits[1:]
+    if len(digits) == 10:
+        area = " ".join(digit_words[d] for d in digits[0:3])
+        prefix = " ".join(digit_words[d] for d in digits[3:6])
+        line = " ".join(digit_words[d] for d in digits[6:10])
+        return f"{area}, {prefix}, {line}"
+    return " ".join(digit_words.get(d, d) for d in digits)
+
+
 def generate_call_demo_script(profile: Dict[str, Any], scenario_id: Optional[str] = None) -> Dict[str, Any]:
     """Generates realistic dual-voice telephone call demos for ANY of the 11 business types:
     HVAC, Plumbing, Electrical, Roofing, Dental/Medical, Auto Repair, Law Firm,
@@ -2998,7 +3014,7 @@ def generate_call_demo_script(profile: Dict[str, Any], scenario_id: Optional[str
     booking    = profile.get("booking_action") or "Book arrival window"
     persona_name  = profile.get("persona_name") or "Riley"
     persona_voice = profile.get("persona_voice") or "flux-heather-en"
-    customer_voice = "flux-cliff-en" if "heather" in str(persona_voice).lower() or "meghan" in str(persona_voice).lower() else "flux-meghan-en"
+    customer_voice = "flux-bruce-en"
     active_scenario = (scenario_id or "routine_booking").lower()
     if active_scenario in ("after_hours", "afterhours", "after-hours", "after_hours_test"):
         active_scenario = "after_hours_test"
@@ -3123,15 +3139,17 @@ def generate_call_demo_script(profile: Dict[str, Any], scenario_id: Optional[str
     TRADE_DEMO_DATA = {
         "hvac": {
             "title": "AC Not Cooling — Full Diagnostic",
-            "caller_name": "Sarah (Homeowner)",
+            "caller_name": "David (Homeowner)",
+            "caller_name_full": "David Thompson",
             "caller_phone": "+1 (713) 555-0184",
+            "caller_phone_raw": "713-555-0184",
             "customer_address": "419 Maple Drive",
             "location_display": "419 Maple Drive",
             "routine_slot": "Today 2:00 PM – 5:00 PM Window",
             "routine_status": "Service Window Confirmed — SMS Sent",
             "owner_alert_title": "⚡ New Service Job Booked",
-            "booking_confirm_line": f"You're all set, Sarah! I have our technician scheduled for your arrival window today between two and five PM at 419 Maple Drive. They'll text fifteen minutes before arriving. I just sent confirmation to your cell!",
-            "sms_body_routine": f"Hi Sarah! You're confirmed with {biz_name} for today, 2–5 PM at 419 Maple Drive. Our technician will text 15 min before arrival. Reply anytime with questions.",
+            "booking_confirm_line": f"You're all set, David! I have our technician scheduled for your arrival window today between two and five PM at 419 Maple Drive. They'll text fifteen minutes before arriving. I just sent confirmation to your cell!",
+            "sms_body_routine": f"Hi David! You're confirmed with {biz_name} for today, 2–5 PM at 419 Maple Drive. Our technician will text 15 min before arrival. Reply anytime with questions.",
             "daytime_cust_problem": "Hi! Yeah, my AC has been running all afternoon but the house is just not cooling down. It's blowing air but it feels kinda warm. Do you guys handle that?",
             "daytime_agent_service": f"Oh no, dealing with AC trouble is such a headache! We can definitely help you with that. That definitely sounds like something a technician should inspect. Would you like to check our available appointment windows?",
             "daytime_cust_price_q": "Yeah, quick question though — what do you charge just to come out and look? Because last company I called wanted ninety-five dollars just to show up.",
@@ -3157,7 +3175,9 @@ def generate_call_demo_script(profile: Dict[str, Any], scenario_id: Optional[str
         "plumbing": {
             "title": "Water Heater Active Leak & Diagnostic",
             "caller_name": "David (Homeowner)",
+            "caller_name_full": "David Miller",
             "caller_phone": "+1 (512) 555-0198",
+            "caller_phone_raw": "512-555-0198",
             "customer_address": "724 Oak Crest Lane",
             "location_display": "724 Oak Crest Lane",
             "routine_slot": "Today 2:00 PM – 5:00 PM Window",
@@ -3190,7 +3210,9 @@ def generate_call_demo_script(profile: Dict[str, Any], scenario_id: Optional[str
         "electrical": {
             "title": "Breaker Tripping & Panel Diagnostic",
             "caller_name": "Robert (Property Owner)",
+            "caller_name_full": "Robert Davis",
             "caller_phone": "+1 (404) 555-0177",
+            "caller_phone_raw": "404-555-0177",
             "customer_address": "812 Highland View",
             "location_display": "812 Highland View",
             "routine_slot": "Today 2:00 PM – 5:00 PM Window",
@@ -3223,7 +3245,9 @@ def generate_call_demo_script(profile: Dict[str, Any], scenario_id: Optional[str
         "roofing": {
             "title": "Loose Shingles & Ceiling Leak Inspection",
             "caller_name": "Tom (Homeowner)",
+            "caller_name_full": "Tom Reynolds",
             "caller_phone": "+1 (303) 555-0162",
+            "caller_phone_raw": "303-555-0162",
             "customer_address": "518 Pine Valley Road",
             "location_display": "518 Pine Valley Road",
             "routine_slot": "Today 1:00 PM – 4:00 PM Window",
@@ -3454,7 +3478,9 @@ def generate_call_demo_script(profile: Dict[str, Any], scenario_id: Optional[str
         "general": {
             "title": "Facility Repair & On-Site Consultation",
             "caller_name": "Mark (Client)",
+            "caller_name_full": "Mark Stevenson",
             "caller_phone": "+1 (555) 234-5678",
+            "caller_phone_raw": "555-234-5678",
             "customer_address": "419 Commercial Boulevard",
             "location_display": "419 Commercial Boulevard",
             "routine_slot": "Today 1:00 PM – 4:00 PM Window",
@@ -3573,25 +3599,73 @@ def generate_call_demo_script(profile: Dict[str, Any], scenario_id: Optional[str
                     "speaker": "agent",
                     "name": f"{persona_name} (Receptionist)",
                     "voice": persona_voice,
-                    "text": tdata["daytime_agent_price_a"]
+                    "text": f"{tdata['daytime_agent_price_a']} Does that sound fair?"
                 },
                 {
                     "speaker": "customer",
                     "name": tdata["caller_name"],
                     "voice": customer_voice,
-                    "text": tdata["daytime_cust_area_q"]
+                    "text": "Okay, that sounds completely fair. Let's get someone scheduled."
                 },
                 {
                     "speaker": "agent",
                     "name": f"{persona_name} (Receptionist)",
                     "voice": persona_voice,
-                    "text": tdata["daytime_agent_area_a"]
+                    "text": "Great! What is your service address so I can check our schedule for your area?"
                 },
                 {
                     "speaker": "customer",
                     "name": tdata["caller_name"],
                     "voice": customer_voice,
-                    "text": tdata["daytime_cust_name_turn"]
+                    "text": f"I'm at {tdata['customer_address']} in {city_disp}."
+                },
+                {
+                    "speaker": "agent",
+                    "name": f"{persona_name} (Receptionist)",
+                    "voice": persona_voice,
+                    "text": f"Got it — so I have {tdata['customer_address']} in {city_disp}. Did I get that right?"
+                },
+                {
+                    "speaker": "customer",
+                    "name": tdata["caller_name"],
+                    "voice": customer_voice,
+                    "text": "Yes, that's right."
+                },
+                {
+                    "speaker": "agent",
+                    "name": f"{persona_name} (Receptionist)",
+                    "voice": persona_voice,
+                    "text": "We have an opening later today between two and five, or tomorrow morning between eight and eleven. Which arrival window works better for your schedule?"
+                },
+                {
+                    "speaker": "customer",
+                    "name": tdata["caller_name"],
+                    "voice": customer_voice,
+                    "text": "Later today works great for me."
+                },
+                {
+                    "speaker": "agent",
+                    "name": f"{persona_name} (Receptionist)",
+                    "voice": persona_voice,
+                    "text": "Wonderful! What is your full name and the best cell number for dispatch arrival updates?"
+                },
+                {
+                    "speaker": "customer",
+                    "name": tdata["caller_name"],
+                    "voice": customer_voice,
+                    "text": f"{tdata.get('caller_name_full', tdata['caller_name'].split(' (')[0])}, and my cell is {tdata.get('caller_phone_raw', '713-555-0184')}."
+                },
+                {
+                    "speaker": "agent",
+                    "name": f"{persona_name} (Receptionist)",
+                    "voice": persona_voice,
+                    "text": f"Perfect — I have {phone_to_spoken_words(tdata['caller_phone'])}. Did I get that right?"
+                },
+                {
+                    "speaker": "customer",
+                    "name": tdata["caller_name"],
+                    "voice": customer_voice,
+                    "text": "Yes, that's it! And if it turns out my unit is totally shot, do you guys also do full replacements or just repairs?"
                 },
                 {
                     "speaker": "agent",
@@ -3697,19 +3771,55 @@ def generate_call_demo_script(profile: Dict[str, Any], scenario_id: Optional[str
                     "speaker": "customer",
                     "name": "Marcus (Caller)",
                     "voice": customer_voice,
-                    "text": tdata["ah_cust_address_q"]
+                    "text": "Okay that works. Let's reserve that morning priority slot."
                 },
                 {
                     "speaker": "agent",
                     "name": f"{persona_name} (Receptionist)",
                     "voice": persona_voice,
-                    "text": tdata["ah_agent_address_a"]
+                    "text": "Great! What is your address so I can confirm you're in our service area and log it for our on-call team?"
                 },
                 {
                     "speaker": "customer",
                     "name": "Marcus (Caller)",
                     "voice": customer_voice,
-                    "text": tdata["ah_cust_info_turn"]
+                    "text": f"I'm at 1042 Bayside Avenue in {city_disp}."
+                },
+                {
+                    "speaker": "agent",
+                    "name": f"{persona_name} (Receptionist)",
+                    "voice": persona_voice,
+                    "text": f"Got it — so I have 1042 Bayside Avenue in {city_disp}. Did I get that right?"
+                },
+                {
+                    "speaker": "customer",
+                    "name": "Marcus (Caller)",
+                    "voice": customer_voice,
+                    "text": "Yes, that's right."
+                },
+                {
+                    "speaker": "agent",
+                    "name": f"{persona_name} (Receptionist)",
+                    "voice": persona_voice,
+                    "text": "And what is your full name and the best cell number for the priority dispatch confirmation?"
+                },
+                {
+                    "speaker": "customer",
+                    "name": "Marcus (Caller)",
+                    "voice": customer_voice,
+                    "text": "Marcus Vance, cell is 415-555-0834."
+                },
+                {
+                    "speaker": "agent",
+                    "name": f"{persona_name} (Receptionist)",
+                    "voice": persona_voice,
+                    "text": f"Perfect — I have {phone_to_spoken_words('+1 (415) 555-0834')}. Did I get that right?"
+                },
+                {
+                    "speaker": "customer",
+                    "name": "Marcus (Caller)",
+                    "voice": customer_voice,
+                    "text": "Yes, that's it! And hey — what if the whole unit needs replacing?"
                 },
                 {
                     "speaker": "agent",
