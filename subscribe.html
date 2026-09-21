@@ -8276,7 +8276,7 @@
       feed.scrollTop = feed.scrollHeight;
     }
 
-    function speakSimReply(text, onComplete) {
+    function speakSimReply(text, onComplete, audioSrcOverride) {
       simIsSpeaking = true;
       const stage = document.getElementById("liveSimStage");
       const statusText = document.getElementById("liveSimStatusText");
@@ -8293,8 +8293,8 @@
         currentTurnAudio = null;
       }
 
-      const voice = state.personaVoice || "flux-meghan-en";
-      const audioUrl = `/api/test-speech?text=${encodeURIComponent(text)}&voice=${encodeURIComponent(voice)}&speed=1.0`;
+      const voice = state.personaVoice || "aura-asteria-en";
+      const audioUrl = audioSrcOverride || `/api/test-speech?text=${encodeURIComponent(text)}&voice=${encodeURIComponent(voice)}&speed=1.0`;
       const audio = new Audio(audioUrl);
       currentTurnAudio = audio;
 
@@ -8335,6 +8335,9 @@
         simRecognition.interimResults = true;
         simRecognition.lang = "en-US";
 
+        let speechSilenceTimeout = null;
+        let lastInterimText = "";
+
         simRecognition.onresult = (event) => {
           if (simIsSpeaking) return;
           let interim = "";
@@ -8349,14 +8352,29 @@
           }
 
           if (finalTranscript.trim()) {
+            if (speechSilenceTimeout) { clearTimeout(speechSilenceTimeout); speechSilenceTimeout = null; }
+            lastInterimText = "";
             handleSimUserInput(finalTranscript.trim());
           } else if (interim.trim()) {
+            lastInterimText = interim.trim();
             if (statusText) statusText.textContent = `🎙️ "${interim.trim()}"`;
             if (stage) stage.classList.add("user-speaking");
+
+            // Fast conversational endpointing: auto-submit after 800ms silence instead of waiting 2.5s for browser
+            if (speechSilenceTimeout) clearTimeout(speechSilenceTimeout);
+            speechSilenceTimeout = setTimeout(() => {
+              if (lastInterimText && !simIsSpeaking) {
+                const textToSubmit = lastInterimText;
+                lastInterimText = "";
+                try { simRecognition.abort(); } catch(e){}
+                handleSimUserInput(textToSubmit);
+              }
+            }, 800);
           }
         };
 
         simRecognition.onerror = (e) => {
+          if (speechSilenceTimeout) { clearTimeout(speechSilenceTimeout); speechSilenceTimeout = null; }
           if (e.error !== "no-speech" && statusText) {
             statusText.textContent = `🟢 Ready (Type or speak)`;
           }
@@ -8425,11 +8443,12 @@
         simHistory.push({ role: "assistant", content: reply });
 
         appendSimBubble("agent", reply);
+        const inlineAudioSrc = data.audio_base64 ? `data:${data.audio_mime || "audio/mpeg"};base64,${data.audio_base64}` : null;
         speakSimReply(reply, () => {
           if (simTimerSeconds > 0) {
             startSimListening();
           }
-        });
+        }, inlineAudioSrc);
       } catch (err) {
         console.error("Live test call error:", err);
         const fallback = "I understand completely! Let me get our technician scheduled to inspect that for you. What is your service address?";

@@ -1501,6 +1501,105 @@ async def api_get_industries():
     return {"industries": INDUSTRIES}
 
 
+# ---------------------------------------------------------
+# Ultra-Low Latency Speech Synthesis Engine (Deepgram Aura v1 ~250ms)
+# ---------------------------------------------------------
+VOICE_MAP_DEEPGRAM = {
+    # Riley / Heather (Warm, clear American female receptionist - 250ms Aura v1)
+    "af_heart": "aura-asteria-en",
+    "riley": "aura-asteria-en",
+    "flux-meghan-en": "aura-asteria-en",
+    "meghan": "aura-asteria-en",
+    "flux-heather-en": "aura-athena-en",
+    "heather": "aura-athena-en",
+    "aura-asteria-en": "aura-asteria-en",
+
+    # Ana / Athena (Crisp, articulate professional female)
+    "ana": "aura-athena-en",
+    "athena": "aura-athena-en",
+    "aura-athena-en": "aura-athena-en",
+
+    # Sarah / Sienna (Friendly, calm American female)
+    "sarah": "aura-luna-en",
+    "af_sarah": "aura-luna-en",
+    "sienna": "aura-luna-en",
+    "flux-sienna-en": "aura-luna-en",
+    "aura-luna-en": "aura-luna-en",
+
+    # Michael / Bruce (Confident, pleasant American male)
+    "michael": "aura-orion-en",
+    "am_michael": "aura-orion-en",
+    "bruce": "aura-orion-en",
+    "flux-bruce-en": "aura-orion-en",
+    "aura-orion-en": "aura-orion-en",
+
+    # David / Cliff (Approachable, friendly male)
+    "am_adam": "aura-angus-en",
+    "adam": "aura-angus-en",
+    "cliff": "aura-angus-en",
+    "flux-cliff-en": "aura-angus-en",
+    "aura-angus-en": "aura-angus-en",
+
+    # Caller / Customer (Natural conversational caller)
+    "customer": "aura-arcas-en",
+    "david": "aura-arcas-en",
+    "aura-arcas-en": "aura-arcas-en",
+}
+
+_speech_cache: dict[str, tuple[bytes, str]] = {}
+
+
+async def synthesize_speech_bytes(text: str, voice: Optional[str] = None, speed: float = 1.0) -> tuple[bytes, str]:
+    """Synthesizes speech using ultra-low-latency Deepgram Aura v1 (~250ms) or Kokoro fallback."""
+    if not text or not text.strip():
+        return (b"", "audio/mpeg")
+    raw_voice = (voice or "aura-asteria-en").lower().strip()
+    target_voice = VOICE_MAP_DEEPGRAM.get(raw_voice, voice or "aura-asteria-en")
+
+    cache_key = f"{target_voice}:{text.strip()}"
+    if cache_key in _speech_cache:
+        return _speech_cache[cache_key]
+
+    # Fast Deepgram Aura v1 synthesis (sub-300ms)
+    if settings.DEEPGRAM_API_KEY:
+        dg_voice = target_voice if (target_voice.startswith("aura-") or target_voice.startswith("flux-")) else "aura-asteria-en"
+        ver = "v2" if "flux" in dg_voice else "v1"
+        try:
+            import httpx
+            async with httpx.AsyncClient(timeout=8.0) as client:
+                res = await client.post(
+                    f"https://api.deepgram.com/{ver}/speak?model={dg_voice}",
+                    headers={"Authorization": f"Token {settings.DEEPGRAM_API_KEY}", "Content-Type": "application/json"},
+                    json={"text": text},
+                )
+                if res.status_code == 200:
+                    audio_bytes = res.content
+                    media_type = res.headers.get("content-type", "audio/mpeg")
+                    if len(_speech_cache) < 1000:
+                        _speech_cache[cache_key] = (audio_bytes, media_type)
+                    return (audio_bytes, media_type)
+        except Exception as e:
+            logger.warning(f"Deepgram speech error ({e}), falling back to Kokoro...")
+
+    # Kokoro ONNX fallback
+    kokoro = get_kokoro_instance()
+    if kokoro:
+        try:
+            voices = kokoro.get_voices() if hasattr(kokoro, "get_voices") else kokoro.voices
+            k_voice = target_voice if target_voice in voices else "af_heart"
+            samples, sample_rate = kokoro.create(text, voice=k_voice, speed=speed)
+            buf = io.BytesIO()
+            sf.write(buf, samples, sample_rate, format="WAV", subtype="PCM_16")
+            audio_bytes = buf.getvalue()
+            if len(_speech_cache) < 1000:
+                _speech_cache[cache_key] = (audio_bytes, "audio/wav")
+            return (audio_bytes, "audio/wav")
+        except Exception as e:
+            logger.warning(f"Kokoro synthesis error: {e}")
+
+    return (b"", "audio/mpeg")
+
+
 @app.post("/api/onboarding/discover")
 async def api_discover_business(payload: Dict[str, Any] = Body(...)):
     """Auto-discover business and address details from text query."""
@@ -1593,6 +1692,19 @@ async def api_simulate_agent_turn(payload: Dict[str, Any] = Body(...)):
     message = payload.get("message") or payload.get("user_text") or payload.get("query", "")
     history = payload.get("history", [])
     result = simulate_agent_turn(profile, message, history)
+
+    # Ultra-low latency inline speech synthesis (~250ms with Deepgram Aura)
+    reply_text = result.get("response", "")
+    voice_pref = payload.get("persona_voice") or profile.get("persona_voice") or "aura-asteria-en"
+    if reply_text:
+        try:
+            audio_bytes, media_type = await synthesize_speech_bytes(reply_text, voice=voice_pref)
+            if audio_bytes:
+                result["audio_base64"] = base64.b64encode(audio_bytes).decode("ascii")
+                result["audio_mime"] = media_type
+        except Exception as e:
+            logger.warning(f"Inline chat-test speech synthesis note: {e}")
+
     return result
 
 
@@ -4757,30 +4869,7 @@ async def api_run_denoise_benchmark():
 # ---------------------------------------------------------
 _speech_cache: dict[str, tuple[bytes, str]] = {}
 
-VOICE_MAP_DEEPGRAM = {
-    "af_heart": "flux-heather-en",
-    "riley": "flux-heather-en",
-    "flux-heather-en": "flux-heather-en",
-    "heather": "flux-heather-en",
-    "aura-asteria-en": "flux-heather-en",
-    "am_adam": "flux-cliff-en",
-    "customer": "flux-bruce-en",
-    "david": "flux-bruce-en",
-    "adam": "flux-cliff-en",
-    "cliff": "flux-cliff-en",
-    "flux-cliff-en": "flux-cliff-en",
-    "aura-angus-en": "flux-cliff-en",
-    "michael": "flux-bruce-en",
-    "am_michael": "flux-bruce-en",
-    "bruce": "flux-bruce-en",
-    "flux-bruce-en": "flux-bruce-en",
-    "aura-orion-en": "flux-bruce-en",
-    "sarah": "flux-sienna-en",
-    "af_sarah": "flux-sienna-en",
-    "sienna": "flux-sienna-en",
-    "flux-sienna-en": "flux-sienna-en",
-    "aura-luna-en": "flux-sienna-en",
-}
+# (VOICE_MAP_DEEPGRAM defined globally above)
 
 # Test & Audio APIs
 # ---------------------------------------------------------
@@ -4790,51 +4879,11 @@ async def test_speech_api(
     voice: Optional[str] = Query(None),
     speed: float = Query(1.0),
 ):
-    """Synthesizes speech using Deepgram Flux (v2) / Aura (v1) with instant MP3 delivery & caching or Kokoro fallback."""
-    raw_voice = (voice or "flux-heather-en").lower().strip()
-    target_voice = VOICE_MAP_DEEPGRAM.get(raw_voice, voice or "flux-heather-en")
-
-    cache_key = f"{target_voice}:{text.strip()}"
-    if cache_key in _speech_cache:
-        cached_data, cached_type = _speech_cache[cache_key]
-        return Response(content=cached_data, media_type=cached_type)
-
-    # Fast Deepgram Flux / Aura MP3 synthesis
-    if settings.DEEPGRAM_API_KEY:
-        dg_voice = target_voice if (target_voice.startswith("aura-") or target_voice.startswith("flux-")) else "flux-heather-en"
-        ver = "v2" if "flux" in dg_voice else "v1"
-        try:
-            import httpx
-            async with httpx.AsyncClient(timeout=8.0) as client:
-                res = await client.post(
-                    f"https://api.deepgram.com/{ver}/speak?model={dg_voice}",
-                    headers={"Authorization": f"Token {settings.DEEPGRAM_API_KEY}", "Content-Type": "application/json"},
-                    json={"text": text},
-                )
-                if res.status_code == 200:
-                    audio_bytes = res.content
-                    media_type = res.headers.get("content-type", "audio/mpeg")
-                    if len(_speech_cache) < 500:
-                        _speech_cache[cache_key] = (audio_bytes, media_type)
-                    return Response(content=audio_bytes, media_type=media_type)
-        except Exception as e:
-            logger.warning(f"Deepgram Aura speech error ({e}), falling back to Kokoro...")
-
-    # Kokoro ONNX fallback
-    kokoro = get_kokoro_instance()
-    if not kokoro:
+    """Synthesizes speech using Deepgram Aura v1 (~250ms) with instant MP3 delivery & caching or Kokoro fallback."""
+    audio_bytes, media_type = await synthesize_speech_bytes(text, voice, speed)
+    if not audio_bytes:
         raise HTTPException(status_code=503, detail="TTS service unavailable.")
-
-    voices = kokoro.get_voices() if hasattr(kokoro, "get_voices") else kokoro.voices
-    k_voice = target_voice if target_voice in voices else "af_heart"
-
-    samples, sample_rate = kokoro.create(text, voice=k_voice, speed=speed)
-    buf = io.BytesIO()
-    sf.write(buf, samples, sample_rate, format="WAV", subtype="PCM_16")
-    audio_bytes = buf.getvalue()
-    if len(_speech_cache) < 500:
-        _speech_cache[cache_key] = (audio_bytes, "audio/wav")
-    return Response(content=audio_bytes, media_type="audio/wav")
+    return Response(content=audio_bytes, media_type=media_type)
 
 
 @app.get("/api/simulation/full-call")

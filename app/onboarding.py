@@ -2700,8 +2700,12 @@ def simulate_agent_turn(client_profile: Dict[str, Any], user_message: str, histo
 
     if groq_key:
         try:
-            from groq import Groq
-            client = Groq(api_key=groq_key)
+            try:
+                from groq import Groq
+                client = Groq(api_key=groq_key)
+            except ImportError:
+                from openai import OpenAI
+                client = OpenAI(api_key=groq_key, base_url="https://api.groq.com/openai/v1")
             messages = [{"role": "system", "content": system_prompt}]
             if history:
                 for h in history[-4:]:
@@ -2711,10 +2715,10 @@ def simulate_agent_turn(client_profile: Dict[str, Any], user_message: str, histo
             messages.append({"role": "user", "content": user_message})
 
             completion = client.chat.completions.create(
-                model=settings.GROQ_MODEL,
+                model=settings.GROQ_MODEL or "qwen/qwen3.8-27b",
                 messages=messages,
                 temperature=0.4,
-                max_tokens=600,
+                max_tokens=150,
             )
             reply = completion.choices[0].message.content.strip()
             reply = reply.replace("*", "").replace("#", "").replace("- ", "")
@@ -2756,7 +2760,7 @@ def simulate_agent_turn(client_profile: Dict[str, Any], user_message: str, histo
                 model=getattr(settings, "GEMINI_MODEL", "gemini-2.5-flash"),
                 messages=messages,
                 temperature=0.4,
-                max_tokens=600,
+                max_tokens=150,
             )
             reply = completion.choices[0].message.content.strip()
             reply = reply.replace("*", "").replace("#", "").replace("- ", "")
