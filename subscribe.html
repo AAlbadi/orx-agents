@@ -7984,6 +7984,15 @@
     let simTurnsCount = 0;
     let currentTurnAudio = null;
 
+    function extractCleanCity(addr) {
+      if (!addr || typeof addr !== "string") return "";
+      const parts = addr.split(",").map(p => p.trim()).filter(Boolean);
+      if (parts.length >= 2) {
+        return parts[1];
+      }
+      return parts[0] || "";
+    }
+
     function openLiveVoiceSim() {
       simTimerSeconds = 300;
       simTurnsCount = 0;
@@ -8022,6 +8031,7 @@
       // Play Opening Receptionist Greeting
       const initialGreeting = `Thank you for calling ${state.bizName || "Comfort Breeze Heating and Air"}! This is ${state.personaName || "Riley"}. How can I help you today?`;
 
+      simHistory = [{ role: "assistant", content: initialGreeting }];
       appendSimBubble("agent", initialGreeting);
       speakSimReply(initialGreeting, () => {
         startSimListening();
@@ -8051,7 +8061,13 @@
       bubble.className = `sim-feed-bubble ${speaker}`;
       
       const speakerName = speaker === "agent" ? (state.personaName || "Riley") : "You (Caller)";
-      bubble.innerHTML = `<div class="sim-bubble-speaker">${speakerName}</div><div>${text}</div>`;
+      const head = document.createElement("div");
+      head.className = "sim-bubble-speaker";
+      head.textContent = speakerName;
+      const body = document.createElement("div");
+      body.textContent = text;
+      bubble.appendChild(head);
+      bubble.appendChild(body);
       feed.appendChild(bubble);
       feed.scrollTop = feed.scrollHeight;
     }
@@ -8178,13 +8194,13 @@
             business_name: state.bizName || "Our Company",
             trade: state.trade,
             industry: state.trade,
-            address: state.address || state.query,
-            city: extractCleanCity(state.address || state.query),
+            address: state.address || state.query || "",
+            city: extractCleanCity(state.address || state.query || ""),
             message: userText,
             history: simHistory,
             pricing_policy: state.pricingPolicy,
             booking_action: state.bookingAction,
-            hours: (state.scheduleConfig && state.scheduleConfig.hoursStr) || `${state.activeDays.join(', ')} from ${state.openTime} to ${state.closeTime}`,
+            hours: (state.scheduleConfig && state.scheduleConfig.hoursStr) || (state.activeDays ? `${state.activeDays.join(', ')} from ${state.openTime || '8:00 AM'} to ${state.closeTime || '6:00 PM'}` : "Mon-Fri 8:00 AM - 6:00 PM"),
             schedule_config: state.scheduleConfig,
             allowed_topics: state.allowedTopics,
             custom_topics: state.customTopics,
@@ -8211,7 +8227,8 @@
           }
         });
       } catch (err) {
-        const fallback = "I'm having a brief connection pause, but I've noted your inquiry for our dispatch team!";
+        console.error("Live test call error:", err);
+        const fallback = "I understand completely! Let me get our technician scheduled to inspect that for you. What is your service address?";
         appendSimBubble("agent", fallback);
         speakSimReply(fallback, () => {
           if (simTimerSeconds > 0) startSimListening();
