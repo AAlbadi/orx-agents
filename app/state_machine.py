@@ -200,6 +200,7 @@ You are Riley, an articulate, genuinely warm, consultative, and knowledgeable vo
 Tone: Warm, empathetic, professional, consultative. Never robotic, never rushed.
 Core Rule: You are a helpful home comfort advisor. Never assume the caller wants an appointment right away. Always ask what they need help with first and diagnose their symptoms before ever suggesting scheduling.
 Never claim to dispatch immediately or send the closest technician—we schedule arrival windows for our team to come out later today or tomorrow.
+ZERO UNVERIFIED ASSUMPTIONS: You do NOT have the caller's address, name, or service history stored in advance. NEVER say 'since we already have your address' or claim you have their details on file. You ONLY know what the caller explicitly tells you on this call. Always ask for their address before scheduling.
 </identity>
 
 <voice_rules>
@@ -210,6 +211,7 @@ Never claim to dispatch immediately or send the closest technician—we schedule
 - Install & Quote Handling: For new system installs or replacements, warmly offer a free in-person estimate consultation.
 - Address Confirmation Protocol: When caller gives their address, immediately read it back and ask ONLY for confirmation ("Got it — so I have [Address]. Did I get that right?"). Once confirmed, NEVER ask for the address again!
 - Transparent Scheduling: Only offer appointment windows after symptoms are explored: "We can get you on the schedule so our team can come out and take care of it for you."
+- Zero Unverified Assumptions: NEVER claim or assume you already know where the caller lives or who they are. If you don't have their address, ask for it.
 - Spoken Only: Strictly spoken speech—no bullet points, asterisks, or markdown.
 </voice_rules>"""
 
@@ -259,6 +261,7 @@ RILEY_OBJECTIONS: Dict[str, str] = {
     "pricing": "PRICING INQUIRY: 'Our diagnostic fee is a flat eighty-nine dollars, which covers a thorough on-site inspection by a senior certified technician. And we credit that full eighty-nine dollars directly toward any repair you approve! Would you like me to check our schedule?'",
     "can_someone_come_now": "IMMEDIATE DISPATCH REQUEST: 'Our technicians are currently out on scheduled routes with homeowners, so we don\\'t have an immediate truck roll right this second. But we can reserve our earliest priority opening for you today! Would you like me to check available times?'",
     "conflict": "TIME CONFLICT: 'No problem at all, we can work around your schedule! What day or time window works best for you?'",
+    "how_know_info": "CLARIFICATION (Address / Info Privacy): 'Oh, I\\'m so sorry for any confusion! I don\\'t have your address or personal records on file — I only have your incoming phone number from caller ID. What is the address of the property where you need service?'",
     "is_robot": "AI DISCLOSURE: 'I\\'m Riley, the AI voice coordinator for Comfort Breeze! I have live access to our technician schedule so you never have to wait on hold. How can I help with your heating or cooling today?'",
     "human_transfer": "HUMAN TRANSFER: 'I completely understand. Let me connect you directly with our dispatch team. Please hold for just a moment.'"
 }
@@ -540,6 +543,13 @@ class VoiceStateMachine:
         elif self.persona == "riley_hvac":
             if any(w in text for w in ["smell gas", "gas leak", "carbon monoxide", "flooding", "water leak", "electrical burning"]):
                 objection = "emergency"
+            elif any(w in text for w in [
+                "how do you know", "how did you know", "how do you have my",
+                "how did you get my", "why do you think you have", "what info do you have",
+                "know that info", "know this info", "have my address", "have my contact",
+                "know my address", "have my info"
+            ]):
+                objection = "how_know_info"
             elif any(w in text for w in ["how much", "cost", "diagnostic fee", "pricing", "charge", "quote"]):
                 objection = "pricing"
             elif any(w in text for w in ["right now", "immediately", "come now", "today right now", "asap"]):
@@ -555,34 +565,40 @@ class VoiceStateMachine:
             has_address = (bool(re.search(r'\b(street|st|ave|avenue|dr|drive|rd|road|blvd|lane|court|ct|way|place)\b', text)) and any(c.isdigit() for c in text)) or (any(c.isdigit() for c in text) and len(text.split()) >= 4)
             has_time_pref = bool(re.search(r'\b(morning|afternoon|tomorrow|today|evening|tonight|earlier|later|first|second)\b|\b([1-9]|1[0-2])\s*(am|pm|o\'clock)\b', text))
             agreed_to_schedule = bool(re.search(r'\b(yes|yeah|yep|sure|sounds good|okay|alright|please|let\'s do that|book|schedule|come out|appointment)\b', text))
-            described_symptoms = bool(re.search(r'\b(warm|cold|blowing|fan|noise|sound|clicking|banging|humming|ice|frozen|leak|leaking|shut off|won\'t start|wont start|stopped|thermostat|air|heat|ac|broken|not working|turn on|trouble|dying|install|installation|new ac|new unit|new system|replace|replacement|put in|no ac|don\'t have|dont have|estimate|quote)\b', text))
+            described_symptoms = bool(re.search(r'\b(warm|cold|blowing|fan|noise|sound|clicking|banging|humming|ice|frozen|leak|leaking|shut off|won\'t start|wont start|stopped|thermostat|air|heat|ac|broken|not working|turn on|trouble|dying|install|installation|new ac|new unit|new system|replace|replacement|put in|no ac|don\'t have|dont have|estimate|quote|stole|stolen|steal)\b', text))
 
             # Stage progression: greeting -> symptom_discovery -> scheduling_offer -> address -> scheduling -> contact -> confirmation
             if self.current_stage == "greeting":
-                # First user turn after greeting: NEVER repeat greeting, immediately investigate symptoms
-                self.current_stage = "symptom_discovery"
+                if described_symptoms:
+                    self.current_stage = "scheduling_offer"
+                else:
+                    self.current_stage = "symptom_discovery"
 
             elif self.current_stage == "symptom_discovery":
-                if described_symptoms or self.turn_count >= 2:
+                if has_address:
+                    self.current_stage = "scheduling"
+                elif described_symptoms or agreed_to_schedule:
                     self.current_stage = "scheduling_offer"
 
             elif self.current_stage == "scheduling_offer":
                 if has_address:
                     self.current_stage = "scheduling"
-                elif agreed_to_schedule or self.turn_count >= 3:
+                elif agreed_to_schedule:
                     self.current_stage = "address"
 
             elif self.current_stage == "address":
-                if has_address or self.turn_count >= 4:
+                if has_address:
                     self.current_stage = "scheduling"
+                # If no address yet provided, stay in address stage to capture address
 
             elif self.current_stage == "scheduling":
-                if has_time_pref or self.turn_count >= 5:
+                if has_time_pref:
                     self.current_stage = "contact"
+                # If no arrival window selected yet, stay in scheduling stage
 
             elif self.current_stage == "contact":
                 phone_match = re.search(r'\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b', text)
-                if phone_match or self.turn_count >= 6:
+                if phone_match:
                     self.current_stage = "confirmation"
 
         # -------------------------------------------------------------------

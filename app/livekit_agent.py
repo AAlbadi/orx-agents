@@ -54,10 +54,11 @@ _SILERO_VAD_INSTANCE = None  # Cached silero VAD (load once, reuse)
 _DEFAULT_AGENT_INSTRUCTIONS: str = (
     "You are Aria, a warm and deeply empathetic voice AI receptionist. "
     "Vibe: Caring, emotionally validating, never robotic, rushed, or cold. "
-    "Emotional Mirroring: When caller reports an issue, validate their feeling first ('Oh no, that sounds awful in this heat! Let's get someone out right away.'). "
+    "Emotional Mirroring: When caller reports an issue, validate their feeling first ('Oh no, dealing with AC trouble is such a headache! We can definitely help you with that.'). "
     "Speak in 1-2 natural spoken sentences (<22 words). Use contractions ('I'm', 'we'll', 'don't'). "
-    "Flow: 1. Acknowledge issue with empathy. 2. Confirm address ('Got it, [Address], is that correct?'). "
-    "3. Offer 2 arrival windows. 4. Collect caller name, phone, email. 5. Warm booking recap. "
+    "Flow: 1. Acknowledge issue with empathy. 2. Ask for and confirm service address ('What is your service address so I can check our schedule for your area?'). "
+    "3. Offer 2 arrival windows. 4. Collect caller name and mobile number. 5. Warm booking recap. "
+    "CRITICAL PRIVACY RULE: NEVER assume or claim you already have the caller's address, name, or records on file! Always ask for their address before scheduling. "
     "STRICT VOICE RULE: Ask AT MOST ONE question per turn. When caller gives address, confirm it and STOP to wait for their answer."
 )
 _STAGED_ROOM_PROMPTS: Dict[str, str] = {}
@@ -314,87 +315,86 @@ class SlotTracker:
             return
         t_clean = text.strip()
         t_lower = t_clean.lower()
+        speaker_norm = (speaker or "").lower().strip()
+        is_customer = speaker_norm in ("customer", "user", "caller")
+        is_agent = speaker_norm in ("assistant", "agent")
 
-        # Phone Number
-        phone_match = re.search(r'\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}', t_clean)
-        if phone_match and 'phone' not in self.slots:
-            self.slots['phone'] = phone_match.group(0)
+        # ONLY extract caller slots from customer turns
+        if is_customer:
+            # Phone Number
+            phone_match = re.search(r'\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}', t_clean)
+            if phone_match and 'phone' not in self.slots:
+                self.slots['phone'] = phone_match.group(0)
 
-        # Email Address
-        email_match = re.search(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+', t_clean)
-        if email_match:
-            self.slots['email'] = email_match.group(0)
+            # Email Address
+            email_match = re.search(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+', t_clean)
+            if email_match and 'email' not in self.slots:
+                self.slots['email'] = email_match.group(0)
 
-        # Street Address
-        addr_match = re.search(
-            r'\b(?:\d{2,5}|\d(?:\s+\d){2,4})\s+[A-Za-z0-9\s]+(?:Street|St|Avenue|Ave|Road|Rd|Drive|Dr|Way|Lane|Ln|Boulevard|Blvd|Place|Pl|Court|Ct)\b[^\n,]*',
-            t_clean,
-            re.IGNORECASE,
-        )
-        if addr_match:
-            full_addr = addr_match.group(0).strip()
-            # Normalize separated digits like '0 5 0 8' or '2 5 0 8'
-            full_addr = re.sub(r'(\d)\s+(\d)', r'\1\2', full_addr)
-            if 'the lowest' in full_addr.lower() and 'delaware' in t_lower:
-                full_addr = re.sub(r'the lowest', 'Delaware', full_addr, flags=re.IGNORECASE)
-            for city in ['chicago', 'minneapolis', 'austin', 'seattle', 'san antonio', 'houston', 'dallas', 'denver', 'phoenix']:
-                if city in t_lower and city not in full_addr.lower():
-                    full_addr += f", {city.title()}"
-            self.slots['address'] = full_addr
-        elif 'delaware' in t_lower and any(w in t_lower for w in ['street', 'st']):
-            # Caller corrected or specified street
-            cur_num = re.search(r'\b\d{2,5}\b', self.slots.get('address', ''))
-            num_prefix = cur_num.group(0) + " " if cur_num else "2508 "
-            city_suffix = ", Chicago" if "chicago" in t_lower else (", Minneapolis" if "minneapolis" in t_lower else "")
-            self.slots['address'] = f"{num_prefix}Delaware Street{city_suffix}"
+            # Street Address
+            addr_match = re.search(
+                r'\b(?:\d{2,5}|\d(?:\s+\d){2,4})\s+[A-Za-z0-9\s]+(?:Street|St|Avenue|Ave|Road|Rd|Drive|Dr|Way|Lane|Ln|Boulevard|Blvd|Place|Pl|Court|Ct)\b[^\n,]*',
+                t_clean,
+                re.IGNORECASE,
+            )
+            if addr_match:
+                full_addr = addr_match.group(0).strip()
+                full_addr = re.sub(r'(\d)\s+(\d)', r'\1\2', full_addr)
+                self.slots['address'] = full_addr
 
-        # Capture city if mentioned in follow-up turn
-        if 'address' in self.slots:
-            for city in ['chicago', 'minneapolis', 'austin', 'seattle', 'san antonio', 'houston', 'dallas', 'denver', 'phoenix']:
-                if city in t_lower and city not in self.slots['address'].lower():
-                    self.slots['address'] += f", {city.title()}"
+            # Capture city if mentioned in follow-up turn
+            if 'address' in self.slots:
+                for city in ['chicago', 'minneapolis', 'austin', 'seattle', 'san antonio', 'houston', 'dallas', 'denver', 'phoenix']:
+                    if city in t_lower and city not in self.slots['address'].lower():
+                        self.slots['address'] += f", {city.title()}"
 
-        # Assistant readback extraction
-        if speaker == "assistant" and any(phrase in t_lower for phrase in ["so i have ", "scheduled for "]):
+            # Caller Name
+            if 'name' not in self.slots:
+                for lead in ['my name is ', 'my name is: ', 'this is ']:
+                    if lead in t_lower:
+                        part = t_clean[t_lower.index(lead) + len(lead):].split('.')[0].split(',')[0].strip()
+                        if part and len(part.split()) <= 3 and not any(w in part.lower() for w in ['riley', 'marcus', 'ana', 'maya', 'aria', 'calling', 'me', 'just', 'not', 'a', 'the', 'comfort']):
+                            self.slots['name'] = part
+                if 'name' not in self.slots and len(t_clean.split()) in (2, 3) and not any(c.isdigit() for c in t_clean):
+                    if not any(w in t_lower for w in ['morning', 'afternoon', 'yes', 'yeah', 'no', 'sure', 'today', 'tomorrow', 'okay', 'working', 'help', 'either', 'what', 'how']):
+                        self.slots['name'] = t_clean
+
+            # Issue / Service Request
+            if any(w in t_lower for w in ['install', 'installation', 'new ac', 'new unit', 'new system', 'replace', 'replacement', 'put in ac', 'don\'t have', 'dont have', 'no ac', 'steal', 'stolen']):
+                self.slots['issue'] = 'New HVAC System Installation & In-Person Estimate'
+            elif any(w in t_lower for w in ['not turn on', 'not working', 'completely down', 'no cooling', 'so hot', 'warm air', 'heating or cooling', 'ac repair', 'broken']):
+                if 'issue' not in self.slots:
+                    self.slots['issue'] = 'HVAC not working / diagnostic repair'
+
+        # Assistant readback extraction: only lock address if assistant repeated it back
+        elif is_agent and any(phrase in t_lower for phrase in ["so i have ", "scheduled for "]):
             for phrase in ["so i have ", "scheduled for "]:
                 if phrase in t_lower:
                     extracted = t_clean[t_lower.index(phrase) + len(phrase):].split(".")[0].split("?")[0].strip()
                     if any(c.isdigit() for c in extracted) and any(w in extracted.lower() for w in ["street", "st", "ave", "avenue", "rd", "road", "dr", "drive", "way", "lane", "blvd"]):
                         self.slots['address'] = extracted
 
-        # Appointment Window
-        if any(w in t_lower for w in ['tomorrow morning', 'between nine and noon', 'tomorrow afternoon', 'after two', 'morning appointment', 'next monday', 'monday next week']):
+        # Appointment Window (can be agreed by either party)
+        if any(w in t_lower for w in ['tomorrow morning', 'between nine and noon', 'tomorrow afternoon', 'after two', 'morning appointment', 'next monday', 'monday next week', 'between one and three', 'between eight and eleven', 'two and five', 'one and four']):
             if 'next monday' in t_lower or 'monday' in t_lower:
                 self.slots['appointment'] = 'Next Monday morning (8:00 AM – 11:00 AM)'
-            elif 'between nine and noon' in t_lower or 'tomorrow morning' in t_lower or 'nine and noon' in t_lower:
+            elif 'between nine and noon' in t_lower or 'nine and noon' in t_lower:
                 self.slots['appointment'] = 'Tomorrow morning (9:00 AM – 12:00 PM)'
+            elif 'between eight and eleven' in t_lower or 'eight and eleven' in t_lower:
+                self.slots['appointment'] = 'Tomorrow morning (8:00 AM – 11:00 AM)'
+            elif 'between one and three' in t_lower or 'one and three' in t_lower:
+                self.slots['appointment'] = 'Today (1:00 PM – 3:00 PM)'
+            elif 'between two and five' in t_lower or 'two and five' in t_lower:
+                self.slots['appointment'] = 'Today (2:00 PM – 5:00 PM)'
+            elif 'tomorrow morning' in t_lower:
+                self.slots['appointment'] = 'Tomorrow morning'
             elif 'afternoon' in t_lower or 'after two' in t_lower:
                 self.slots['appointment'] = 'Tomorrow afternoon (2:00 PM – 5:00 PM)'
-
-        # Issue / Service Request
-        if any(w in t_lower for w in ['install', 'installation', 'new ac', 'new unit', 'new system', 'replace', 'replacement', 'put in ac', 'don\'t have', 'dont have', 'no ac']):
-            self.slots['issue'] = 'New HVAC System Installation & In-Person Estimate'
-        elif any(w in t_lower for w in ['not turn on', 'not working', 'completely down', 'no cooling', 'so hot', 'warm air', 'heating or cooling', 'ac repair', 'broken']):
-            if 'issue' not in self.slots:
-                self.slots['issue'] = 'HVAC not working / diagnostic repair'
-
-        # Name
-        if any(name_phrase in t_lower for name_phrase in ['aziz', 'abdul aziz', 'alpadi']):
-            self.slots['name'] = 'Aziz Alpadi'
-        elif any(lead in t_lower for lead in ['my name is ', 'this is ']):
-            for lead in ['my name is ', 'this is ']:
-                if lead in t_lower:
-                    part = t_clean[t_lower.index(lead) + len(lead):].split('.')[0].split(',')[0].strip()
-                    if part and len(part.split()) <= 4 and 'name' not in self.slots:
-                        self.slots['name'] = part
-        elif speaker == "customer" and len(t_clean.split()) in (2, 3) and not any(c.isdigit() for c in t_clean) and 'name' not in self.slots:
-            if not any(w in t_lower for w in ['morning', 'afternoon', 'yes', 'yeah', 'no', 'sure', 'today', 'tomorrow', 'okay', 'working', 'help', 'either']):
-                self.slots['name'] = t_clean
 
     def get_prompt_block(self) -> str:
         if not self.slots:
             return ""
-        lines = ["\n\n[CONFIRMED BOOKING DETAILS — STRICTLY NEVER RE-ASK]:"]
+        lines = ["\n\n[CONFIRMED BOOKING DETAILS]:"]
         for k, label in [
             ("issue", "Service Request / Scope"),
             ("address", "Service Address (CONFIRMED)"),
@@ -405,10 +405,24 @@ class SlotTracker:
         ]:
             if k in self.slots:
                 lines.append(f"- {label}: {self.slots[k]}")
+
+        # Explicitly declare what is NOT yet provided so LLM never hallucinates having it
+        missing = []
+        if "address" not in self.slots:
+            missing.append("Service Address (NOT YET PROVIDED - you MUST ask the caller for their address)")
+        if "phone" not in self.slots:
+            missing.append("Mobile Phone (NOT YET PROVIDED - ask for dispatch arrival updates)")
+        if "name" not in self.slots:
+            missing.append("Customer Name (NOT YET PROVIDED)")
+
+        if missing:
+            lines.append("\nSTILL NEEDED BEFORE CONFIRMING BOOKING:")
+            for m in missing:
+                lines.append(f"- {m}")
+
         lines.append(
-            "CRITICAL: The Service Address and Mobile Phone above are ALREADY CONFIRMED by the customer. "
-            "You are STRICTLY FORBIDDEN from asking for the service address, mobile phone, or name again! "
-            "If all details are gathered, provide the final verbal recap directly and conclude the booking."
+            "\nCRITICAL PRIVACY RULE: NEVER claim or assume you already have the caller's address, name, or phone number on file unless they explicitly gave it to you in this call. "
+            "If an item is listed as (CONFIRMED) above, do not ask for it again. If an item is NOT YET PROVIDED, you MUST ask for it at the appropriate step."
         )
         return "\n".join(lines)
 
